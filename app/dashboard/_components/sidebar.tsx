@@ -26,11 +26,6 @@ const navItems: NavItem[] = [
     icon: HomeIcon,
   },
   {
-    label: "Chat",
-    href: "/dashboard/chat",
-    icon: MessageCircleIcon,
-  },
-  {
     label: "Upload",
     href: "/dashboard/upload",
     icon: Upload,
