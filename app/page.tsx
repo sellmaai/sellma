@@ -1,18 +1,20 @@
-import FooterSection from "@/components/homepage/footer";
+import { AccordionComponent } from "@/components/homepage/accordion-component";
 import HeroSection from "@/components/homepage/hero-section";
-import Integrations from "@/components/homepage/integrations";
-import { getSubscriptionDetails } from "@/lib/subscription";
-import PricingTable from "./pricing/_component/pricing-table";
-
-export default async function Home() {
-  const subscriptionDetails = await getSubscriptionDetails();
+import MarketingCards from "@/components/homepage/marketing-cards";
+import Pricing from "@/components/homepage/pricing";
+import SideBySide from "@/components/homepage/side-by-side";
+import PageWrapper from "@/components/wrapper/page-wrapper";
+export default function Home() {
 
   return (
-    <>
-      <HeroSection />
-      <Integrations />
-      <PricingTable subscriptionDetails={subscriptionDetails} />
-      <FooterSection />
-    </>
+    <PageWrapper>
+      <div className="flex flex-col justify-center items-center w-full mt-[1rem] p-3">
+        <HeroSection />
+      </div>
+      <SideBySide />
+      <MarketingCards />
+      <Pricing />
+      <AccordionComponent />
+    </PageWrapper>
   );
 }

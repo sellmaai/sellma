@@ -1,51 +1,65 @@
+import Provider from "@/app/provider";
+import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { ClerkProvider } from "@clerk/nextjs";
+import { Analytics } from "@vercel/analytics/react";
+import { GeistSans } from "geist/font/sans";
 import type { Metadata } from "next";
-import { ThemeProvider } from "../components/provider";
 import "./globals.css";
-import { Analytics } from "@vercel/analytics/next";
+
 export const metadata: Metadata = {
-  title: "Next.js Starter Kit - Launch Your SAAS",
+  metadataBase: new URL("https://nextstarter.xyz/"),
+  title: {
+    default: 'Next Starter',
+    template: `%s | Next Starter`
+  },
   description:
-    "A modern, full-stack Next.js starter kit with authentication, payments, and dashboard. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
+    "The Ultimate Nextjs 15 Starter Kit for quickly building your SaaS, giving you time to focus on what really matters",
   openGraph: {
-    title: "Next.js Starter Kit",
     description:
-      "A modern, full-stack Next.js starter kit with authentication, payments, and dashboard. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-    url: "nextstarter.xyz",
-    siteName: "Next.js Starter Kit",
+      "The Ultimate Nextjs 15 Starter Kit for quickly building your SaaS, giving you time to focus on what really matters",
     images: [
-      {
-        url: "https://jdj14ctwppwprnqu.public.blob.vercel-storage.com/nsk-w9fFwBBmLDLxrB896I4xqngTUEEovS.png",
-        width: 1200,
-        height: 630,
-        alt: "Next.js Starter Kit",
-      },
+      "https://dwdwn8b5ye.ufs.sh/f/MD2AM9SEY8GucGJl7b5qyE7FjNDKYduLOG2QHWh3f5RgSi0c",
     ],
-    locale: "en-US",
-    type: "website",
+    url: "https://nextstarter.xyz/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Nextjs Starter Kit",
+    description:
+      "The Ultimate Nextjs 15 Starter Kit for quickly building your SaaS, giving you time to focus on what really matters",
+    siteId: "",
+    creator: "@rasmickyy",
+    creatorId: "",
+    images: [
+      "https://dwdwn8b5ye.ufs.sh/f/MD2AM9SEY8GucGJl7b5qyE7FjNDKYduLOG2QHWh3f5RgSi0c",
+    ],
   },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`font-[-apple-system,BlinkMacSystemFont]antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          forcedTheme="light"
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster />
+    <ClerkProvider dynamic>
+      <html lang="en" suppressHydrationWarning>
+        <body className={GeistSans.className}>
+          <Provider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+              <Toaster />
+            </ThemeProvider>
+          </Provider>
           <Analytics />
-        </ThemeProvider>
-      </body>
-    </html>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

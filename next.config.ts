@@ -1,27 +1,48 @@
-import type { NextConfig } from "next";
+/** @type {import('next').NextConfig} */
+import type { NextConfig } from 'next';
+import createMDX from '@next/mdx';
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  reactStrictMode: false,
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "pub-6f0cf05705c7412b93a792350f3b3aa5.r2.dev",
-      },
-      {
-        protocol: "https",
-        hostname: "jdj14ctwppwprnqu.public.blob.vercel-storage.com",
-      },
-      {
-        protocol: "https",
         hostname: "images.unsplash.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "seo-heist.s3.amazonaws.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "dwdwn8b5ye.ufs.sh",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "ansubkhan.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "utfs.io",
+        port: "",
+        pathname: "/**",
       },
     ],
   },
+  experimental: {
+    reactCompiler: true,
+  },
+  pageExtensions: ["ts", "tsx", "mdx"],
 };
 
-export default nextConfig;
+const withMDX = createMDX({});
+
+export default withMDX(nextConfig);

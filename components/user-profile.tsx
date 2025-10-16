@@ -1,139 +1,83 @@
+"use client";
+
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+} from "@/components/ui/avatar";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { authClient } from "@/lib/auth-client";
-import { Loader2 } from "lucide-react";
+import { SignOutButton, useUser } from "@clerk/nextjs";
+import {
+    LogOut,
+    Settings,
+    Sparkles,
+    User
+} from "lucide-react";
+import { Button } from "./ui/button";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
-interface UserInfo {
-  id: string;
-  name: string;
-  image?: string | null | undefined;
-  email: string;
-  emailVerified: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export function UserProfile() {
+    const { user } = useUser();
 
-export default function UserProfile({ mini }: { mini?: boolean }) {
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-
-  const fetchUserData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const result = await authClient.getSession();
-
-      if (!result.data?.user) {
-        router.push("/sign-in");
-        return;
-      }
-
-      setUserInfo(result.data?.user);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      setError("Failed to load user profile. Please try refreshing the page.");
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
-
-  useEffect(() => {
-    fetchUserData();
-  }, [fetchUserData]);
-
-  const handleSignOut = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          router.push("/sign-in"); // redirect to login page
-        },
-      },
-    });
-  };
-
-  if (error) {
     return (
-      <div
-        className={`flex gap-2 justify-start items-center w-full rounded ${mini ? "" : "px-4 pt-2 pb-3"}`}
-      >
-        <div className="text-red-500 text-sm flex-1">
-          {mini ? "Error" : error}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div
-          className={`flex gap-2 justify-start items-center w-full rounded ${mini ? "" : "px-4 pt-2 pb-3"}`}
-        >
-          <Avatar>
-            {loading ? (
-              <div className="flex items-center justify-center w-full h-full">
-                <Loader2 className="h-4 w-4 animate-spin" />
-              </div>
-            ) : (
-              <>
-                {userInfo?.image ? (
-                  <AvatarImage src={userInfo?.image} alt="User Avatar" />
-                ) : (
-                  <AvatarFallback>
-                    {userInfo?.name && userInfo.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                )}
-              </>
-            )}
-          </Avatar>
-          {mini ? null : (
-            <div className="flex items-center gap-2">
-              <p className="font-medium text-md">
-                {loading ? "Loading..." : userInfo?.name || "User"}
-              </p>
-              {loading && <Loader2 className="h-3 w-3 animate-spin" />}
-            </div>
-          )}
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <Link href="/dashboard/settings?tab=profile">
-            <DropdownMenuItem>
-              Profile
-              <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-            </DropdownMenuItem>
-          </Link>
-          <Link href="/dashboard/settings?tab=billing">
-            <DropdownMenuItem>
-              Billing
-              <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-            </DropdownMenuItem>
-          </Link>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>
-          Log out
-          <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Avatar className="h-9 w-9 rounded-full ring-1 ring-border">
+                        <AvatarImage src={user?.imageUrl} alt={user?.fullName || "User Profile"} />
+                        <AvatarFallback className="bg-blue-50 text-blue-900 dark:bg-blue-950 dark:text-blue-200">
+                            {user?.firstName?.[0]}
+                            {user?.lastName?.[0]}
+                        </AvatarFallback>
+                    </Avatar>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end">
+                <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user?.fullName}</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                            {user?.emailAddresses[0].emailAddress}
+                        </p>
+                    </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                    <Link href="/user-profile">
+                        <DropdownMenuItem className="focus:bg-blue-50 dark:focus:bg-blue-950">
+                            <User className="mr-2 h-4 w-4" />
+                            <span>Profile</span>
+                        </DropdownMenuItem>
+                    </Link>
+                    <Link href="/dashboard/settings">
+                        <DropdownMenuItem className="focus:bg-blue-50 dark:focus:bg-blue-950">
+                            <Settings className="mr-2 h-4 w-4" />
+                            <span>Settings</span>
+                        </DropdownMenuItem>
+                    </Link>
+                    <Link href="/#pricing">
+                        <DropdownMenuItem className="focus:bg-blue-50 dark:focus:bg-blue-950">
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            <span>Upgrade Plan</span>
+                        </DropdownMenuItem>
+                    </Link>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <SignOutButton>
+                    <DropdownMenuItem className="focus:bg-blue-50 dark:focus:bg-blue-950">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Log out</span>
+                    </DropdownMenuItem>
+                </SignOutButton>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    )
 }
