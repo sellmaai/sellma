@@ -14,6 +14,7 @@
   "dependencies": {
     "@auth/core": "^0.37.0",
     "@convex-dev/auth": "^0.0.77",
+    "@convex-dev/polar": "^0.6.4",
     "@icons-pack/react-simple-icons": "13.8.0",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-collapsible": "^1.1.12",
