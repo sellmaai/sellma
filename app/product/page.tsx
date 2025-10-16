@@ -15,7 +15,6 @@ export default async function ProductPage() {
     <main className="flex max-h-screen grow flex-col overflow-hidden">
       <div className="flex items-center justify-between border-b p-4">
         <div className="flex items-center gap-2">
-          <SidebarTrigger />
           <ChatIntro />
         </div>
       </div>
