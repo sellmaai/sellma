@@ -109,7 +109,10 @@ export const generateForGroups = action({
     ),
     total: v.optional(v.number()),
     audienceId: v.optional(v.string()),
-    context: v.optional(v.object({ location: v.optional(v.string()) })),
+    context: v.optional(v.object({
+      location: v.optional(v.string()),
+      audienceDescription: v.optional(v.string()),
+    })),
   },
   handler: async (ctx, args) => {
     const total = Math.max(1, Math.min(args.total ?? 16, 32));

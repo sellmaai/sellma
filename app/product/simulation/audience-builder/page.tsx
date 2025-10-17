@@ -11,7 +11,7 @@ import { AnimatedTooltip } from '@/components/ui/shadcn-io/animated-tooltip';
 import GenerationChainOfThought from './AudienceGenerationChainOfThought';
 
 export default function AudienceGenerationPage() {
-  const suggest = useAction((api as any).audienceGroups.suggestBundle);
+  const generateAudienceSegments = useAction((api as any).audienceGroups.suggestBundle);
   const generate = useAction((api as any).personas.generate);
   const [message, setMessage] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -46,7 +46,7 @@ export default function AudienceGenerationPage() {
       // Suggest including a location in the prompt; default to a broad region if missing
       const location = extractLocationHint(message) ?? 'United States';
       try {
-        const bundle = (await suggest({ text: message, location, count: 6 })) as any;
+        const bundle = (await generateAudienceSegments({ text: message, location, count: 6 })) as any;
         setAudienceDescription(bundle?.description ?? null);
         const res = bundle?.groups ?? [];
         setGroups(res as any);
