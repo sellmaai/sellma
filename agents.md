@@ -14,7 +14,7 @@ Key files:
 - `lib/personas/schemas.ts`: Zod schemas mirroring the interfaces (strict JSON validation).
 - `lib/personas/prompt.ts`: prompt builder for persona generation.
 - `convex/personas.ts`: Convex action `generate` (AI call), action `generateForGroups` (orchestrator), queries, and mutation `saveMany` (persistence).
-- `convex/audienceGroups.ts`: Convex action `suggest` (audience → group subsegments).
+- `convex/audienceGroups.ts`: Convex action `suggestBundle` (audience → overview + subsegments).
 - `convex/ads.ts`: Convex action `generateVariants` (ad variants).
 - `convex/simulation.ts`: Convex action `simulate` (persona reactions to ads).
 - `convex/schema.ts`: Convex tables; includes `personas` table.
@@ -22,7 +22,8 @@ Key files:
 ### Persona generation agent
 - Uses `generateObject` (non‑streaming) with `google('gemini-2.5-flash')` to return validated `Persona[]`.
 - `Persona` fields include OCEAN personality scores, profile, and pre‑ad context. The `scenario`, `current_activity`, and `emotional_state` inside `pre_ad_context` are derived by the model (not inputs).
-- Inputs: `{ group, count, context?: { location? } }`.
+- Inputs: `{ group, count, audienceId?, context?: { location?, audienceDescription?, segment? } }`.
+- The `group` is normalized server‑side to a canonical ID (e.g., `fitness`, `tech`, `beauty`, `home`, `outdoors`) for consistent indexing. The prompt prioritizes: audienceDescription (primary) → segment (secondary) → canonical group (tertiary) → location.
 
 Why structured outputs: Zod schemas are enforced at generation time, preventing malformed data and reducing ad‑hoc validation.
 
@@ -31,6 +32,8 @@ Why structured outputs: Zod schemas are enforced at generation time, preventing 
 - Indexes:
   - `by_group` on `audienceGroup` for fast filtering.
   - `by_persona_id` on `persona_id` for quick lookups.
+  - `by_audience` on `audienceId` for session‑scoped lists.
+- Saved personas include a stable `audienceGroup` (canonical ID) and `audienceId` tag for the current generation session.
 
 ### Usage examples
 Server component calling Convex action (preferred):
@@ -41,7 +44,16 @@ import { fetchAction } from 'convex/nextjs';
 const personas = await fetchAction(api.personas.generate, {
   group: 'fitness',
   count: 2,
-  context: { location: 'Austin, TX' },
+  audienceId: 'aud-123',
+  context: {
+    location: 'Austin, TX',
+    audienceDescription: 'Young professionals seeking eco‑friendly commuting options',
+    segment: {
+      id: 'urban-cyclists',
+      label: 'Urban Cyclists',
+      description: 'Commute by bike 3–5x/week; value durability, safety, and style.'
+    }
+  },
 });
 ```
 
@@ -56,16 +68,17 @@ const personas = await generatePersonas({
 });
 ```
 
-Audience → groups (subsegments) example:
+Audience → overview + subsegments example:
 ```ts
 import { api } from '@/convex/_generated/api';
 import { fetchAction } from 'convex/nextjs';
 
-const groups = await fetchAction(api.audienceGroups.suggest, {
+const bundle = await fetchAction(api.audienceGroups.suggestBundle, {
   text: 'Young professionals seeking eco‑friendly commuting options',
-  location: 'Austin, TX',
   count: 6,
 });
+// bundle: { description: string, groups: Array<{ id, label, description, color, percent }> }
+// Pass bundle.description as audienceDescription and a chosen bundle.groups[i] as context.segment when generating personas.
 ```
 
 Ad variants example:
@@ -136,6 +149,7 @@ await ctx.db
 - [ ] Client components minimized; RSC where possible
 
 ### UI notes
-- Personas are visualized in `app/product/simulation/workflow/page.tsx` using a shadcn `AvatarGroup` with hover tooltips summarizing the persona.
+- In `app/product/simulation/audience-builder/page.tsx`, audience text is converted into an overview and subsegments (cards). Clicking a card renders a detailed `PersonaForm` for the selected generated persona.
+- Personas are also visualized in `app/product/simulation/workflow/page.tsx` using a shadcn `AvatarGroup` with hover tooltips summarizing the persona.
 
 

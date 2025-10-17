@@ -9,6 +9,9 @@ import { cn } from '@/lib/utils';
 import { Mic, Paperclip, Plus, Search, Send, Sparkles, Waves } from 'lucide-react';
 import { AnimatedTooltip } from '@/components/ui/shadcn-io/animated-tooltip';
 import GenerationChainOfThought from './AudienceGenerationChainOfThought';
+import PersonaForm from '@/components/personas/PersonaForm';
+import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function AudienceGenerationPage() {
   const generateAudienceSegments = useAction((api as any).audienceGroups.suggestBundle);
@@ -20,6 +23,8 @@ export default function AudienceGenerationPage() {
   const [isPending, startTransition] = useTransition();
   const [groups, setGroups] = useState<Array<{ id: string; label: string; color: string; description: string }>>([]);
   const [people, setPeople] = useState<Array<{ id: number; name: string; designation: string; image: string }>>([]);
+  const [personasById, setPersonasById] = useState<Record<string, any>>({});
+  const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [groupSuggestStatus, setGroupSuggestStatus] = useState<'pending' | 'active' | 'complete'>('pending');
@@ -60,6 +65,7 @@ export default function AudienceGenerationPage() {
             .then((arr: any[]) => {
               const p = arr?.[0];
               if (p && p.audienceId === newAudienceId) {
+                setPersonasById((prev) => ({ ...prev, [p.persona_id]: p }));
                 setPeople((prev) => {
                   const baseFirst = p?.profile?.firstName ?? 'Persona';
                   const baseLast = p?.profile?.lastName ?? '';
@@ -217,38 +223,51 @@ export default function AudienceGenerationPage() {
                     className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   />
                 </div>
-                <div className="flex flex-row items-center justify-center w-full">
-                  <AnimatedTooltip
-                    items={people.filter((p) => {
-                      const q = search.trim().toLowerCase();
-                      if (!q) return true;
-                      return (
-                        p.name.toLowerCase().includes(q) ||
-                        p.designation.toLowerCase().includes(q)
-                      );
-                    })}
-                  />
+
+                <div className="flex items-center justify-center">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 w-full">
+                    {people
+                      .filter((p) => {
+                        const q = search.trim().toLowerCase();
+                        if (!q) return true;
+                        return (
+                          p.name.toLowerCase().includes(q) ||
+                          p.designation.toLowerCase().includes(q)
+                        );
+                      })
+                      .map((p) => (
+                        <Card
+                          key={p.id}
+                          onClick={() => {
+                            const persona = Object.values(personasById).find((x: any) => `${x.profile.firstName} ${x.profile.lastName}`.trim() === p.name || x.persona_id?.endsWith((p as any).suffix ?? ''))
+                            if (persona) setSelectedPersonaId(persona.persona_id)
+                          }}
+                          className="relative border transition-all duration-100 hover:border-muted-foreground hover:shadow-sm cursor-pointer"
+                        >
+                          <CardContent className="flex items-center space-x-4 p-4">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={p.image} alt={p.name} />
+                              <AvatarFallback>{p.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-medium text-foreground">
+                                {p.name}
+                              </div>
+                              <div className="truncate text-sm text-muted-foreground">
+                                {p.designation}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
                 </div>
-                <ul className="divide-y divide-border rounded-md border border-border">
-                  {people
-                    .filter((p) => {
-                      const q = search.trim().toLowerCase();
-                      if (!q) return true;
-                      return (
-                        p.name.toLowerCase().includes(q) ||
-                        p.designation.toLowerCase().includes(q)
-                      );
-                    })
-                    .map((p) => (
-                      <li key={p.id} className="flex items-center gap-3 p-3">
-                        <img src={p.image} alt={p.name} className="h-10 w-10 rounded-full object-cover" />
-                        <div className="flex-1">
-                          <div className="text-sm font-medium">{p.name}</div>
-                          <div className="text-xs text-muted-foreground">{p.designation}</div>
-                        </div>
-                      </li>
-                    ))}
-                </ul>
+
+                {selectedPersonaId && personasById[selectedPersonaId] && (
+                  <div className="mt-8">
+                    <PersonaForm persona={personasById[selectedPersonaId]} />
+                  </div>
+                )}
               </>
             )}
           </div>
