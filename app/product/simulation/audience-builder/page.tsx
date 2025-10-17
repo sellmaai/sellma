@@ -7,11 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Mic, Paperclip, Plus, Search, Send, Sparkles, Waves } from 'lucide-react';
-import { AnimatedTooltip } from '@/components/ui/shadcn-io/animated-tooltip';
-import GenerationChainOfThought from './AudienceGenerationChainOfThought';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PersonaForm } from '@/components/personas/PersonaForm';
+import GenerationChainOfThought from './AudienceGenerationChainOfThought';
 
 export default function AudienceGenerationPage() {
   const generateAudienceSegments = useAction((api as any).audienceGroups.suggestBundle);
@@ -30,6 +29,7 @@ export default function AudienceGenerationPage() {
   const [groupSuggestStatus, setGroupSuggestStatus] = useState<'pending' | 'active' | 'complete'>('pending');
   const [perGroupStatus, setPerGroupStatus] = useState<Record<string, 'pending' | 'active' | 'complete'>>({});
   const [currentAudienceId, setCurrentAudienceId] = useState<string | null>(null);
+  const currentAudienceIdRef = useRef<string | null>(null);
   const [search, setSearch] = useState('');
   const [audienceDescription, setAudienceDescription] = useState<string | null>(null);
 
@@ -43,10 +43,9 @@ export default function AudienceGenerationPage() {
     setGroups([]);
     setPeople([]);
     setAudienceDescription(null);
-    const newAudienceId = (typeof crypto !== 'undefined' && (crypto as any).randomUUID)
-      ? (crypto as any).randomUUID()
-      : Math.random().toString(36).slice(2);
+    const newAudienceId =  Math.random().toString(36).slice(2);
     setCurrentAudienceId(newAudienceId);
+    currentAudienceIdRef.current = newAudienceId;
     startTransition(async () => {
       // Suggest including a location in the prompt; default to a broad region if missing
       const location = extractLocationHint(message) ?? 'United States';
@@ -60,11 +59,15 @@ export default function AudienceGenerationPage() {
 
         // Kick off persona generation per group with progressive updates
         (res as any[]).forEach((g: any) => {
-          setPerGroupStatus((prev) => ({ ...prev, [g.id]: 'active' }));
+          // Only mark as active for the latest audience generation
+          if (currentAudienceIdRef.current === newAudienceId) {
+            setPerGroupStatus((prev) => ({ ...prev, [g.id]: 'active' }));
+          }
           generate({ group: g.id, count: 1, audienceId: newAudienceId, context: { location, audienceDescription: bundle?.description } })
             .then((arr: any[]) => {
               const p = arr?.[0];
-              if (p && p.audienceId === newAudienceId) {
+              // Only apply results if they belong to the most recent audience session
+              if (p && p.audienceId === currentAudienceIdRef.current) {
                 setPersonasById((prev) => ({ ...prev, [p.persona_id]: p }));
                 setPeople((prev) => {
                   const baseFirst = p?.profile?.firstName ?? 'Persona';
@@ -98,7 +101,10 @@ export default function AudienceGenerationPage() {
               // noop: keep UX flowing; we could surface per-group errors later if desired
             })
             .finally(() => {
-              setPerGroupStatus((prev) => ({ ...prev, [g.id]: 'complete' }));
+              // Only update status for the latest audience generation
+              if (currentAudienceIdRef.current === newAudienceId) {
+                setPerGroupStatus((prev) => ({ ...prev, [g.id]: 'complete' }));
+              }
             });
         });
         setMessage('');

@@ -3,8 +3,8 @@
 import {
   RadioGroup,
   RadioGroupItem,
-} from "@repo/shadcn-ui/components/ui/radio-group";
-import { cn } from "@repo/shadcn-ui/lib/utils";
+} from "@/components/ui/radio-group";
+import {cn} from "@/lib/utils";
 import {
   type ComponentProps,
   createContext,

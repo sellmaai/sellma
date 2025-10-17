@@ -62,6 +62,7 @@ export function buildPersonaPrompt(params: {
     '- Ensure diversity across personas (demographics, motivations, behaviors) while staying true to the audience; avoid stereotypes.'
   );
 
+  console.log(parts.join('\n'));  
   return parts.join('\n');
 }
 
