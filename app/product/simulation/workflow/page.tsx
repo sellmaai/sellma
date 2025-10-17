@@ -15,6 +15,11 @@ import {
 import { Panel } from '@/components/ai-elements/panel';
 import { Toolbar } from '@/components/ai-elements/toolbar';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { AvatarGroup } from '@/components/ui/shadcn-io/avatar-group';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { api } from '@/convex/_generated/api';
+import { useQuery } from 'convex/react';
 
 const nodeIds = {
   start: 'start',
@@ -197,6 +202,68 @@ const Example = () => (
   </Canvas>
 );
 
-export default Example;
+export default function WorkflowPage() {
+  const personas = useQuery((api as any).personas.listByGroup, { group: 'fitness', limit: 16 }) ?? [];
+
+  return (
+    <div className="flex flex-col gap-8">
+      <Example />
+      <section className="px-6">
+        <h2 className="text-lg font-medium mb-3">Personas</h2>
+        <TooltipProvider delayDuration={0}>
+          <AvatarGroup variant="stack" size={48} animate className="-space-x-3">
+            {personas.map((p: any) => (
+              <Tooltip key={p.persona_id}>
+                <TooltipTrigger asChild>
+                  <Avatar>
+                    <AvatarFallback>
+                      {p.profile.firstName?.[0]}
+                      {p.profile.lastName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                </TooltipTrigger>
+                <TooltipContent side="top" sideOffset={16}>
+                  <div className="max-w-xs">
+                    <div className="font-medium">
+                      {p.profile.firstName} {p.profile.lastName} · {p.profile.age}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {p.profile.occupation} · {p.profile.location.city}, {p.profile.location.state}
+                    </div>
+                    <div className="mt-2 text-sm">
+                      {p.personality.ocean_summary}
+                    </div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </AvatarGroup>
+        </TooltipProvider>
+      </section>
+    </div>
+  );
+}
+
+// Below: example grid of persona orbs (to be used when wiring personas data)
+// import { Orb } from '@/components/ui/orb';
+// import { api } from '@/convex/_generated/api';
+// import { fetchQuery } from 'convex/nextjs';
+//
+// export default async function WorkflowWithOrbs() {
+//   const personas = await fetchQuery(api.personas.listByGroup, { group: 'fitness', limit: 16 });
+//   return (
+//     <div className="p-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+//       {personas.map((p) => (
+//         <div key={p.persona_id} className="aspect-square">
+//           <Orb colors={["#ffffff", "#87ceeb"]} />
+//           <div className="mt-2 text-sm">
+//             <div className="font-medium">{p.profile.firstName} {p.profile.lastName}</div>
+//             <div className="text-muted-foreground text-xs">{p.personaGroup}</div>
+//           </div>
+//         </div>
+//       ))}
+//     </div>
+//   );
+// }
 
 

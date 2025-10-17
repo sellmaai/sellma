@@ -1,0 +1,37 @@
+import { personaGroupDescriptions, personaGroupLabels } from './personaGroups';
+
+type Context = {
+  location?: string;
+};
+
+export function buildPersonaPrompt(params: {
+  group: keyof typeof personaGroupLabels;
+  count: number;
+  context?: Context;
+}) {
+  const { group, count, context } = params;
+  const parts: string[] = [];
+
+  parts.push(
+    `You are generating ${count} realistic marketing personas for the group "${personaGroupLabels[group]}".`,
+    `Group description: ${personaGroupDescriptions[group]}.`
+  );
+
+  if (context) {
+    if (context.location) parts.push(`Primary location context: ${context.location}`);
+  }
+
+  parts.push(
+    'Output only JSON that conforms to the provided schema. Do not include comments or markdown.',
+    'Constraints:',
+    '- ocean_scores are floats in [0,1].',
+    '- engagement_score is a float in [0,1].',
+    '- last_updated must be an ISO-8601 timestamp.',
+    '- Use culturally respectful, inclusive language. Keep chain_of_thought concise and non-sensitive.',
+    '- Derive scenario, current_activity, and emotional_state from context; do not take them as inputs.'
+  );
+
+  return parts.join('\n');
+}
+
+
