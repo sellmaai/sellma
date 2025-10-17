@@ -68,9 +68,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
-                  <SidebarMenuSubButton asChild isActive={pathname?.startsWith("/product/simulation/persona-generation")}>
-                    <Link href="/product/simulation/persona-generation">
-                      <span>Persona Generation</span>
+                  <SidebarMenuSubButton asChild isActive={pathname?.startsWith("/product/simulation/audience-builder")}>
+                    <Link href="/product/simulation/audience-builder">
+                      <span>Audience Builder</span>
                     </Link>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>

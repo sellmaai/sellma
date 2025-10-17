@@ -12,7 +12,7 @@ export default defineSchema({
   }),
   personas: defineTable({
     persona_id: v.string(),
-    personaGroup: v.string(),
+    audienceGroup: v.string(),
     last_updated: v.string(),
     profile: v.object({
       firstName: v.string(),
@@ -46,6 +46,6 @@ export default defineSchema({
       chain_of_thought: v.string(),
     }),
   })
-    .index('by_group', ['personaGroup'])
+    .index('by_group', ['audienceGroup'])
     .index('by_persona_id', ['persona_id'])
 });

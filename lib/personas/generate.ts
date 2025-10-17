@@ -4,18 +4,18 @@ import { generateObject, NoObjectGeneratedError } from 'ai';
 import { z } from 'zod';
 import { google } from '@ai-sdk/google';
 import { PersonaSchema } from './schemas';
-import { personaGroupIds, PersonaGroup } from './personaGroups';
+import { audienceGroupIds, AudienceGroup } from './audienceGroups';
 import { buildPersonaPrompt } from './prompt';
 
-const PersonaGroupLiteralUnion = z.union(
-  personaGroupIds.map((id) => z.literal(id)) as [
+const AudienceGroupLiteralUnion = z.union(
+  audienceGroupIds.map((id) => z.literal(id)) as [
     z.ZodLiteral<string>,
     ...z.ZodLiteral<string>[]
   ]
 );
 
 const InputSchema = z.object({
-  group: PersonaGroupLiteralUnion,
+  group: AudienceGroupLiteralUnion,
   count: z.number().int().min(1).max(10).default(1),
   context: z.object({ location: z.string().min(1).optional() }).optional(),
 });
@@ -25,7 +25,7 @@ export type GeneratePersonasInput = z.infer<typeof InputSchema>;
 export async function generatePersonas(input: GeneratePersonasInput) {
   const { group, count, context } = InputSchema.parse(input);
 
-  const prompt = buildPersonaPrompt({ group: group as PersonaGroup, count, context });
+  const prompt = buildPersonaPrompt({ group: group as AudienceGroup, count, context });
 
   try {
     const { object } = await generateObject({

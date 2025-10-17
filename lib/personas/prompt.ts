@@ -1,11 +1,11 @@
-import { personaGroupDescriptions, personaGroupLabels } from './personaGroups';
+import { audienceGroupDescriptions, audienceGroupLabels } from './audienceGroups';
 
 type Context = {
   location?: string;
 };
 
 export function buildPersonaPrompt(params: {
-  group: keyof typeof personaGroupLabels;
+  group: keyof typeof audienceGroupLabels;
   count: number;
   context?: Context;
 }) {
@@ -13,8 +13,8 @@ export function buildPersonaPrompt(params: {
   const parts: string[] = [];
 
   parts.push(
-    `You are generating ${count} realistic marketing personas for the group "${personaGroupLabels[group]}".`,
-    `Group description: ${personaGroupDescriptions[group]}.`
+    `You are generating ${count} realistic marketing personas for the group "${audienceGroupLabels[group]}".`,
+    `Group description: ${audienceGroupDescriptions[group]}.`
   );
 
   if (context) {

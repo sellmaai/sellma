@@ -1,4 +1,4 @@
-export function buildPersonaGroupSuggestionsPrompt(params: {
+export function buildAudienceGroupSuggestionsPrompt(params: {
   text: string;
   count?: number; // 4-6 by default
 }) {

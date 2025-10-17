@@ -16,7 +16,7 @@ import {
 import { Mic, Paperclip, Plus, Search, Send, Sparkles, Waves } from 'lucide-react';
 
 export default function PersonaGenerationPage() {
-  const suggest = useAction((api as any).personaGroups.suggest);
+  const suggest = useAction((api as any).audienceGroups.suggest);
   const [message, setMessage] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);

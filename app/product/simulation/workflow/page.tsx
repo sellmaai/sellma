@@ -258,7 +258,7 @@ export default function WorkflowPage() {
 //           <Orb colors={["#ffffff", "#87ceeb"]} />
 //           <div className="mt-2 text-sm">
 //             <div className="font-medium">{p.profile.firstName} {p.profile.lastName}</div>
-//             <div className="text-muted-foreground text-xs">{p.personaGroup}</div>
+//             <div className="text-muted-foreground text-xs">{p.audienceGroup}</div>
 //           </div>
 //         </div>
 //       ))}

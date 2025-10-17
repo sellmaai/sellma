@@ -67,7 +67,7 @@ export const listByGroup = query({
     const limit = args.limit ?? 100;
     return await ctx.db
       .query('personas')
-      .withIndex('by_group', (q) => q.eq('personaGroup', args.group))
+      .withIndex('by_group', (q) => q.eq('audienceGroup', args.group))
       .order('desc')
       .take(limit);
   },

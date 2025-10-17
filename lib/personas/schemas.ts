@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { personaGroupIds } from './personaGroups';
+import { audienceGroupIds } from './audienceGroups';
 
 export const LocationSchema = z.object({
   city: z.string().min(1),
@@ -58,8 +58,8 @@ export const PreAdContextSchema = z.object({
 
 export const PersonaSchema = z.object({
   persona_id: z.string().min(1),
-  personaGroup: z.union(
-    personaGroupIds.map((id) => z.literal(id)) as [
+  audienceGroup: z.union(
+    audienceGroupIds.map((id) => z.literal(id)) as [
       z.ZodLiteral<string>,
       ...z.ZodLiteral<string>[]
     ]

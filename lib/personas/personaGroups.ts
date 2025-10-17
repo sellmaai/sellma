@@ -1,4 +1,4 @@
-export const personaGroups = {
+export const audienceGroups = {
   fitness: {
     label: 'Fitness & Wellness',
     color: '#22c55e',
@@ -26,23 +26,23 @@ export const personaGroups = {
   },
 } as const;
 
-export type PersonaGroup = keyof typeof personaGroups;
+export type AudienceGroup = keyof typeof audienceGroups;
 
-export const personaGroupLabels = Object.fromEntries(
-  Object.entries(personaGroups).map(([id, cfg]) => [id, cfg.label])
-) as Record<PersonaGroup, string>;
+export const audienceGroupLabels = Object.fromEntries(
+  Object.entries(audienceGroups).map(([id, cfg]) => [id, cfg.label])
+) as Record<AudienceGroup, string>;
 
-export const personaGroupColors = Object.fromEntries(
-  Object.entries(personaGroups).map(([id, cfg]) => [id, cfg.color])
-) as Record<PersonaGroup, string>;
+export const audienceGroupColors = Object.fromEntries(
+  Object.entries(audienceGroups).map(([id, cfg]) => [id, cfg.color])
+) as Record<AudienceGroup, string>;
 
-export const personaGroupDescriptions = Object.fromEntries(
-  Object.entries(personaGroups).map(([id, cfg]) => [id, cfg.description])
-) as Record<PersonaGroup, string>;
+export const audienceGroupDescriptions = Object.fromEntries(
+  Object.entries(audienceGroups).map(([id, cfg]) => [id, cfg.description])
+) as Record<AudienceGroup, string>;
 
-export const personaGroupIds = Object.keys(personaGroups) as PersonaGroup[];
-export const personaGroupList = Object.entries(personaGroups).map(([id, cfg]) => ({
-  id: id as PersonaGroup,
+export const audienceGroupIds = Object.keys(audienceGroups) as AudienceGroup[];
+export const audienceGroupList = Object.entries(audienceGroups).map(([id, cfg]) => ({
+  id: id as AudienceGroup,
   label: cfg.label,
   color: cfg.color,
   description: cfg.description,

@@ -1,4 +1,4 @@
-import type { PersonaGroup } from './personaGroups';
+import type { AudienceGroup } from './audienceGroups';
 
 export interface Location {
     city: string;
@@ -57,7 +57,7 @@ export interface PreAdContext {
 
 export interface Persona {
     persona_id: string;
-    personaGroup: PersonaGroup;
+    audienceGroup: AudienceGroup;
     last_updated: string;
     profile: Profile;
     personality: Personality;
