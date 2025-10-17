@@ -14,15 +14,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Mic, Paperclip, Plus, Search, Send, Sparkles, Waves } from 'lucide-react';
+import { AnimatedTooltip } from '@/components/ui/shadcn-io/animated-tooltip';
 
 export default function PersonaGenerationPage() {
   const suggest = useAction((api as any).audienceGroups.suggest);
+  const generate = useAction((api as any).personas.generate);
   const [message, setMessage] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
   const [groups, setGroups] = useState<Array<{ id: string; label: string; color: string; description: string }>>([]);
+  const [people, setPeople] = useState<Array<{ id: number; name: string; designation: string; image: string }>>([]);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -33,8 +36,22 @@ export default function PersonaGenerationPage() {
       // Suggest including a location in the prompt; default to a broad region if missing
       const location = extractLocationHint(message) ?? 'United States';
       try {
-        const res = await suggest({ text: message, location, count: 6 });
+        const res = (await suggest({ text: message, location, count: 6 })) as any[];
         setGroups(res as any);
+        const personasPerGroup = await Promise.all(
+          res.map((g: any) => generate({ group: g.id, count: 1, context: {} }).then((arr: any[]) => arr?.[0]))
+        );
+        setPeople(
+          personasPerGroup
+            .filter(Boolean)
+            .map((p: any, idx: number) => ({
+              id: idx + 1,
+              name: `${p?.profile?.firstName ?? 'Persona'} ${p?.profile?.lastName ?? ''}`.trim(),
+              designation: `${p?.profile?.occupation ?? ''} · ${p?.profile?.location?.city ?? ''}${p?.profile?.location?.state ? ', ' + p.profile.location.state : ''}`.trim(),
+              image:
+                'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=3387&q=80',
+            }))
+        );
         setMessage('');
         setIsExpanded(false);
         if (textareaRef.current) textareaRef.current.style.height = 'auto';
@@ -132,7 +149,7 @@ export default function PersonaGenerationPage() {
       {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
 
       {groups.length > 0 && (
-        <section className="mt-8 space-y-3">
+        <section className="mt-8 space-y-6">
           <h2 className="text-lg font-medium">Suggested groups</h2>
           <div className="flex flex-wrap gap-3">
             {groups.map((g) => (
@@ -147,6 +164,11 @@ export default function PersonaGenerationPage() {
               </span>
             ))}
           </div>
+          {people.length > 0 && (
+            <div className="flex flex-row items-center justify-center w-full">
+              <AnimatedTooltip items={people} />
+            </div>
+          )}
         </section>
       )}
     </div>

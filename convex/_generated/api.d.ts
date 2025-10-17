@@ -9,10 +9,10 @@
  */
 
 import type * as ads from "../ads.js";
+import type * as audienceGroups from "../audienceGroups.js";
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
 import type * as messages from "../messages.js";
-import type * as audienceGroups from "../audienceGroups.js";
 import type * as personas from "../personas.js";
 import type * as simulation from "../simulation.js";
 import type * as users from "../users.js";
@@ -33,10 +33,10 @@ import type {
  */
 declare const fullApi: ApiFromModules<{
   ads: typeof ads;
+  audienceGroups: typeof audienceGroups;
   auth: typeof auth;
   http: typeof http;
   messages: typeof messages;
-  audienceGroups: typeof audienceGroups;
   personas: typeof personas;
   simulation: typeof simulation;
   users: typeof users;
