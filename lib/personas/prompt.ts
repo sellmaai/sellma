@@ -2,6 +2,7 @@ import { audienceGroupDescriptions, audienceGroupLabels } from './audienceGroups
 
 type Context = {
   location?: string;
+  audienceDescription?: string;
 };
 
 export function buildPersonaPrompt(params: {
@@ -19,6 +20,7 @@ export function buildPersonaPrompt(params: {
 
   if (context) {
     if (context.location) parts.push(`Primary location context: ${context.location}`);
+    if (context.audienceDescription) parts.push(`Overall audience overview: ${context.audienceDescription}`);
   }
 
   parts.push(

@@ -10,3 +10,9 @@ export const AudienceGroupSuggestionSchema = z.object({
 export type AudienceGroupSuggestion = z.infer<typeof AudienceGroupSuggestionSchema>;
 
 
+export const AudienceSuggestionBundleSchema = z.object({
+  description: z.string().min(40).max(800),
+  groups: z.array(AudienceGroupSuggestionSchema).min(3).max(8),
+});
+
+

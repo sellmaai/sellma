@@ -20,7 +20,7 @@ Key files:
 - `convex/schema.ts`: Convex tables; includes `personas` table.
 
 ### Persona generation agent
-- Uses `generateObject` (non‑streaming) with `google('gemini-2.5-pro')` to return validated `Persona[]`.
+- Uses `generateObject` (non‑streaming) with `google('gemini-2.5-flash')` to return validated `Persona[]`.
 - `Persona` fields include OCEAN personality scores, profile, and pre‑ad context. The `scenario`, `current_activity`, and `emotional_state` inside `pre_ad_context` are derived by the model (not inputs).
 - Inputs: `{ group, count, context?: { location? } }`.
 

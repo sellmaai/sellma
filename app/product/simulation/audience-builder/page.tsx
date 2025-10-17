@@ -6,19 +6,12 @@ import { useRef, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { Mic,Search, Send, Sparkles, Waves } from 'lucide-react';
+import { Mic, Paperclip, Plus, Search, Send, Sparkles, Waves } from 'lucide-react';
 import { AnimatedTooltip } from '@/components/ui/shadcn-io/animated-tooltip';
-import {
-  ChainOfThought,
-  ChainOfThoughtContent,
-  ChainOfThoughtHeader,
-  ChainOfThoughtSearchResult,
-  ChainOfThoughtSearchResults,
-  ChainOfThoughtStep,
-} from '@/components/ai-elements/chain-of-thought';
+import GenerationChainOfThought from './AudienceGenerationChainOfThought';
 
 export default function AudienceGenerationPage() {
-  const suggest = useAction((api as any).audienceGroups.suggest);
+  const suggest = useAction((api as any).audienceGroups.suggestBundle);
   const generate = useAction((api as any).personas.generate);
   const [message, setMessage] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -31,6 +24,9 @@ export default function AudienceGenerationPage() {
   const [isThinking, setIsThinking] = useState(false);
   const [groupSuggestStatus, setGroupSuggestStatus] = useState<'pending' | 'active' | 'complete'>('pending');
   const [perGroupStatus, setPerGroupStatus] = useState<Record<string, 'pending' | 'active' | 'complete'>>({});
+  const [currentAudienceId, setCurrentAudienceId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [audienceDescription, setAudienceDescription] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,32 +37,55 @@ export default function AudienceGenerationPage() {
     setPerGroupStatus({});
     setGroups([]);
     setPeople([]);
+    setAudienceDescription(null);
+    const newAudienceId = (typeof crypto !== 'undefined' && (crypto as any).randomUUID)
+      ? (crypto as any).randomUUID()
+      : Math.random().toString(36).slice(2);
+    setCurrentAudienceId(newAudienceId);
     startTransition(async () => {
       // Suggest including a location in the prompt; default to a broad region if missing
       const location = extractLocationHint(message) ?? 'United States';
       try {
-        const res = (await suggest({ text: message, location, count: 6 })) as any[];
+        const bundle = (await suggest({ text: message, location, count: 6 })) as any;
+        setAudienceDescription(bundle?.description ?? null);
+        const res = bundle?.groups ?? [];
         setGroups(res as any);
         setGroupSuggestStatus('complete');
         setPerGroupStatus(Object.fromEntries((res as any[]).map((g: any) => [g.id, 'pending'])));
 
         // Kick off persona generation per group with progressive updates
-        (res as any[]).forEach((g: any, idx: number) => {
+        (res as any[]).forEach((g: any) => {
           setPerGroupStatus((prev) => ({ ...prev, [g.id]: 'active' }));
-          generate({ group: g.id, count: 1, context: { location } })
+          generate({ group: g.id, count: 1, audienceId: newAudienceId, context: { location, audienceDescription: bundle?.description } })
             .then((arr: any[]) => {
               const p = arr?.[0];
-              if (p) {
-                setPeople((prev) => [
-                  ...prev,
-                  {
-                    id: prev.length + 1,
-                    name: `${p?.profile?.firstName ?? 'Persona'} ${p?.profile?.lastName ?? ''}`.trim(),
-                    designation: `${p?.profile?.occupation ?? ''} · ${p?.profile?.location?.city ?? ''}${p?.profile?.location?.state ? ', ' + p.profile.location.state : ''}`.trim(),
-                    image:
-                      'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=3387&q=80',
-                  },
-                ]);
+              if (p && p.audienceId === newAudienceId) {
+                setPeople((prev) => {
+                  const baseFirst = p?.profile?.firstName ?? 'Persona';
+                  const baseLast = p?.profile?.lastName ?? '';
+                  let displayName = `${baseFirst} ${baseLast}`.trim();
+                  const existingNames = new Set(prev.map((i) => i.name));
+                  if (existingNames.has(displayName)) {
+                    const mi = (p?.persona_id?.charAt(0)?.toUpperCase()) || (baseLast?.charAt(0)?.toUpperCase()) || 'X';
+                    displayName = baseLast
+                      ? `${baseFirst} ${mi}. ${baseLast}`
+                      : `${baseFirst} ${mi}.`;
+                    if (existingNames.has(displayName)) {
+                      const suffix = p?.persona_id ? ` #${p.persona_id.slice(-4)}` : ` #${String(Date.now()).slice(-4)}`;
+                      displayName = `${displayName}${suffix}`;
+                    }
+                  }
+                  return [
+                    ...prev,
+                    {
+                      id: prev.length + 1,
+                      name: displayName,
+                      designation: `${p?.profile?.occupation ?? ''} · ${p?.profile?.location?.city ?? ''}${p?.profile?.location?.state ? ', ' + p.profile.location.state : ''}`.trim(),
+                      image:
+                        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=3387&q=80',
+                    },
+                  ];
+                });
               }
             })
             .catch(() => {
@@ -172,13 +191,67 @@ export default function AudienceGenerationPage() {
       </form>
 
       {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+
+      <div className="w-full">
+        <div className="mx-auto w-full max-w-2xl">
+          <GenerationChainOfThought
+            isThinking={isThinking}
+            groups={groups as any}
+            groupSuggestStatus={groupSuggestStatus}
+            perGroupStatus={perGroupStatus}
+          />
+        </div>
+      </div>
+
       {groups.length > 0 && (
-        <section className="mt-8 space-y-6">
-          {people.length > 0 && (
-            <div className="flex flex-row items-center justify-center w-full">
-              <AnimatedTooltip items={people} />
-            </div>
-          )}
+        <section className="mt-8">
+          <div className="mx-auto w-full max-w-2xl space-y-4">
+            <h2 className="text-lg font-medium">Your Simulated Audience</h2>
+            {people.length > 0 && (
+              <>
+                <div className="flex items-center">
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search people by name, role, or city..."
+                    className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                </div>
+                <div className="flex flex-row items-center justify-center w-full">
+                  <AnimatedTooltip
+                    items={people.filter((p) => {
+                      const q = search.trim().toLowerCase();
+                      if (!q) return true;
+                      return (
+                        p.name.toLowerCase().includes(q) ||
+                        p.designation.toLowerCase().includes(q)
+                      );
+                    })}
+                  />
+                </div>
+                <ul className="divide-y divide-border rounded-md border border-border">
+                  {people
+                    .filter((p) => {
+                      const q = search.trim().toLowerCase();
+                      if (!q) return true;
+                      return (
+                        p.name.toLowerCase().includes(q) ||
+                        p.designation.toLowerCase().includes(q)
+                      );
+                    })
+                    .map((p) => (
+                      <li key={p.id} className="flex items-center gap-3 p-3">
+                        <img src={p.image} alt={p.name} className="h-10 w-10 rounded-full object-cover" />
+                        <div className="flex-1">
+                          <div className="text-sm font-medium">{p.name}</div>
+                          <div className="text-xs text-muted-foreground">{p.designation}</div>
+                        </div>
+                      </li>
+                    ))}
+                </ul>
+              </>
+            )}
+          </div>
         </section>
       )}
     </div>
