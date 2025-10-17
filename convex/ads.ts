@@ -18,7 +18,7 @@ export const generateVariants = action({
   handler: async (_ctx, args) => {
     try {
       const { object } = await generateObject({
-        model: google('gemini-1.5-pro'),
+        model: google('gemini-2.5-pro'),
         output: 'array',
         schema: AdVariantSchema,
         schemaName: 'AdVariant',
