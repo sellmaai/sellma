@@ -9,9 +9,9 @@ import { cn } from '@/lib/utils';
 import { Mic, Paperclip, Plus, Search, Send, Sparkles, Waves } from 'lucide-react';
 import { AnimatedTooltip } from '@/components/ui/shadcn-io/animated-tooltip';
 import GenerationChainOfThought from './AudienceGenerationChainOfThought';
-import PersonaForm from '@/components/personas/PersonaForm';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { PersonaForm } from '@/components/personas/PersonaForm';
 
 export default function AudienceGenerationPage() {
   const generateAudienceSegments = useAction((api as any).audienceGroups.suggestBundle);
