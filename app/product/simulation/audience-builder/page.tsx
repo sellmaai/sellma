@@ -1,15 +1,13 @@
-'use client'
+"use client"
 
 import { api } from '@/convex/_generated/api';
 import { useAction } from 'convex/react';
-import { useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Mic, Paperclip, Plus, Search, Send, Sparkles, Waves } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { PersonaForm } from '@/components/personas/PersonaForm';
+import { PersonaBrowser } from '@/components/personas/PersonaBrowser';
 import GenerationChainOfThought from './AudienceGenerationChainOfThought';
 
 export default function AudienceGenerationPage() {
@@ -21,17 +19,17 @@ export default function AudienceGenerationPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
   const [groups, setGroups] = useState<Array<{ id: string; label: string; color: string; description: string }>>([]);
-  const [people, setPeople] = useState<Array<{ id: number; name: string; designation: string; image: string }>>([]);
+  const [, setPeople] = useState<Array<{ id: number; name: string; designation: string; image: string }>>([]);
   const [personasById, setPersonasById] = useState<Record<string, any>>({});
-  const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [groupSuggestStatus, setGroupSuggestStatus] = useState<'pending' | 'active' | 'complete'>('pending');
   const [perGroupStatus, setPerGroupStatus] = useState<Record<string, 'pending' | 'active' | 'complete'>>({});
   const [currentAudienceId, setCurrentAudienceId] = useState<string | null>(null);
   const currentAudienceIdRef = useRef<string | null>(null);
-  const [search, setSearch] = useState('');
   const [audienceDescription, setAudienceDescription] = useState<string | null>(null);
+  const personaSectionRef = useRef<HTMLDivElement | null>(null);
+  const prevPersonaCountRef = useRef<number>(0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,32 +67,7 @@ export default function AudienceGenerationPage() {
               // Only apply results if they belong to the most recent audience session
               if (p && p.audienceId === currentAudienceIdRef.current) {
                 setPersonasById((prev) => ({ ...prev, [p.persona_id]: p }));
-                setPeople((prev) => {
-                  const baseFirst = p?.profile?.firstName ?? 'Persona';
-                  const baseLast = p?.profile?.lastName ?? '';
-                  let displayName = `${baseFirst} ${baseLast}`.trim();
-                  const existingNames = new Set(prev.map((i) => i.name));
-                  if (existingNames.has(displayName)) {
-                    const mi = (p?.persona_id?.charAt(0)?.toUpperCase()) || (baseLast?.charAt(0)?.toUpperCase()) || 'X';
-                    displayName = baseLast
-                      ? `${baseFirst} ${mi}. ${baseLast}`
-                      : `${baseFirst} ${mi}.`;
-                    if (existingNames.has(displayName)) {
-                      const suffix = p?.persona_id ? ` #${p.persona_id.slice(-4)}` : ` #${String(Date.now()).slice(-4)}`;
-                      displayName = `${displayName}${suffix}`;
-                    }
-                  }
-                  return [
-                    ...prev,
-                    {
-                      id: prev.length + 1,
-                      name: displayName,
-                      designation: `${p?.profile?.occupation ?? ''} · ${p?.profile?.location?.city ?? ''}${p?.profile?.location?.state ? ', ' + p.profile.location.state : ''}`.trim(),
-                      image:
-                        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=3387&q=80',
-                    },
-                  ];
-                });
+                // No separate people list; we render directly from personas
               }
             })
             .catch(() => {
@@ -140,8 +113,18 @@ export default function AudienceGenerationPage() {
     return match ? match[1].trim() : null;
   }
 
+  // Smoothly scroll to personas once the first persona is available
+  useEffect(() => {
+    const count = Object.values(personasById).length;
+    const prev = prevPersonaCountRef.current;
+    if (prev === 0 && count > 0 && personaSectionRef.current) {
+      personaSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    prevPersonaCountRef.current = count;
+  }, [personasById]);
+
   return (
-    <div className="w-full p-6">
+    <div className="w-full p-6 overflow-x-hidden pb-24">
       <h1 className="mb-7 mx-auto max-w-2xl text-center text-2xl font-semibold leading-9 text-foreground px-1 text-pretty whitespace-pre-wrap">
         Describe Your Target Audience
       </h1>
@@ -215,70 +198,11 @@ export default function AudienceGenerationPage() {
         </div>
       </div>
 
-      {groups.length > 0 && (
-        <section className="mt-8">
-          <div className="mx-auto w-full max-w-2xl space-y-4">
-            <h2 className="text-lg font-medium">Your Simulated Audience</h2>
-            {people.length > 0 && (
-              <>
-                <div className="flex items-center">
-                  <input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search people by name, role, or city..."
-                    className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  />
-                </div>
-
-                <div className="flex items-center justify-center">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 w-full">
-                    {people
-                      .filter((p) => {
-                        const q = search.trim().toLowerCase();
-                        if (!q) return true;
-                        return (
-                          p.name.toLowerCase().includes(q) ||
-                          p.designation.toLowerCase().includes(q)
-                        );
-                      })
-                      .map((p) => (
-                        <Card
-                          key={p.id}
-                          onClick={() => {
-                            const persona = Object.values(personasById).find((x: any) => `${x.profile.firstName} ${x.profile.lastName}`.trim() === p.name || x.persona_id?.endsWith((p as any).suffix ?? ''))
-                            if (persona) setSelectedPersonaId(persona.persona_id)
-                          }}
-                          className="relative border transition-all duration-100 hover:border-muted-foreground hover:shadow-sm cursor-pointer"
-                        >
-                          <CardContent className="flex items-center space-x-4 p-4">
-                            <Avatar className="h-10 w-10">
-                              <AvatarImage src={p.image} alt={p.name} />
-                              <AvatarFallback>{p.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0 flex-1">
-                              <div className="text-sm font-medium text-foreground">
-                                {p.name}
-                              </div>
-                              <div className="truncate text-sm text-muted-foreground">
-                                {p.designation}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                  </div>
-                </div>
-
-                {selectedPersonaId && personasById[selectedPersonaId] && (
-                  <div className="mt-8">
-                    <PersonaForm persona={personasById[selectedPersonaId]} />
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </section>
-      )}
+      <div ref={personaSectionRef} className="scroll-mt-24 mx-auto w-full max-w-2xl">
+        {groups.length > 0 && Object.values(personasById).length > 0 && (
+          <PersonaBrowser personas={Object.values(personasById) as any} />
+        )}
+      </div>
     </div>
   );
 }

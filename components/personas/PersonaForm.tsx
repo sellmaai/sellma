@@ -26,48 +26,44 @@ export const PersonaForm: React.FC<PersonaCharacteristicsProps> = ({ persona }) 
 
   return (
     <div className="border-t border-gray-200/50 pt-6">
-      <button
-        className="flex items-center justify-between w-full text-left hover:bg-gray-50/80 rounded-2xl p-3 transition-all duration-200"
-      >
         <div className="flex items-center space-x-2">
           <User size={16} className="text-indigo-600" />
-          <h4 className="text-gray-900 font-medium tracking-wide">Persona Characteristics</h4>
+          <h4 className="text-center text-foreground text-pretty whitespace-pre-wrap font-medium tracking-wide">Persona Characteristics</h4>
         </div>
-      </button>
       {(
         <div className="mt-6 space-y-6 animate-in slide-in-from-top-2 duration-300">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <h5 className="text-gray-700 font-medium tracking-wide mb-3 text-sm">Profile</h5>
+                <h5 className="text-foreground font-medium tracking-wide mb-3 text-sm">Profile</h5>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
-                    <MapPin size={12} className="text-gray-500" />
-                    <span className="text-gray-600 text-sm">
+                    <MapPin size={12} className="text-foreground" />
+                    <span className="text-foreground text-sm">
                       {persona.profile.location.city}, {persona.profile.location.state}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <GraduationCap size={12} className="text-gray-500" />
-                    <span className="text-gray-600 text-sm">
+                    <GraduationCap size={12} className="text-foreground" />
+                    <span className="text-foreground text-sm">
                       {persona.profile.education.level} in {persona.profile.education.field}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Briefcase size={12} className="text-gray-500" />
-                    <span className="text-gray-600 text-sm">
+                    <Briefcase size={12} className="text-foreground" />
+                    <span className="text-foreground text-sm">
                       {persona.profile.occupation}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <DollarSign size={12} className="text-gray-500" />
-                    <span className="text-gray-600 text-sm">
+                    <DollarSign size={12} className="text-foreground" />
+                    <span className="text-foreground text-sm">
                       {formatIncome(persona.profile.income.annual_usd)} annually
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Home size={12} className="text-gray-500" />
-                    <span className="text-gray-600 text-sm">
+                    <Home size={12} className="text-foreground" />
+                    <span className="text-foreground text-sm">
                       {persona.profile.living_situation.homeownership}
                     </span>
                   </div>
@@ -75,12 +71,12 @@ export const PersonaForm: React.FC<PersonaCharacteristicsProps> = ({ persona }) 
               </div>
 
               <div>
-                <h5 className="text-gray-700 font-medium tracking-wide mb-3 text-sm">Goals</h5>
+                <h5 className="text-foreground font-medium tracking-wide mb-3 text-sm">Goals</h5>
                 <div className="space-y-1">
                   {persona.goals_and_motivations.slice(0, 3).map((goal, index) => (
                     <div key={index} className="flex items-start space-x-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 flex-shrink-0" />
-                      <span className="text-gray-600 text-sm leading-relaxed">
+                      <span className="text-foreground text-sm leading-relaxed">
                         {goal}
                       </span>
                     </div>
@@ -89,12 +85,12 @@ export const PersonaForm: React.FC<PersonaCharacteristicsProps> = ({ persona }) 
               </div>
 
               <div>
-                <h5 className="text-gray-700 font-medium tracking-wide mb-3 text-sm">Pain Points</h5>
+                <h5 className="text-foreground font-medium tracking-wide mb-3 text-sm">Pain Points</h5>
                 <div className="space-y-1">
                   {persona.pain_points.slice(0, 3).map((pain, index) => (
                     <div key={index} className="flex items-start space-x-2">
                       <AlertTriangle size={12} className="text-orange-500 mt-1 flex-shrink-0" />
-                      <span className="text-gray-600 text-sm leading-relaxed">
+                      <span className="text-foreground text-sm leading-relaxed">
                         {pain}
                       </span>
                     </div>
@@ -105,15 +101,15 @@ export const PersonaForm: React.FC<PersonaCharacteristicsProps> = ({ persona }) 
 
             <div className="space-y-4">
               <div>
-                <h5 className="text-gray-700 font-medium tracking-wide mb-3 text-sm">Personality (OCEAN)</h5>
+                <h5 className="text-foreground font-medium tracking-wide mb-3 text-sm">Personality (OCEAN)</h5>
                 <div className="space-y-2">
                   {Object.entries(persona.personality.ocean_scores).map(([trait, score]) => (
                     <div key={trait}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-gray-600 text-xs capitalize tracking-wide">
+                        <span className="text-foreground text-xs capitalize tracking-wide">
                           {trait}
                         </span>
-                        <span className="text-gray-500 text-xs font-mono tabular-nums">
+                        <span className="text-foreground text-xs font-mono tabular-nums">
                           {score}/10
                         </span>
                       </div>
@@ -132,16 +128,16 @@ export const PersonaForm: React.FC<PersonaCharacteristicsProps> = ({ persona }) 
               </div>
 
               <div>
-                <h5 className="text-gray-700 font-medium tracking-wide mb-3 text-sm">Current Context</h5>
+                <h5 className="text-foreground font-medium tracking-wide mb-3 text-sm">Current Context</h5>
                 <div className="space-y-3">
                   <div>
-                    <span className="text-gray-500 text-xs font-medium tracking-wide uppercase">Activity</span>
-                    <p className="text-gray-600 text-sm mt-1">
+                    <span className="text-foreground text-xs font-medium tracking-wide uppercase">Activity</span>
+                    <p className="text-foreground text-sm mt-1">
                       {persona.pre_ad_context.current_activity}
                     </p>
                   </div>
                   <div>
-                    <span className="text-gray-500 text-xs font-medium tracking-wide uppercase">Emotional State</span>
+                    <span className="text-foreground text-xs font-medium tracking-wide uppercase">Emotional State</span>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {persona.pre_ad_context.emotional_state.map((emotion, index) => (
                         <span
