@@ -6,17 +6,18 @@ import { useRef, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Mic, Paperclip, Plus, Search, Send, Sparkles, Waves } from 'lucide-react';
+import { Mic,Search, Send, Sparkles, Waves } from 'lucide-react';
 import { AnimatedTooltip } from '@/components/ui/shadcn-io/animated-tooltip';
+import {
+  ChainOfThought,
+  ChainOfThoughtContent,
+  ChainOfThoughtHeader,
+  ChainOfThoughtSearchResult,
+  ChainOfThoughtSearchResults,
+  ChainOfThoughtStep,
+} from '@/components/ai-elements/chain-of-thought';
 
-export default function PersonaGenerationPage() {
+export default function AudienceGenerationPage() {
   const suggest = useAction((api as any).audienceGroups.suggest);
   const generate = useAction((api as any).personas.generate);
   const [message, setMessage] = useState('');
@@ -27,36 +28,60 @@ export default function PersonaGenerationPage() {
   const [groups, setGroups] = useState<Array<{ id: string; label: string; color: string; description: string }>>([]);
   const [people, setPeople] = useState<Array<{ id: number; name: string; designation: string; image: string }>>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isThinking, setIsThinking] = useState(false);
+  const [groupSuggestStatus, setGroupSuggestStatus] = useState<'pending' | 'active' | 'complete'>('pending');
+  const [perGroupStatus, setPerGroupStatus] = useState<Record<string, 'pending' | 'active' | 'complete'>>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
     setError(null);
+    setIsThinking(true);
+    setGroupSuggestStatus('active');
+    setPerGroupStatus({});
+    setGroups([]);
+    setPeople([]);
     startTransition(async () => {
       // Suggest including a location in the prompt; default to a broad region if missing
       const location = extractLocationHint(message) ?? 'United States';
       try {
         const res = (await suggest({ text: message, location, count: 6 })) as any[];
         setGroups(res as any);
-        const personasPerGroup = await Promise.all(
-          res.map((g: any) => generate({ group: g.id, count: 1, context: {} }).then((arr: any[]) => arr?.[0]))
-        );
-        setPeople(
-          personasPerGroup
-            .filter(Boolean)
-            .map((p: any, idx: number) => ({
-              id: idx + 1,
-              name: `${p?.profile?.firstName ?? 'Persona'} ${p?.profile?.lastName ?? ''}`.trim(),
-              designation: `${p?.profile?.occupation ?? ''} · ${p?.profile?.location?.city ?? ''}${p?.profile?.location?.state ? ', ' + p.profile.location.state : ''}`.trim(),
-              image:
-                'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=3387&q=80',
-            }))
-        );
+        setGroupSuggestStatus('complete');
+        setPerGroupStatus(Object.fromEntries((res as any[]).map((g: any) => [g.id, 'pending'])));
+
+        // Kick off persona generation per group with progressive updates
+        (res as any[]).forEach((g: any, idx: number) => {
+          setPerGroupStatus((prev) => ({ ...prev, [g.id]: 'active' }));
+          generate({ group: g.id, count: 1, context: { location } })
+            .then((arr: any[]) => {
+              const p = arr?.[0];
+              if (p) {
+                setPeople((prev) => [
+                  ...prev,
+                  {
+                    id: prev.length + 1,
+                    name: `${p?.profile?.firstName ?? 'Persona'} ${p?.profile?.lastName ?? ''}`.trim(),
+                    designation: `${p?.profile?.occupation ?? ''} · ${p?.profile?.location?.city ?? ''}${p?.profile?.location?.state ? ', ' + p.profile.location.state : ''}`.trim(),
+                    image:
+                      'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=3387&q=80',
+                  },
+                ]);
+              }
+            })
+            .catch(() => {
+              // noop: keep UX flowing; we could surface per-group errors later if desired
+            })
+            .finally(() => {
+              setPerGroupStatus((prev) => ({ ...prev, [g.id]: 'complete' }));
+            });
+        });
         setMessage('');
         setIsExpanded(false);
         if (textareaRef.current) textareaRef.current.style.height = 'auto';
       } catch (err: any) {
         setError(err?.message ?? 'Failed to suggest groups');
+        setGroupSuggestStatus('complete');
       }
     });
   };
@@ -147,23 +172,8 @@ export default function PersonaGenerationPage() {
       </form>
 
       {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
-
       {groups.length > 0 && (
         <section className="mt-8 space-y-6">
-          <h2 className="text-lg font-medium">Suggested groups</h2>
-          <div className="flex flex-wrap gap-3">
-            {groups.map((g) => (
-              <span
-                key={g.id}
-                style={{ backgroundColor: g.color }}
-                className="inline-flex items-center gap-2 rounded px-3 py-1 text-white"
-                title={g.description}
-              >
-                <span className="font-medium">{g.label}</span>
-                <span className="opacity-80 text-xs">{g.id}</span>
-              </span>
-            ))}
-          </div>
           {people.length > 0 && (
             <div className="flex flex-row items-center justify-center w-full">
               <AnimatedTooltip items={people} />
