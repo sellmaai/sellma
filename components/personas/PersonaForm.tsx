@@ -27,7 +27,7 @@ export const PersonaForm: React.FC<PersonaCharacteristicsProps> = ({ persona }) 
   return (
     <div className="border-t border-gray-200/50 pt-6">
         <div className="flex items-center space-x-2">
-          <User size={16} className="text-indigo-600" />
+          <User size={16}/>
           <h4 className="text-center text-foreground text-pretty whitespace-pre-wrap font-medium tracking-wide">Persona Characteristics</h4>
         </div>
       {(

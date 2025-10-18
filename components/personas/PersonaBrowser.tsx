@@ -5,6 +5,7 @@ import { Persona } from '@/lib/personas/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PersonaForm } from '@/components/personas/PersonaForm';
+import { User } from 'lucide-react';
 
 interface PersonaBrowserProps {
   personas: Persona[];
@@ -81,10 +82,7 @@ export const PersonaBrowser: React.FC<PersonaBrowserProps> = ({ personas }) => {
                 }
               >
                 <CardContent className="flex items-center space-x-4 p-4">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={p.image} alt={p.name} />
-                    <AvatarFallback>{p.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
+                  <User className="h-8 w-8" />
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium text-foreground">{p.name}</div>
                     <div className="truncate text-sm text-muted-foreground">{p.designation}</div>
