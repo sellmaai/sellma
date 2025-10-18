@@ -42,7 +42,6 @@ export default function AudienceGenerationPage() {
     setPeople([]);
     setAudienceDescription(null);
     const newAudienceId =  Math.random().toString(36).slice(2);
-    setCurrentAudienceId(newAudienceId);
     currentAudienceIdRef.current = newAudienceId;
     startTransition(async () => {
       // Suggest including a location in the prompt; default to a broad region if missing
@@ -50,7 +49,7 @@ export default function AudienceGenerationPage() {
       try {
         const bundle = (await generateAudienceSegments({ text: message, location, count: 6 }));
         setAudienceDescription(bundle?.description ?? null);
-        const res = bundle?.groups ?? [];
+        const res: Array<{ id: string; label: string; color: string; description: string }> = bundle?.groups ?? [];
         setGroups(res);
         setGroupSuggestStatus('complete');
         setPerGroupStatus(Object.fromEntries((res).map((g) => [g.id, 'pending'])));
@@ -84,7 +83,7 @@ export default function AudienceGenerationPage() {
         setIsExpanded(false);
         if (textareaRef.current) textareaRef.current.style.height = 'auto';
       } catch (err) {
-        setError(err?.message ?? 'Failed to suggest groups');
+        setError(err instanceof Error ? err.message : 'Failed to suggest groups');
         setGroupSuggestStatus('complete');
       }
     });

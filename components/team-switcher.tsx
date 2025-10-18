@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronsUpDown, Plus } from "lucide-react"
+import { ChevronsUpDown, Plus, type LucideIcon } from "lucide-react"
 
 import {
   DropdownMenu,
@@ -24,7 +24,7 @@ export function TeamSwitcher({
 }: {
   teams: {
     name: string
-    logo: React.ElementType
+    logo: LucideIcon
     plan: string
   }[]
 }) {
