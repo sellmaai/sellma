@@ -142,7 +142,7 @@ export const PersonaForm: React.FC<PersonaCharacteristicsProps> = ({ persona }) 
                       {persona.pre_ad_context.emotional_state.map((emotion, index) => (
                         <span
                           key={index}
-                          className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-medium border border-indigo-200"
+                          className="px-2 py-1  text-foreground rounded-lg text-xs font-medium border border-indigo-200"
                         >
                           {emotion}
                         </span>
