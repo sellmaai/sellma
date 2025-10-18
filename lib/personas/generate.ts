@@ -4,18 +4,11 @@ import { generateObject, NoObjectGeneratedError } from 'ai';
 import { z } from 'zod';
 import { google } from '@ai-sdk/google';
 import { PersonaSchema } from './schemas';
-import { audienceGroupIds, AudienceGroup } from './audienceGroups';
+// No static audience groups; accept dynamic ids
 import { buildPersonaPrompt } from './prompt';
 
-const AudienceGroupLiteralUnion = z.union(
-  audienceGroupIds.map((id) => z.literal(id)) as [
-    z.ZodLiteral<string>,
-    ...z.ZodLiteral<string>[]
-  ]
-);
-
 const InputSchema = z.object({
-  group: AudienceGroupLiteralUnion,
+  group: z.string().min(1),
   count: z.number().int().min(1).max(10).default(1),
   context: z.object({ location: z.string().min(1).optional() }).optional(),
 });
@@ -25,7 +18,7 @@ export type GeneratePersonasInput = z.infer<typeof InputSchema>;
 export async function generatePersonas(input: GeneratePersonasInput) {
   const { group, count, context } = InputSchema.parse(input);
 
-  const prompt = buildPersonaPrompt({ group: group as AudienceGroup, count, context });
+  const prompt = buildPersonaPrompt({ group, count, context });
 
   try {
     const { object } = await generateObject({
@@ -35,6 +28,7 @@ export async function generatePersonas(input: GeneratePersonasInput) {
       schemaName: 'Persona',
       schemaDescription: 'A standardized marketing persona used for ad simulations.',
       prompt,
+      temperature: 0.2,
     });
 
     // object is Persona[] due to output: 'array' with Persona element schema

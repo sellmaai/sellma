@@ -60,7 +60,17 @@ export default function AudienceGenerationPage() {
           if (currentAudienceIdRef.current === newAudienceId) {
             setPerGroupStatus((prev) => ({ ...prev, [g.id]: 'active' }));
           }
-          generate({ group: g.id, count: 1, audienceId: newAudienceId, context: { location, audienceDescription: bundle?.description } })
+          // Feed the selected dynamic group as the segment to the personas generator
+          generate({
+            group: g.id,
+            count: 1,
+            audienceId: newAudienceId,
+            context: {
+              location,
+              audienceDescription: bundle?.description,
+              segment: { id: g.id, label: g.label, description: g.description, color: g.color },
+            },
+          })
             .then((arr) => {
               const p = arr?.[0];
               // Only apply results if they belong to the most recent audience session

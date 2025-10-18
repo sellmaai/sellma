@@ -1,4 +1,4 @@
-import type { AudienceGroup } from './audienceGroups';
+// audienceGroup is dynamic; no static catalog import
 
 export interface Location {
     city: string;
@@ -57,7 +57,7 @@ export interface PreAdContext {
 
 export interface Persona {
     persona_id: string;
-    audienceGroup: AudienceGroup;
+    audienceGroup: string;
     last_updated: string;
     profile: Profile;
     personality: Personality;

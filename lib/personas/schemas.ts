@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { audienceGroupIds } from './audienceGroups';
+// audienceGroup is now dynamic, not limited to a static catalog
 
 export const LocationSchema = z.object({
   city: z.string().min(1),
@@ -58,12 +58,7 @@ export const PreAdContextSchema = z.object({
 
 export const PersonaSchema = z.object({
   persona_id: z.string().min(1),
-  audienceGroup: z.union(
-    audienceGroupIds.map((id) => z.literal(id)) as [
-      z.ZodLiteral<string>,
-      ...z.ZodLiteral<string>[]
-    ]
-  ),
+  audienceGroup: z.string().min(1),
   last_updated: z.string().min(1), // ISO strings enforced at prompt level
   profile: ProfileSchema,
   personality: PersonalitySchema,

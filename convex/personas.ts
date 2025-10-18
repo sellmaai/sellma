@@ -4,7 +4,6 @@ import { generateObject, NoObjectGeneratedError } from 'ai';
 import { google } from '@ai-sdk/google';
 import { PersonaSchema } from '../lib/personas/schemas';
 import { buildPersonaPrompt, buildBatchPersonaPrompt } from '../lib/personas/prompt';
-import { audienceGroupIds } from '../lib/personas/audienceGroups';
 
 export const generate = action({
   args: {
@@ -28,20 +27,7 @@ export const generate = action({
   handler: async (_ctx, args) => {
     try {
       const normalizeGroupId = (raw: string): string => {
-        const canonical = new Set(audienceGroupIds as readonly string[]);
-        if (canonical.has(raw)) return raw;
-        const text = raw.toLowerCase();
-        const matches = [
-          { id: 'fitness', keys: ['fitness', 'wellness', 'gym', 'health', 'workout', 'nutrition', 'recovery'] },
-          { id: 'tech', keys: ['tech', 'software', 'developer', 'engineering', 'gadget', 'ai', 'ml', 'saas'] },
-          { id: 'beauty', keys: ['beauty', 'skincare', 'cosmetic', 'makeup'] },
-          { id: 'home', keys: ['home', 'lifestyle', 'decor', 'household', 'furniture'] },
-          { id: 'outdoors', keys: ['outdoor', 'outdoors', 'hiking', 'camping', 'trail', 'adventure', 'gear'] },
-        ];
-        for (const group of matches) {
-          if (group.keys.some((k) => text.includes(k))) return group.id;
-        }
-        return 'tech';
+        return raw;
       };
       const group = normalizeGroupId(args.group);
       const { object } = await generateObject({
@@ -59,6 +45,8 @@ export const generate = action({
             segment: args.context?.segment,
           },
         }),
+        // Reduce variance to increase schema adherence
+        temperature: 0.2,
       });
 
       // Tag with audienceId if provided and persist
@@ -179,6 +167,7 @@ export const generateForGroups = action({
         schemaName: 'Persona',
         schemaDescription: 'A standardized marketing persona used for ad simulations.',
         prompt,
+        temperature: 0.2,
       });
 
       const personasWithAudience = (object as any[]).map((p) => ({

@@ -1,5 +1,3 @@
-import { audienceGroupDescriptions, audienceGroupLabels } from './audienceGroups';
-
 type Context = {
   location?: string;
   audienceDescription?: string;
@@ -12,7 +10,7 @@ type Context = {
 };
 
 export function buildPersonaPrompt(params: {
-  group: keyof typeof audienceGroupLabels;
+  group: string; // dynamic id
   count: number;
   context?: Context;
 }) {
@@ -35,8 +33,7 @@ export function buildPersonaPrompt(params: {
   }
 
   parts.push(
-    `Secondary guidance — audience group: ${audienceGroupLabels[group]}.`,
-    `Group description (use to refine, not override the audience): ${audienceGroupDescriptions[group]}.`
+    `Secondary guidance — audience group id: ${group}. Use this id literally when setting audienceGroup.`,
   );
 
   if (context?.location) {
@@ -62,6 +59,24 @@ export function buildPersonaPrompt(params: {
     '- Ensure diversity across personas (demographics, motivations, behaviors) while staying true to the audience; avoid stereotypes.'
   );
 
+  // Add explicit key names and a compact JSON example to reduce schema drift
+  parts.push(
+    'Use EXACT key names and shapes (camelCase where shown). Do not invent keys. Required object keys:',
+    '- persona_id: string',
+    `- audienceGroup: "${group}"`,
+    '- last_updated: string (ISO 8601)',
+    '- profile: { firstName, lastName, age, gender?, ethnicity?, location: { city, state, country? }, education: { level, field }, occupation, income: { annual_usd, type }, living_situation: { homeownership, household }, relationship_status? }',
+    '- personality: { ocean_summary, ocean_scores: { openness, conscientiousness, extraversion, agreeableness, neuroticism } }',
+    '- goals_and_motivations: string[] (1-10)',
+    '- pain_points: string[] (1-10)',
+    '- pre_ad_context: { scenario, current_activity, emotional_state: string[] (1-5), chain_of_thought }'
+  );
+
+  parts.push(
+    'Example persona object (values are illustrative; match types and keys exactly):',
+    '{"persona_id":"pers_7k3x","audienceGroup":"${group}","last_updated":"2025-01-20T12:34:56.000Z","profile":{"firstName":"Ava","lastName":"Ng","age":29,"gender":"female","ethnicity":"Asian","location":{"city":"Austin","state":"TX","country":"USA"},"education":{"level":"Bachelors","field":"Marketing"},"occupation":"Growth Marketer","income":{"annual_usd":95000,"type":"salary"},"living_situation":{"homeownership":"rent","household":"roommate"},"relationship_status":"single"},"personality":{"ocean_summary":"Curious and balanced.","ocean_scores":{"openness":0.72,"conscientiousness":0.63,"extraversion":0.51,"agreeableness":0.66,"neuroticism":0.34}},"goals_and_motivations":["Save commute time","Stay healthy"],"pain_points":["Cluttered apps","Overpriced gear"],"pre_ad_context":{"scenario":"Browsing on lunch break","current_activity":"Checking Instagram","emotional_state":["curious"],"chain_of_thought":"Considering options briefly."}}'
+  );
+
   console.log(parts.join('\n'));  
   return parts.join('\n');
 }
@@ -69,7 +84,7 @@ export function buildPersonaPrompt(params: {
 
 
 export function buildBatchPersonaPrompt(params: {
-  groups: Array<{ id: keyof typeof audienceGroupLabels; count: number }>;
+  groups: Array<{ id: string; count: number }>;
   total: number;
   context?: Context;
 }) {
@@ -91,11 +106,9 @@ export function buildBatchPersonaPrompt(params: {
     );
   }
 
-  parts.push('Secondary guidance — audience groups:');
+  parts.push('Secondary guidance — audience group ids:');
   for (const g of groups) {
-    parts.push(
-      `- ${g.id}: ${audienceGroupLabels[g.id]} — ${audienceGroupDescriptions[g.id]}`
-    );
+    parts.push(`- ${g.id}`);
   }
 
   if (context?.location) {
@@ -123,6 +136,11 @@ export function buildBatchPersonaPrompt(params: {
     '- last_updated must be an ISO-8601 timestamp.',
     '- Derive scenario, current_activity, and emotional_state from context; do not take them as inputs.',
     '- Ensure diversity across personas (demographics, motivations, behaviors) while staying true to the audience; avoid stereotypes.'
+  );
+
+  // Reinforce exact key names and provide a compact example for multi-group batches
+  parts.push(
+    'Use EXACT key names and shapes. For each persona object include: persona_id, audienceGroup, last_updated, profile{firstName,lastName,age,gender?,ethnicity?,location{city,state,country?},education{level,field},occupation,income{annual_usd,type},living_situation{homeownership,household},relationship_status?}, personality{ocean_summary,ocean_scores{openness,conscientiousness,extraversion,agreeableness,neuroticism}}, goals_and_motivations[1-10], pain_points[1-10], pre_ad_context{scenario,current_activity,emotional_state[1-5],chain_of_thought}.'
   );
 
   return parts.join('\n');
