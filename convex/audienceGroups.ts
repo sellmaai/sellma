@@ -57,7 +57,7 @@ export const suggestBundle = action({
 
       // Normalize percents to ensure integer sum = 100
       const groups = Array.isArray((groupsObj as any).groups) ? (groupsObj as any).groups : [];
-      const rawPercents = groups.map((g: any) => Math.max(1, Math.min(100, Math.round(Number(g.percent) || 0))));
+      const rawPercents = groups.map((g) => Math.max(1, Math.min(100, Math.round(Number(g.percent) || 0))));
       let sum = rawPercents.reduce((a: number, b: number) => a + b, 0);
       if (sum === 0) {
         // Even split if model failed
@@ -72,7 +72,7 @@ export const suggestBundle = action({
       if (diff !== 0 && groups.length > 0) {
         rawPercents[0] = Math.max(1, Math.min(100, rawPercents[0] + diff));
       }
-      const normalizedGroups = groups.map((g: any, i: number) => ({ ...g, percent: rawPercents[i] ?? g.percent }));
+      const normalizedGroups = groups.map((g, i: number) => ({ ...g, percent: rawPercents[i] ?? g.percent }));
 
       return {
         description: (overviewObj as any).description,

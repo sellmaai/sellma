@@ -21,18 +21,6 @@ import {
   MarqueeItem,
 } from "@/components/kibo-ui/marquee";
 import { Button } from "@/components/ui/button";
-import {
-  VideoPlayer,
-  VideoPlayerContent,
-  VideoPlayerControlBar,
-  VideoPlayerMuteButton,
-  VideoPlayerPlayButton,
-  VideoPlayerSeekBackwardButton,
-  VideoPlayerSeekForwardButton,
-  VideoPlayerTimeDisplay,
-  VideoPlayerTimeRange,
-  VideoPlayerVolumeRange,
-} from "@/components/kibo-ui/video-player";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -47,7 +35,7 @@ const logos = [
 ];
 
 export const GetStarted = () => {
-  const [showVideo, setShowVideo] = useState(false);
+  const [ , setShowVideo] = useState(false);
 
   useEffect(() => {
     const timerId = setTimeout(() => setShowVideo(true), 1000);

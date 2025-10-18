@@ -6,13 +6,14 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { Mic, Paperclip, Plus, Search, Send, Sparkles, Waves } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { PersonaBrowser } from '@/components/personas/PersonaBrowser';
 import GenerationChainOfThought from './AudienceGenerationChainOfThought';
+import { Persona } from '@/lib/personas/types';
 
 export default function AudienceGenerationPage() {
-  const generateAudienceSegments = useAction((api as any).audienceGroups.suggestBundle);
-  const generate = useAction((api as any).personas.generate);
+  const generateAudienceSegments = useAction((api).audienceGroups.suggestBundle);
+  const generate = useAction((api).personas.generate);
   const [message, setMessage] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -20,14 +21,13 @@ export default function AudienceGenerationPage() {
   const [isPending, startTransition] = useTransition();
   const [groups, setGroups] = useState<Array<{ id: string; label: string; color: string; description: string }>>([]);
   const [, setPeople] = useState<Array<{ id: number; name: string; designation: string; image: string }>>([]);
-  const [personasById, setPersonasById] = useState<Record<string, any>>({});
+  const [personasById, setPersonasById] = useState<Record<string, Persona>>({});
   const [error, setError] = useState<string | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [groupSuggestStatus, setGroupSuggestStatus] = useState<'pending' | 'active' | 'complete'>('pending');
   const [perGroupStatus, setPerGroupStatus] = useState<Record<string, 'pending' | 'active' | 'complete'>>({});
-  const [currentAudienceId, setCurrentAudienceId] = useState<string | null>(null);
   const currentAudienceIdRef = useRef<string | null>(null);
-  const [audienceDescription, setAudienceDescription] = useState<string | null>(null);
+  const [, setAudienceDescription] = useState<string | null>(null);
   const personaSectionRef = useRef<HTMLDivElement | null>(null);
   const prevPersonaCountRef = useRef<number>(0);
 
@@ -48,21 +48,21 @@ export default function AudienceGenerationPage() {
       // Suggest including a location in the prompt; default to a broad region if missing
       const location = extractLocationHint(message) ?? 'United States';
       try {
-        const bundle = (await generateAudienceSegments({ text: message, location, count: 6 })) as any;
+        const bundle = (await generateAudienceSegments({ text: message, location, count: 6 }));
         setAudienceDescription(bundle?.description ?? null);
         const res = bundle?.groups ?? [];
-        setGroups(res as any);
+        setGroups(res);
         setGroupSuggestStatus('complete');
-        setPerGroupStatus(Object.fromEntries((res as any[]).map((g: any) => [g.id, 'pending'])));
+        setPerGroupStatus(Object.fromEntries((res).map((g) => [g.id, 'pending'])));
 
         // Kick off persona generation per group with progressive updates
-        (res as any[]).forEach((g: any) => {
+        (res).forEach((g) => {
           // Only mark as active for the latest audience generation
           if (currentAudienceIdRef.current === newAudienceId) {
             setPerGroupStatus((prev) => ({ ...prev, [g.id]: 'active' }));
           }
           generate({ group: g.id, count: 1, audienceId: newAudienceId, context: { location, audienceDescription: bundle?.description } })
-            .then((arr: any[]) => {
+            .then((arr) => {
               const p = arr?.[0];
               // Only apply results if they belong to the most recent audience session
               if (p && p.audienceId === currentAudienceIdRef.current) {
@@ -83,7 +83,7 @@ export default function AudienceGenerationPage() {
         setMessage('');
         setIsExpanded(false);
         if (textareaRef.current) textareaRef.current.style.height = 'auto';
-      } catch (err: any) {
+      } catch (err) {
         setError(err?.message ?? 'Failed to suggest groups');
         setGroupSuggestStatus('complete');
       }
@@ -102,7 +102,7 @@ export default function AudienceGenerationPage() {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e as any);
+      handleSubmit(e);
     }
   };
 
@@ -183,7 +183,7 @@ export default function AudienceGenerationPage() {
         <div className="mx-auto w-full max-w-2xl">
           <GenerationChainOfThought
             isThinking={isThinking}
-            groups={groups as any}
+            groups={groups}
             groupSuggestStatus={groupSuggestStatus}
             perGroupStatus={perGroupStatus}
           />
@@ -192,7 +192,7 @@ export default function AudienceGenerationPage() {
 
       <div ref={personaSectionRef} className="scroll-mt-24 mx-auto w-full max-w-2xl">
         {groups.length > 0 && Object.values(personasById).length > 0 && (
-          <PersonaBrowser personas={Object.values(personasById) as any} />
+          <PersonaBrowser personas={Object.values(personasById)} />
         )}
       </div>
     </div>

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Persona } from '@/lib/personas/types';
-import { User, ChevronDown, ChevronUp, MapPin, GraduationCap, Briefcase, DollarSign, Home, AlertTriangle } from 'lucide-react';
+import { User, MapPin, GraduationCap, Briefcase, DollarSign, Home, AlertTriangle } from 'lucide-react';
 
 interface PersonaCharacteristicsProps {
   persona: Persona;

@@ -3,7 +3,7 @@ import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { fetchQuery } from "convex/nextjs";
 
 export default async function ProductPage() {
-  const viewer = await fetchQuery(
+  await fetchQuery(
     api.users.viewer,
     {},
     { token: await convexAuthNextjsToken() },

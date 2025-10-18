@@ -8,7 +8,7 @@ export default async function SimulationLayout({
 }: {
   children: ReactNode;
 }) {
-  const viewer = await fetchQuery(
+  await fetchQuery(
     api.users.viewer,
     {},
     { token: await convexAuthNextjsToken() },

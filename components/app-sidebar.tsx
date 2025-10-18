@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, MessageSquare, Rocket } from "lucide-react"
+import { Rocket } from "lucide-react"
 import { useQuery } from "convex/react"
 
 import { NavUser } from "@/components/nav-user"
@@ -31,7 +31,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = React.useMemo(
     () => ({
       name: viewer?.name ?? "",
-      email: (viewer as any)?.email ?? "",
+      email: viewer?.email ?? "",
       avatar: "/avatars/shadcn.jpg",
     }),
     [viewer]

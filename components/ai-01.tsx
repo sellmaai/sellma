@@ -56,7 +56,7 @@ export default function Ai01() {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e as any);
+      handleSubmit(e);
     }
   };
 
@@ -72,7 +72,7 @@ export default function Ai01() {
           type="file"
           multiple
           className="sr-only"
-          onChange={(e) => {}}
+          onChange={() => {}}
         />
 
         <div
