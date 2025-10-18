@@ -67,3 +67,64 @@ export function buildPersonaPrompt(params: {
 }
 
 
+
+export function buildBatchPersonaPrompt(params: {
+  groups: Array<{ id: keyof typeof audienceGroupLabels; count: number }>;
+  total: number;
+  context?: Context;
+}) {
+  const { groups, total, context } = params;
+  const parts: string[] = [];
+
+  parts.push(
+    `You are generating ${total} realistic marketing personas for ad simulations across multiple audience groups.`,
+  );
+
+  if (context?.audienceDescription) {
+    parts.push(`Primary audience (prioritize this): ${context.audienceDescription}`);
+  }
+
+  if (context?.segment) {
+    parts.push(
+      `Segment guidance — id: ${context.segment.id}, label: ${context.segment.label}.`,
+      `Segment description (use to sharpen persona details): ${context.segment.description}.`
+    );
+  }
+
+  parts.push('Secondary guidance — audience groups:');
+  for (const g of groups) {
+    parts.push(
+      `- ${g.id}: ${audienceGroupLabels[g.id]} — ${audienceGroupDescriptions[g.id]}`
+    );
+  }
+
+  if (context?.location) {
+    parts.push(`Location context: ${context.location}.`);
+  }
+
+  parts.push(
+    'Tailoring priorities (strict order):',
+    '1) Fit the Primary audience first.',
+    '2) Use the Segment description to sharpen details without contradicting the audience.',
+    '3) Use each Group description as tertiary context only.',
+    '4) Reflect the Location when relevant (language, norms, constraints).'
+  );
+
+  const distribution = groups
+    .map((g) => `${g.id}: ${g.count}`)
+    .join(', ');
+
+  parts.push(
+    'Output only JSON that conforms to the provided schema. Do not include comments, explanations, or markdown.',
+    'Constraints:',
+    `- Return an array with exactly ${total} personas matching the schema.`,
+    `- Match the exact distribution by audienceGroup: { ${distribution} } (use the IDs exactly).`,
+    '- ocean_scores are floats in [0,1].',
+    '- last_updated must be an ISO-8601 timestamp.',
+    '- Derive scenario, current_activity, and emotional_state from context; do not take them as inputs.',
+    '- Ensure diversity across personas (demographics, motivations, behaviors) while staying true to the audience; avoid stereotypes.'
+  );
+
+  return parts.join('\n');
+}
+

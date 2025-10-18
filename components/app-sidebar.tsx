@@ -45,14 +45,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname === "/product"}>
-                <Link href="/product">
-                  <MessageSquare />
-                  <span>Chat</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={pathname?.startsWith("/product/simulation")}>
                 <Link href="/product/simulation">
                   <Rocket />
@@ -61,31 +53,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenuButton>
               <SidebarMenuSub>
                 <SidebarMenuSubItem>
-                  <SidebarMenuSubButton asChild isActive={pathname === "/product/simulation"}>
-                    <Link href="/product/simulation">
-                      <span>Overview</span>
-                    </Link>
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-                <SidebarMenuSubItem>
                   <SidebarMenuSubButton asChild isActive={pathname?.startsWith("/product/simulation/audience-builder")}>
                     <Link href="/product/simulation/audience-builder">
                       <span>Audience Builder</span>
-                    </Link>
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-                <SidebarMenuSubItem>
-                  <SidebarMenuSubButton asChild isActive={pathname?.startsWith("/product/simulation/configuration")}>
-                    <Link href="/product/simulation/configuration">
-                      <span>Configuration</span>
-                    </Link>
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-                <SidebarMenuSubItem>
-                  <SidebarMenuSubButton asChild isActive={pathname?.startsWith("/product/simulation/workflow")}
-                  >
-                    <Link href="/product/simulation/workflow">
-                      <span>Workflow</span>
                     </Link>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>

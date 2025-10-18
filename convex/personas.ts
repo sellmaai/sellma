@@ -3,7 +3,7 @@ import { v } from 'convex/values';
 import { generateObject, NoObjectGeneratedError } from 'ai';
 import { google } from '@ai-sdk/google';
 import { PersonaSchema } from '../lib/personas/schemas';
-import { buildPersonaPrompt } from '../lib/personas/prompt';
+import { buildPersonaPrompt, buildBatchPersonaPrompt } from '../lib/personas/prompt';
 import { audienceGroupIds } from '../lib/personas/audienceGroups';
 
 export const generate = action({
@@ -136,36 +136,69 @@ export const listByAudienceId = query({
 export const generateForGroups = action({
   args: {
     groups: v.array(
-      v.object({ id: v.string(), label: v.string(), color: v.string(), description: v.string() })
+      v.object({ id: v.string(), label: v.string(), color: v.string(), description: v.string(), percent: v.optional(v.number()) })
     ),
     total: v.optional(v.number()),
     audienceId: v.optional(v.string()),
     context: v.optional(v.object({
       location: v.optional(v.string()),
       audienceDescription: v.optional(v.string()),
+      segment: v.optional(
+        v.object({
+          id: v.string(),
+          label: v.string(),
+          description: v.string(),
+          color: v.optional(v.string()),
+        })
+      ),
     })),
   },
   handler: async (ctx, args) => {
     const total = Math.max(1, Math.min(args.total ?? 16, 32));
+    if (args.groups.length === 0) return [];
+
+    // Evenly distribute totals across provided groups (previous behavior), but batch into a single LLM call
     const perGroupBase = Math.floor(total / args.groups.length);
     const remainder = total % args.groups.length;
-    const batches: Array<{ groupId: string; count: number }> = args.groups.map((g, i) => ({
-      groupId: g.id,
+    const distribution = args.groups.map((g, i) => ({
+      id: g.id,
       count: perGroupBase + (i < remainder ? 1 : 0),
     }));
 
-    const allPersonas: any[] = [];
-    for (const batch of batches) {
-      if (batch.count <= 0) continue;
-      const personas = await ctx.runAction((api as any).personas.generate, {
-        group: batch.groupId,
-        count: batch.count,
-        audienceId: args.audienceId,
-        context: args.context,
+    const prompt = buildBatchPersonaPrompt({
+      groups: distribution as any,
+      total,
+      context: args.context as any,
+    });
+
+    try {
+      const { object } = await generateObject({
+        model: google('gemini-2.5-flash'),
+        output: 'array',
+        schema: PersonaSchema,
+        schemaName: 'Persona',
+        schemaDescription: 'A standardized marketing persona used for ad simulations.',
+        prompt,
       });
-      allPersonas.push(...personas);
+
+      const personasWithAudience = (object as any[]).map((p) => ({
+        ...p,
+        audienceId: args.audienceId ?? 'default',
+      }));
+
+      await ctx.runMutation((api as any).personas.saveMany, { personas: personasWithAudience });
+      return personasWithAudience;
+    } catch (error) {
+      if (NoObjectGeneratedError.isInstance(error)) {
+        console.error('convex.personas.generateForGroups NoObjectGeneratedError', {
+          cause: error.cause,
+          text: error.text,
+          response: error.response,
+          usage: error.usage,
+        });
+      }
+      throw error;
     }
-    return allPersonas;
   },
 });
 

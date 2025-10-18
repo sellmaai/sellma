@@ -167,14 +167,6 @@ export default function AudienceGenerationPage() {
           </div>
           <div className="flex items-center gap-2" style={{ gridArea: isExpanded ? 'footer' : 'trailing' }}>
             <div className="ms-auto flex items-center gap-1.5">
-              <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-accent">
-                <Mic className="size-5 text-muted-foreground" />
-              </Button>
-
-              <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-accent relative">
-                <Waves className="size-5 text-muted-foreground" />
-              </Button>
-
               {message.trim() && (
                 <Button type="submit" disabled={isPending} size="icon" className="h-9 w-9 rounded-full">
                   <Send className="size-5" />

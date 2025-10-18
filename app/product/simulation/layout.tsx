@@ -1,8 +1,6 @@
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { api } from "@/convex/_generated/api";
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { fetchQuery } from "convex/nextjs";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 export default async function SimulationLayout({
