@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Persona } from '@/lib/personas/types';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PersonaForm } from '@/components/personas/PersonaForm';
 import { User } from 'lucide-react';
 
