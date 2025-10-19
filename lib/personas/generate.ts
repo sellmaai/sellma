@@ -1,9 +1,9 @@
 "use server";
 
 import { z } from "zod";
-import { buildPersonaPrompt } from "./prompt";
-import { type PersonaAIOutput } from "./schemas";
 import { generatePersonasFromPrompt } from "./aiClient";
+import { buildPersonaPrompt } from "./prompt";
+import type { PersonaAIOutput } from "./schemas";
 
 const InputSchema = z.object({
   group: z.string().min(1),

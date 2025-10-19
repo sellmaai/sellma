@@ -15,7 +15,8 @@ export async function generatePersonasFromPrompt(
       output: "array",
       schema: PersonaSchema,
       schemaName: "Persona",
-      schemaDescription: "A standardized marketing persona used for ad simulations.",
+      schemaDescription:
+        "A standardized marketing persona used for ad simulations.",
       prompt: options.prompt,
       temperature: 0.2,
     });

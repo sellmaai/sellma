@@ -1,18 +1,18 @@
 import { randomUUID } from "node:crypto";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
+import { generatePersonasFromPrompt } from "../lib/personas/aiClient";
 import {
   buildBatchPersonaPrompt,
   buildPersonaPrompt,
 } from "../lib/personas/prompt";
 import {
+  type PersistedPersona,
   type PersonaAIOutput,
-  PersistedPersona,
   TrustedPersonaSchema,
 } from "../lib/personas/schemas";
-import { generatePersonasFromPrompt } from "../lib/personas/aiClient";
-import { action, mutation, query } from "./_generated/server";
 import { api } from "./_generated/api";
+import { action, mutation, query } from "./_generated/server";
 
 const PERSONA_ID_PATTERN = /^[a-z0-9_-]{3,64}$/i;
 
@@ -57,8 +57,8 @@ const applyTrustedMetadata = (
     audienceId: string;
     userId: string;
   }
-): PersistedPersona => {
-  return TrustedPersonaSchema.parse({
+): PersistedPersona =>
+  TrustedPersonaSchema.parse({
     ...persona,
     personaId: coercePersonaId(persona.personaId),
     audienceGroup: metadata.audienceGroup,
@@ -66,7 +66,6 @@ const applyTrustedMetadata = (
     audienceId: metadata.audienceId,
     userId: metadata.userId,
   });
-};
 
 export const generate = action({
   args: {
@@ -229,7 +228,9 @@ export const generateForGroups = action({
       count: perGroupBase + (index < remainder ? 1 : 0),
     }));
 
-    const positiveDistribution = distribution.filter((entry) => entry.count > 0);
+    const positiveDistribution = distribution.filter(
+      (entry) => entry.count > 0
+    );
     if (positiveDistribution.length === 0) {
       return [];
     }

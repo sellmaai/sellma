@@ -78,7 +78,7 @@ function SignInWithMagicLink({
             toast.error(
               `Could not send sign-in link: ${
                 error instanceof Error ? error.message : "Unknown error"
-              }`,
+              }`
             );
           });
       }}
