@@ -334,7 +334,7 @@ export const generateForGroups = action({
     };
 
     const personasWithMetadata = personas.map((persona) =>
-      applyTrustedMetadata(persona, {
+      buildTrustedPersona(persona, {
         audienceGroup: assignGroup(persona.audienceGroup),
         audienceId,
         userId,
