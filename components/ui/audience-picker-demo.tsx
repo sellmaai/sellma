@@ -1,68 +1,80 @@
 "use client";
 
 import { useState } from "react";
-import { AudiencePicker, type Audience } from "@/components/ui/audience-picker";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { type Audience, AudiencePicker } from "@/components/ui/audience-picker";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export function AudiencePickerDemo() {
   const [selectedAudiences, setSelectedAudiences] = useState<Audience[]>([]);
+  const [integrationNotice, setIntegrationNotice] = useState<string | null>(
+    null
+  );
 
   const handleGoogleAdsClick = () => {
-    // TODO: Implement Google Ads integration
-    console.log("Google Ads clicked - would open Google Ads integration");
-    alert("Google Ads integration would open here");
+    setIntegrationNotice("Google Ads integration would open here.");
   };
 
   const handleMetaAdsClick = () => {
-    // TODO: Implement Meta Ads integration
-    console.log("Meta Ads clicked - would open Meta Ads integration");
-    alert("Meta Ads integration would open here");
+    setIntegrationNotice("Meta Ads integration would open here.");
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6 p-6">
       <Card>
         <CardHeader>
           <CardTitle>Audience Picker Demo</CardTitle>
           <CardDescription>
-            This demonstrates the audience picker component positioned at the bottom left of a larger text area:
-            - Increased text area height for better typing experience
-            - Audience picker positioned at bottom left corner
-            - Click to open search functionality with external source buttons (Google Ads & Meta Ads)
-            - Multi-select with pills for saved audiences only
-            - Search only appears when the dropdown is opened
+            This demonstrates the audience picker component positioned at the
+            bottom left of a larger text area: - Increased text area height for
+            better typing experience - Audience picker positioned at bottom left
+            corner - Click to open search functionality with external source
+            buttons (Google Ads & Meta Ads) - Multi-select with pills for saved
+            audiences only - Search only appears when the dropdown is opened
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="border border-border rounded-lg p-4 bg-muted/20 relative min-h-24">
+          <div className="relative min-h-24 rounded-lg border border-border bg-muted/20 p-4">
             <textarea
-              className="w-full resize-none border-0 bg-transparent pt-3 px-0 pb-12 text-base placeholder:text-muted-foreground focus:outline-none"
+              className="w-full resize-none border-0 bg-transparent px-0 pt-3 pb-12 text-base placeholder:text-muted-foreground focus:outline-none"
               placeholder="Type in what you want to ask your selected audiences..."
               rows={3}
             />
-            
+
             {/* Audience Picker - positioned at bottom left */}
-            <div className="absolute bottom-2 left-2 right-2">
+            <div className="absolute right-2 bottom-2 left-2">
               <AudiencePicker
-                selectedAudiences={selectedAudiences}
                 onAudiencesChange={setSelectedAudiences}
                 onGoogleAdsClick={handleGoogleAdsClick}
                 onMetaAdsClick={handleMetaAdsClick}
                 placeholder="Audience"
+                selectedAudiences={selectedAudiences}
               />
             </div>
           </div>
-          
+
+          {integrationNotice && (
+            <div className="rounded-lg border border-muted-foreground/40 border-dashed bg-muted/40 p-3 text-muted-foreground text-sm">
+              {integrationNotice}
+            </div>
+          )}
+
           {selectedAudiences.length > 0 && (
-            <div className="mt-4 p-4 bg-muted rounded-lg">
-              <h4 className="font-medium mb-2">Selected Audiences:</h4>
+            <div className="mt-4 rounded-lg bg-muted p-4">
+              <h4 className="mb-2 font-medium">Selected Audiences:</h4>
               <div className="space-y-2">
                 {selectedAudiences.map((audience) => (
-                  <div key={audience.id} className="text-sm">
-                    <strong>{audience.name}</strong> 
-                    {audience.count && ` (${audience.count.toLocaleString()} people)`}
+                  <div className="text-sm" key={audience.id}>
+                    <strong>{audience.name}</strong>
+                    {audience.count &&
+                      ` (${audience.count.toLocaleString()} people)`}
                     <span className="ml-2 text-muted-foreground">
-                      - {audience.source.replace('-', ' ').toUpperCase()}
+                      - {audience.source.replace("-", " ").toUpperCase()}
                     </span>
                   </div>
                 ))}

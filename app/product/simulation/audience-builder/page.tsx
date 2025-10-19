@@ -1,7 +1,7 @@
 "use client";
 
 import { useAction, useMutation } from "convex/react";
-import { Send, CornerDownLeft } from "lucide-react";
+import { CornerDownLeft, Send } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { PersonaBrowser } from "@/components/personas/PersonaBrowser";
 import { Button } from "@/components/ui/button";
@@ -209,9 +209,9 @@ export default function AudienceGenerationPage() {
     [personasById]
   );
   const allGroupsComplete =
-    groups.length > 0 && groups.every((group) => perGroupStatus[group.id] === "complete");
-  const canDecide =
-    allGroupsComplete && personaValues.length > 0;
+    groups.length > 0 &&
+    groups.every((group) => perGroupStatus[group.id] === "complete");
+  const canDecide = allGroupsComplete && personaValues.length > 0;
 
   const handleSaveAudience = async () => {
     if (!canDecide || decision !== "pending") {
@@ -222,8 +222,11 @@ export default function AudienceGenerationPage() {
     setIsSaving(true);
     try {
       const payload = personaValues.map((persona) => {
-        const { _id: _previewId, ...rest } = persona;
-        void _previewId;
+        const { _id: previewId, ...rest } = persona;
+        if (previewId !== undefined) {
+          // Preview IDs are only used client-side and should not be persisted.
+          return rest;
+        }
         return rest;
       });
       const saved = await savePersonas({ personas: payload });
@@ -236,7 +239,9 @@ export default function AudienceGenerationPage() {
       currentAudienceIdRef.current = null;
     } catch (err) {
       setSaveError(
-        err instanceof Error ? err.message : "Failed to save the generated audience"
+        err instanceof Error
+          ? err.message
+          : "Failed to save the generated audience"
       );
     } finally {
       setIsSaving(false);
@@ -259,11 +264,7 @@ export default function AudienceGenerationPage() {
     setAudienceNotice(null);
   };
 
-  const handleSimulationSubmit = (simulationMessage: string) => {
-    // TODO: Implement simulation logic
-    console.log("Simulation message:", simulationMessage);
-    // For now, just show a placeholder
-    setError("Simulation feature coming soon!");
+  const handleSimulationSubmit = () => {    // setError("Simulation feature coming soon!");
   };
 
   function extractLocationHint(text: string): string | null {
@@ -291,35 +292,35 @@ export default function AudienceGenerationPage() {
     <div className="w-full overflow-x-hidden p-6 pb-24">
       {/* Mode Toggle Switch */}
       <div className="mx-auto mb-8 flex justify-center">
-        <ToggleGroup 
-          type="single" 
-          value={mode} 
+        <ToggleGroup
+          className="rounded-lg bg-muted p-1 shadow-sm"
           onValueChange={(value) => {
             if (value && value !== mode) {
               resetAllState();
-              setModeChangeKey(prev => prev + 1);
+              setModeChangeKey((prev) => prev + 1);
               setMode(value as "build" | "simulate");
             }
           }}
-          className="bg-muted rounded-lg p-1 shadow-sm"
+          type="single"
+          value={mode}
         >
-          <ToggleGroupItem 
-            value="build" 
+          <ToggleGroupItem
             className={cn(
-              "px-6 py-2 text-sm font-medium transition-all duration-200",
+              "px-6 py-2 font-medium text-sm transition-all duration-200",
               "data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm",
-              "data-[state=off]:text-muted-foreground hover:text-foreground"
+              "hover:text-foreground data-[state=off]:text-muted-foreground"
             )}
+            value="build"
           >
             Build Audience
           </ToggleGroupItem>
-          <ToggleGroupItem 
-            value="simulate" 
+          <ToggleGroupItem
             className={cn(
-              "px-6 py-2 text-sm font-medium transition-all duration-200",
+              "px-6 py-2 font-medium text-sm transition-all duration-200",
               "data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm",
-              "data-[state=off]:text-muted-foreground hover:text-foreground"
+              "hover:text-foreground data-[state=off]:text-muted-foreground"
             )}
+            value="simulate"
           >
             Run Simulations
           </ToggleGroupItem>
@@ -327,7 +328,9 @@ export default function AudienceGenerationPage() {
       </div>
 
       <h1 className="mx-auto mb-7 max-w-2xl whitespace-pre-wrap text-pretty px-1 text-center font-semibold text-2xl text-foreground leading-9">
-        {mode === "build" ? "Describe Your Target Audience" : "Ask Your Chosen Audience, Anything!"}
+        {mode === "build"
+          ? "Describe Your Target Audience"
+          : "Ask Your Chosen Audience, Anything!"}
       </h1>
 
       {mode === "build" ? (
@@ -404,18 +407,25 @@ export default function AudienceGenerationPage() {
         </form>
       ) : (
         <SimulationMode
+          error={error}
+          isPending={isPending}
           key={modeChangeKey}
           onSubmit={handleSimulationSubmit}
-          isPending={isPending}
-          error={error}
         />
       )}
 
-      {mode === "build" && error ? <p className="mt-4 text-red-600 text-sm">{error}</p> : null}
+      {mode === "build" && error ? (
+        <p className="mt-4 text-red-600 text-sm">{error}</p>
+      ) : null}
       {audienceNotice === "saved" ? (
         <div className="mt-4 flex items-center justify-between gap-3 text-sm">
           <p className="text-emerald-600">Audience saved successfully.</p>
-          <Button onClick={handleStartNewAudience} size="sm" type="button" variant="ghost">
+          <Button
+            onClick={handleStartNewAudience}
+            size="sm"
+            type="button"
+            variant="ghost"
+          >
             Create another audience
           </Button>
         </div>
@@ -423,7 +433,12 @@ export default function AudienceGenerationPage() {
       {audienceNotice === "rejected" ? (
         <div className="mt-4 flex items-center justify-between gap-3 text-sm">
           <p className="text-muted-foreground">Audience discarded.</p>
-          <Button onClick={handleStartNewAudience} size="sm" type="button" variant="ghost">
+          <Button
+            onClick={handleStartNewAudience}
+            size="sm"
+            type="button"
+            variant="ghost"
+          >
             Start over
           </Button>
         </div>
@@ -452,7 +467,6 @@ export default function AudienceGenerationPage() {
           </div>
         </>
       )}
-
 
       {canDecide ? (
         <div className="mx-auto mt-6 w-full max-w-2xl">

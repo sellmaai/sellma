@@ -6,9 +6,9 @@ import {
   buildPersonaPrompt,
 } from "../lib/personas/prompt";
 import {
+  type PersistedPersona,
   type PersonaAIOutput,
   TrustedPersonaSchema,
-  type PersistedPersona,
 } from "../lib/personas/schemas";
 import { api } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
@@ -202,9 +202,7 @@ export const saveMany = mutation({
     const savedPersonas = await Promise.all(
       insertedIds.map((id) => table.get(id))
     );
-    return savedPersonas.filter(
-      (p): p is Doc<"personas"> => p !== null
-    );
+    return savedPersonas.filter((p): p is Doc<"personas"> => p !== null);
   },
 });
 

@@ -1,13 +1,18 @@
 "use client";
 
-import { Send, CornerDownLeft } from "lucide-react";
+import { CornerDownLeft, Send } from "lucide-react";
 import { useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { AudiencePicker, type Audience } from "@/components/ui/audience-picker";
 import { AdvertisementsPicker } from "@/components/ui/advertisements-picker";
 import { AttachFilesPicker } from "@/components/ui/attach-files-picker";
+import { type Audience, AudiencePicker } from "@/components/ui/audience-picker";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 interface SimulationModeProps {
@@ -16,7 +21,11 @@ interface SimulationModeProps {
   error: string | null;
 }
 
-export function SimulationMode({ onSubmit, isPending, error }: SimulationModeProps) {
+export function SimulationMode({
+  onSubmit,
+  isPending,
+  error,
+}: SimulationModeProps) {
   const [message, setMessage] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedAudiences, setSelectedAudiences] = useState<Audience[]>([]);
@@ -36,25 +45,21 @@ export function SimulationMode({ onSubmit, isPending, error }: SimulationModePro
   };
 
   const handleGoogleAdsClick = () => {
-    // TODO: Implement Google Ads integration
-    console.log("Google Ads clicked");
+    // TODO: Integrate Google Ads audience import.
   };
 
   const handleMetaAdsClick = () => {
-    // TODO: Implement Meta Ads integration
-    console.log("Meta Ads clicked");
+    // TODO: Integrate Meta Ads audience import.
   };
 
   const handleAttachFilesClick = (files: FileList | null) => {
     if (files && files.length > 0) {
-      console.log("Files selected:", Array.from(files).map(file => file.name));
       // TODO: Implement file processing/upload logic
     }
   };
 
   const handleFilesChange = (files: FileList | null) => {
     if (files && files.length > 0) {
-      console.log("Files attached:", Array.from(files).map(file => file.name));
       // TODO: Implement file processing/upload logic
     }
   };
@@ -106,7 +111,7 @@ export function SimulationMode({ onSubmit, isPending, error }: SimulationModePro
         >
           <div
             className={cn(
-              "flex min-h-20 items-start overflow-x-hidden px-1.5 relative",
+              "relative flex min-h-20 items-start overflow-x-hidden px-1.5",
               {
                 "mb-0 px-2 py-1": isExpanded,
                 "-my-2.5": !isExpanded,
@@ -116,7 +121,7 @@ export function SimulationMode({ onSubmit, isPending, error }: SimulationModePro
           >
             <div className="max-h-52 flex-1 overflow-auto">
               <Textarea
-                className="scrollbar-thin min-h-0 resize-none rounded-none border-0 pt-3 px-0 pb-12 text-base placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
+                className="scrollbar-thin min-h-0 resize-none rounded-none border-0 px-0 pt-3 pb-12 text-base placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
                 onChange={handleTextareaChange}
                 onKeyDown={handleKeyDown}
                 placeholder="Type in what you want to ask your selected audiences..."
@@ -124,26 +129,24 @@ export function SimulationMode({ onSubmit, isPending, error }: SimulationModePro
                 rows={3}
                 value={message}
               />
-              
+
               {/* Audience Picker, Advertisements, and Attach Files - positioned at bottom */}
-              <div className="absolute bottom-2 left-2 right-2 flex gap-2">
+              <div className="absolute right-2 bottom-2 left-2 flex gap-2">
                 <div className="flex-1">
                   <AudiencePicker
-                    selectedAudiences={selectedAudiences}
                     onAudiencesChange={setSelectedAudiences}
                     onGoogleAdsClick={handleGoogleAdsClick}
                     onMetaAdsClick={handleMetaAdsClick}
                     placeholder="Audiences"
+                    selectedAudiences={selectedAudiences}
                   />
                 </div>
                 <AdvertisementsPicker
+                  onAttachFilesClick={handleAttachFilesClick}
                   onGoogleAdsClick={handleGoogleAdsClick}
                   onMetaAdsClick={handleMetaAdsClick}
-                  onAttachFilesClick={handleAttachFilesClick}
                 />
-                <AttachFilesPicker
-                  onFilesChange={handleFilesChange}
-                />
+                <AttachFilesPicker onFilesChange={handleFilesChange} />
               </div>
             </div>
           </div>
@@ -157,7 +160,11 @@ export function SimulationMode({ onSubmit, isPending, error }: SimulationModePro
                   <div>
                     <Button
                       className="h-9 w-9 rounded-full"
-                      disabled={isPending || !message.trim() || selectedAudiences.length === 0}
+                      disabled={
+                        isPending ||
+                        !message.trim() ||
+                        selectedAudiences.length === 0
+                      }
                       size="icon"
                       type="submit"
                     >

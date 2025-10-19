@@ -1,10 +1,20 @@
 "use client";
 
-import { ChevronDown, ExternalLink, Paperclip, X, Megaphone } from "lucide-react";
-import { useState, useRef } from "react";
-import { Button } from "@/components/ui/button";
+import {
+  ChevronDown,
+  ExternalLink,
+  Megaphone,
+  Paperclip,
+  X,
+} from "lucide-react";
+import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface AdvertisementsPickerProps {
   onGoogleAdsClick?: () => void;
@@ -31,100 +41,100 @@ export function AdvertisementsPicker({
     const files = event.target.files;
     if (files && files.length > 0) {
       const newFiles = Array.from(files);
-      setSelectedFiles(prev => [...prev, ...newFiles]);
+      setSelectedFiles((prev) => [...prev, ...newFiles]);
       onAttachFilesClick?.(files);
     }
     // Reset the input so the same file can be selected again
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   const handleRemoveFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
     <div className={className}>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover onOpenChange={setOpen} open={open}>
         <PopoverTrigger asChild>
           <Button
-            variant="ghost"
-            role="combobox"
             aria-expanded={open}
-            className="h-auto min-h-[32px] px-2 py-1 justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            className="h-auto min-h-[32px] justify-start px-2 py-1 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+            role="combobox"
+            variant="ghost"
           >
-            <div className="flex flex-wrap gap-1 flex-1">
+            <div className="flex flex-1 flex-wrap gap-1">
               {selectedFiles.length === 0 ? (
                 <span className="text-sm">Ads</span>
               ) : (
                 selectedFiles.map((file, index) => (
                   <Badge
+                    className="flex items-center gap-1 px-2 py-1 text-xs"
                     key={`${file.name}-${index}`}
                     variant="secondary"
-                    className="flex items-center gap-1 px-2 py-1 text-xs"
                   >
-                    <span className="truncate max-w-[120px]">
-                      {file.name}
-                    </span>
-                    <div
+                    <span className="max-w-[120px] truncate">{file.name}</span>
+                    <button
+                      aria-label={`Remove ${file.name}`}
+                      className="ml-1 rounded-full p-0.5 hover:bg-destructive/20"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleRemoveFile(index);
                       }}
-                      className="ml-1 hover:bg-destructive/20 rounded-full p-0.5 cursor-pointer"
+                      type="button"
                     >
                       <X className="h-3 w-3" />
-                    </div>
+                    </button>
                   </Badge>
                 ))
               )}
             </div>
-            <Megaphone className="h-4 w-4 shrink-0 opacity-50 mr-1" />
+            <Megaphone className="mr-1 h-4 w-4 shrink-0 opacity-50" />
             <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-64 p-1" align="start">
+        <PopoverContent align="start" className="w-64 p-1">
           <div className="space-y-1">
             <Button
-              variant="ghost"
-              size="sm"
+              className="h-9 w-full justify-start px-3 text-left"
               onClick={onGoogleAdsClick}
-              className="w-full justify-start text-left h-9 px-3"
+              size="sm"
+              variant="ghost"
             >
-              <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
+              <ExternalLink className="mr-2 h-4 w-4 flex-shrink-0" />
               <span className="text-sm">From Google Ads</span>
             </Button>
             <Button
-              variant="ghost"
-              size="sm"
+              className="h-9 w-full justify-start px-3 text-left"
               onClick={onMetaAdsClick}
-              className="w-full justify-start text-left h-9 px-3"
+              size="sm"
+              variant="ghost"
             >
-              <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
+              <ExternalLink className="mr-2 h-4 w-4 flex-shrink-0" />
               <span className="text-sm">From Meta Ads</span>
             </Button>
             <Button
-              variant="ghost"
-              size="sm"
+              className="h-9 w-full justify-start px-3 text-left"
               onClick={handleAttachFilesClick}
-              className="w-full justify-start text-left h-9 px-3"
+              size="sm"
+              variant="ghost"
             >
-              <Paperclip className="h-4 w-4 mr-2 flex-shrink-0" />
+              <Paperclip className="mr-2 h-4 w-4 flex-shrink-0" />
               <span className="text-sm">Attach Files</span>
             </Button>
           </div>
         </PopoverContent>
       </Popover>
-      
+
       {/* Hidden file input */}
       <input
+        accept="image/*,.pdf,.doc,.docx,.txt"
+        className="hidden"
+        multiple
+        onChange={handleFileChange}
         ref={fileInputRef}
         type="file"
-        multiple
-        accept="image/*,.pdf,.doc,.docx,.txt"
-        onChange={handleFileChange}
-        className="hidden"
       />
     </div>
   );
