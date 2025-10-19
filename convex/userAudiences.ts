@@ -88,3 +88,32 @@ export const getByName = query({
       .first();
   },
 });
+
+export const listByUserPaginated = query({
+  args: {
+    limit: v.optional(v.number()),
+    cursor: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    const limit = args.limit ?? 5;
+    const audiences = await ctx.db
+      .query("user_audiences")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .order("desc")
+      .take(limit + 1); // Take one extra to check if there are more
+
+    const hasMore = audiences.length > limit;
+    const data = hasMore ? audiences.slice(0, limit) : audiences;
+    
+    return {
+      data,
+      hasMore,
+      nextCursor: hasMore ? data[data.length - 1]?._id : null,
+    };
+  },
+});
