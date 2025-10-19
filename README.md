@@ -20,13 +20,13 @@ Sellma is a full-stack application that uses AI to generate realistic audience p
 
 2. **Install dependencies**
    ```bash
-npm install
+   npm install
    ```
 
 3. **Start the development server**
    ```bash
-npm run dev
-```
+   npm run dev
+   ```
 
    This command will:
    - Start the Next.js frontend (with Turbopack) on [http://localhost:3000](http://localhost:3000)
