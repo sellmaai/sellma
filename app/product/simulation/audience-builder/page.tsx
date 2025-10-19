@@ -200,13 +200,23 @@ export default function AudienceGenerationPage() {
       return;
     }
 
-    setDecision("rejected");
     setSaveError(null);
+    setError(null);
     setPersonasById({});
     setGroups([]);
     setPerGroupStatus({});
     setGroupSuggestStatus("pending");
+    setIsThinking(false);
+    setAudienceDescription(null);
+    setIsExpanded(false);
+    setMessage("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+    setPeople([]);
+    prevPersonaCountRef.current = 0;
     currentAudienceIdRef.current = null;
+    setDecision("pending");
   };
 
   function extractLocationHint(text: string): string | null {
