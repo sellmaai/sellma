@@ -7,15 +7,33 @@ import { Button } from "@/components/ui/button";
 
 interface AttachFilesPickerProps {
   onFilesChange?: (files: FileList | null) => void;
+  selectedFiles?: File[];
+  onSelectedFilesChange?: (files: File[]) => void;
   className?: string;
 }
 
 export function AttachFilesPicker({
   onFilesChange,
+  selectedFiles: externalSelectedFiles,
+  onSelectedFilesChange,
   className,
 }: AttachFilesPickerProps) {
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [internalSelectedFiles, setInternalSelectedFiles] = useState<File[]>(
+    []
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Use external files if provided, otherwise use internal state
+  const selectedFiles = externalSelectedFiles ?? internalSelectedFiles;
+  const setSelectedFiles = onSelectedFilesChange
+    ? (files: File[] | ((prev: File[]) => File[])) => {
+        if (typeof files === "function") {
+          onSelectedFilesChange(files(selectedFiles));
+        } else {
+          onSelectedFilesChange(files);
+        }
+      }
+    : setInternalSelectedFiles;
 
   const handleAttachFilesClick = () => {
     fileInputRef.current?.click();
@@ -25,7 +43,7 @@ export function AttachFilesPicker({
     const files = event.target.files;
     if (files && files.length > 0) {
       const newFiles = Array.from(files);
-      setSelectedFiles((prev) => [...prev, ...newFiles]);
+      setSelectedFiles((prev: File[]) => [...prev, ...newFiles]);
       onFilesChange?.(files);
     }
     // Reset the input so the same file can be selected again
@@ -35,7 +53,9 @@ export function AttachFilesPicker({
   };
 
   const handleRemoveFile = (index: number) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setSelectedFiles((prev: File[]) =>
+      prev.filter((_: File, i: number) => i !== index)
+    );
   };
 
   return (
@@ -45,13 +65,13 @@ export function AttachFilesPicker({
         onClick={handleAttachFilesClick}
         variant="ghost"
       >
-        <div className="flex flex-1 flex-wrap gap-1">
+        <div className="flex flex-1 flex-col gap-1">
           {selectedFiles.length === 0 ? (
             <span className="text-sm">Attachements</span>
           ) : (
             selectedFiles.map((file, index) => (
               <Badge
-                className="flex items-center gap-1 px-2 py-1 text-xs"
+                className="flex w-fit items-center gap-1 px-2 py-1 text-xs"
                 key={`${file.name}-${index}`}
                 variant="outline"
               >

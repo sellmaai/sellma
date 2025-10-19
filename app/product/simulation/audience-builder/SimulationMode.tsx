@@ -1,7 +1,7 @@
 "use client";
 
 import { CornerDownLeft, Send } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AdvertisementsPicker } from "@/components/ui/advertisements-picker";
 import { AttachFilesPicker } from "@/components/ui/attach-files-picker";
 import { type Audience, AudiencePicker } from "@/components/ui/audience-picker";
@@ -13,6 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
 import { cn } from "@/lib/utils";
 
 interface SimulationModeProps {
@@ -27,8 +28,10 @@ export function SimulationMode({
   error,
 }: SimulationModeProps) {
   const [message, setMessage] = useState("");
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [, setIsExpanded] = useState(false);
   const [selectedAudiences, setSelectedAudiences] = useState<Audience[]>([]);
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [advertisementFileCount, setAdvertisementFileCount] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -58,12 +61,6 @@ export function SimulationMode({
     }
   };
 
-  const handleFilesChange = (files: FileList | null) => {
-    if (files && files.length > 0) {
-      // TODO: Implement file processing/upload logic
-    }
-  };
-
   const getTooltipText = () => {
     if (selectedAudiences.length === 0) {
       return "Please select at least one audience";
@@ -74,13 +71,21 @@ export function SimulationMode({
     return "Send message";
   };
 
+  // Calculate total number of pills
+  const totalPills =
+    selectedAudiences.length + attachedFiles.length + advertisementFileCount;
+
+  // Determine if textarea should be expanded based on content or pills
+  const shouldExpand =
+    message.length > 100 || message.includes("\n") || totalPills > 0;
+
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
-    setIsExpanded(e.target.value.length > 100 || e.target.value.includes("\n"));
+    setIsExpanded(shouldExpand);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -90,6 +95,11 @@ export function SimulationMode({
     }
   };
 
+  // Update expansion state when pills change
+  useEffect(() => {
+    setIsExpanded(shouldExpand);
+  }, [shouldExpand]);
+
   return (
     <TooltipProvider delayDuration={300}>
       <form className="group/composer w-full" onSubmit={handleSubmit}>
@@ -98,13 +108,13 @@ export function SimulationMode({
             "mx-auto w-full max-w-2xl cursor-text overflow-clip border border-border bg-transparent bg-clip-padding p-2.5 shadow-lg transition-all duration-200 dark:bg-muted/50",
             {
               "grid grid-cols-1 grid-rows-[auto_1fr_auto] rounded-3xl":
-                isExpanded,
+                shouldExpand,
               "grid grid-cols-[auto_1fr_auto] grid-rows-[auto_1fr_auto] rounded-[28px]":
-                !isExpanded,
+                !shouldExpand,
             }
           )}
           style={{
-            gridTemplateAreas: isExpanded
+            gridTemplateAreas: shouldExpand
               ? "'header' 'primary' 'footer'"
               : "'header header header' 'leading primary trailing' '. footer .'",
           }}
@@ -113,8 +123,8 @@ export function SimulationMode({
             className={cn(
               "relative flex min-h-20 items-start overflow-x-hidden px-1.5",
               {
-                "mb-0 px-2 py-1": isExpanded,
-                "-my-2.5": !isExpanded,
+                "mb-0 px-2 py-1": shouldExpand,
+                "-my-2.5": !shouldExpand,
               }
             )}
             style={{ gridArea: "primary" }}
@@ -143,16 +153,20 @@ export function SimulationMode({
                 </div>
                 <AdvertisementsPicker
                   onAttachFilesClick={handleAttachFilesClick}
+                  onFileCountChange={setAdvertisementFileCount}
                   onGoogleAdsClick={handleGoogleAdsClick}
                   onMetaAdsClick={handleMetaAdsClick}
                 />
-                <AttachFilesPicker onFilesChange={handleFilesChange} />
+                <AttachFilesPicker
+                  onSelectedFilesChange={setAttachedFiles}
+                  selectedFiles={attachedFiles}
+                />
               </div>
             </div>
           </div>
           <div
             className="flex items-center gap-2"
-            style={{ gridArea: isExpanded ? "footer" : "trailing" }}
+            style={{ gridArea: shouldExpand ? "footer" : "trailing" }}
           >
             <div className="ms-auto flex items-center gap-1.5">
               <Tooltip>

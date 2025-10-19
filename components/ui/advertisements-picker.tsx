@@ -7,26 +7,27 @@ import {
   Paperclip,
   X,
 } from "lucide-react";
-import { useRef, useState } from "react";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Badge } from "./badge";
 
 interface AdvertisementsPickerProps {
   onGoogleAdsClick?: () => void;
   onMetaAdsClick?: () => void;
   onAttachFilesClick?: (files: FileList | null) => void;
+  onFileCountChange?: (count: number) => void;
   className?: string;
 }
 
 export function AdvertisementsPicker({
   onGoogleAdsClick,
   onMetaAdsClick,
-  onAttachFilesClick,
+  onFileCountChange,
   className,
 }: AdvertisementsPickerProps) {
   const [open, setOpen] = useState(false);
@@ -41,8 +42,8 @@ export function AdvertisementsPicker({
     const files = event.target.files;
     if (files && files.length > 0) {
       const newFiles = Array.from(files);
-      setSelectedFiles((prev) => [...prev, ...newFiles]);
-      onAttachFilesClick?.(files);
+      setSelectedFiles((prev: File[]) => [...prev, ...newFiles]);
+      // Don't call onAttachFilesClick here to avoid duplication
     }
     // Reset the input so the same file can be selected again
     if (fileInputRef.current) {
@@ -51,8 +52,15 @@ export function AdvertisementsPicker({
   };
 
   const handleRemoveFile = (index: number) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setSelectedFiles((prev: File[]) =>
+      prev.filter((_: File, i: number) => i !== index)
+    );
   };
+
+  // Notify parent when file count changes
+  useEffect(() => {
+    onFileCountChange?.(selectedFiles.length);
+  }, [selectedFiles.length, onFileCountChange]);
 
   return (
     <div className={className}>
@@ -64,7 +72,7 @@ export function AdvertisementsPicker({
             role="combobox"
             variant="ghost"
           >
-            <div className="flex flex-1 flex-wrap gap-1">
+            <div className="flex flex-1 flex-col gap-1">
               {selectedFiles.length === 0 ? (
                 <span className="text-sm">Ads</span>
               ) : (
@@ -121,7 +129,7 @@ export function AdvertisementsPicker({
               variant="ghost"
             >
               <Paperclip className="mr-2 h-4 w-4 flex-shrink-0" />
-              <span className="text-sm">Attach Files</span>
+              <span className="text-sm">Attach Ad Files</span>
             </Button>
           </div>
         </PopoverContent>
