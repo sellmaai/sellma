@@ -44,11 +44,13 @@ export const PersonaAIOutputSchema = z.object({
   preAdContextChainOfThought: z.string().min(1).max(500),
 });
 
-// Complete schema including DB-specific fields
-export const FlattenedPersonaSchema = PersonaAIOutputSchema.extend({
-  id: z.string().uuid(),
+// Schema enforced after server-side metadata injection
+export const TrustedPersonaSchema = PersonaAIOutputSchema.extend({
+  personaId: z.string().min(1),
+  audienceGroup: z.string().min(1),
+  lastUpdated: z.string().min(1),
   audienceId: z.string().min(1),
-  userId: z.string().uuid(),
+  userId: z.string().min(1),
 });
 
 // Main schema for AI generation (use this in generateObject)
@@ -56,4 +58,4 @@ export const PersonaSchema = PersonaAIOutputSchema;
 
 export type PersonaAIOutput = z.infer<typeof PersonaAIOutputSchema>;
 export type PersonaOutput = PersonaAIOutput;
-export type FlattenedPersonaOutput = z.infer<typeof FlattenedPersonaSchema>;
+export type PersistedPersona = z.infer<typeof TrustedPersonaSchema>;

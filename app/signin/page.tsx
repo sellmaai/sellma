@@ -74,8 +74,12 @@ function SignInWithMagicLink({
         formData.set("redirectTo", "/product");
         signIn("resend", formData)
           .then(handleLinkSent)
-          .catch((_error) => {
-            toast.error("Could not send sign-in link");
+          .catch((error) => {
+            toast.error(
+              `Could not send sign-in link: ${
+                error instanceof Error ? error.message : "Unknown error"
+              }`,
+            );
           });
       }}
     >
