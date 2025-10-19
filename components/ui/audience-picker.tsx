@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Search, ChevronDown, X, ExternalLink, Users } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ChevronDown, X, ExternalLink, Users, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { useInfiniteAudiences } from "@/hooks/use-infinite-audiences";
 
 export interface Audience {
   id: string;
@@ -36,6 +36,29 @@ export function AudiencePicker({
 }: AudiencePickerProps) {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  
+  const {
+    audiences: savedAudiences,
+    isLoading,
+    error,
+    hasMore,
+    loadMore,
+    isLoadingMore,
+    setSearchQuery,
+  } = useInfiniteAudiences();
+
+  // Update search query when searchValue changes
+  useEffect(() => {
+    setSearchQuery(searchValue);
+  }, [searchValue, setSearchQuery]);
+
+  // Convert saved audiences to the expected format
+  const convertedAudiences: Audience[] = savedAudiences.map(audience => ({
+    id: audience._id,
+    name: audience.name,
+    source: "saved" as const,
+  }));
 
   const handleSelect = (audience: Audience) => {
     const isSelected = selectedAudiences.some(a => a.id === audience.id);
@@ -74,18 +97,13 @@ export function AudiencePicker({
     }
   };
 
-  // Mock data for now - will be replaced with real data in later phases
-  const mockAudiences: Audience[] = [
-    { id: "1", name: "High-value customers", source: "saved" },
-    { id: "2", name: "Lookalike audience", source: "saved" },
-    { id: "3", name: "Retargeting list", source: "saved" },
-    { id: "4", name: "Email subscribers", source: "saved" },
-    { id: "5", name: "Cart abandoners", source: "saved" },
-  ];
-
-  const filteredAudiences = mockAudiences.filter(audience =>
-    audience.name.toLowerCase().includes(searchValue.toLowerCase())
-  );
+  // Handle scroll to load more
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight + 50 && hasMore && !isLoadingMore) {
+      loadMore();
+    }
+  };
 
   return (
     <div className={cn("w-full", className)}>
@@ -134,52 +152,91 @@ export function AudiencePicker({
               value={searchValue}
               onValueChange={setSearchValue}
             />
-            <CommandList>
-              <CommandEmpty>No audiences found.</CommandEmpty>
-              
-              {/* External Sources Section */}
-              <div className="p-3">
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">External Sources</h4>
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onGoogleAdsClick}
-                    className="flex-1 justify-center text-center min-h-[40px] px-3"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span className="text-xs font-medium">Google Ads</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onMetaAdsClick}
-                    className="flex-1 justify-center text-center min-h-[40px] px-3"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span className="text-xs font-medium">Meta Ads</span>
-                  </Button>
+            <CommandList
+              ref={scrollRef}
+              onScroll={handleScroll}
+              className="max-h-[300px] overflow-y-auto"
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center p-4">
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <span className="text-sm text-muted-foreground">Loading audiences...</span>
                 </div>
-              </div>
-              
-              <Separator />
-              
-              {/* Saved Audiences Section */}
-              <CommandGroup heading="Saved Audiences">
-                {filteredAudiences.map((audience) => (
-                  <CommandItem
-                    key={audience.id}
-                    value={audience.name}
-                    onSelect={() => handleSelect(audience)}
-                    className="flex items-center justify-between"
-                  >
-                    <span>{audience.name}</span>
-                    {selectedAudiences.some(a => a.id === audience.id) && (
-                      <div className="h-2 w-2 rounded-full bg-primary" />
+              ) : error ? (
+                <div className="flex items-center justify-center p-4">
+                  <span className="text-sm text-destructive">Failed to load audiences</span>
+                </div>
+              ) : (
+                <>
+                  <CommandEmpty>No audiences found.</CommandEmpty>
+                  
+                  {/* External Sources Section */}
+                  <div className="p-3">
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2">External Sources</h4>
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onGoogleAdsClick}
+                        className="flex-1 justify-center text-center min-h-[40px] px-3"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="text-xs font-medium">Google Ads</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onMetaAdsClick}
+                        className="flex-1 justify-center text-center min-h-[40px] px-3"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="text-xs font-medium">Meta Ads</span>
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  {/* Saved Audiences Section */}
+                  <CommandGroup heading="Saved Audiences">
+                    {convertedAudiences.map((audience) => (
+                      <CommandItem
+                        key={audience.id}
+                        value={audience.name}
+                        onSelect={() => handleSelect(audience)}
+                        className="flex items-center justify-between"
+                      >
+                        <span>{audience.name}</span>
+                        {selectedAudiences.some(a => a.id === audience.id) && (
+                          <div className="h-2 w-2 rounded-full bg-primary" />
+                        )}
+                      </CommandItem>
+                    ))}
+                    
+                    {/* Load More Button */}
+                    {hasMore && (
+                      <div className="p-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={loadMore}
+                          disabled={isLoadingMore}
+                          className="w-full justify-center"
+                        >
+                          {isLoadingMore ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              Loading more...
+                            </>
+                          ) : (
+                            "Load more audiences"
+                          )}
+                        </Button>
+                      </div>
                     )}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+                  </CommandGroup>
+                </>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>
