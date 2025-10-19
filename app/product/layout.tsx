@@ -1,21 +1,16 @@
 "use client";
 
-import ConvexClientProvider from "@/components/ConvexClientProvider";
+import type { ReactNode } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@/components/ui/sidebar";
-import { ReactNode } from "react";
+import ConvexClientProvider from "@/components/ConvexClientProvider";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export default function ProductLayout({ children }: { children: ReactNode }) {
   return (
     <ConvexClientProvider>
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset>
-          {children}
-        </SidebarInset>
+        <SidebarInset>{children}</SidebarInset>
       </SidebarProvider>
     </ConvexClientProvider>
   );

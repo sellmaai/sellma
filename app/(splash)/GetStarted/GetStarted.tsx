@@ -9,6 +9,8 @@ import {
   SiX,
   SiYoutube,
 } from "@icons-pack/react-simple-icons";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import {
   Announcement,
   AnnouncementTag,
@@ -21,8 +23,6 @@ import {
   MarqueeItem,
 } from "@/components/kibo-ui/marquee";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { useEffect, useState } from "react";
 
 const logos = [
   { name: "GitHub", icon: SiGithub, url: "https://github.com" },
@@ -35,7 +35,7 @@ const logos = [
 ];
 
 export const GetStarted = () => {
-  const [ , setShowVideo] = useState(false);
+  const [, setShowVideo] = useState(false);
 
   useEffect(() => {
     const timerId = setTimeout(() => setShowVideo(true), 1000);
@@ -50,15 +50,17 @@ export const GetStarted = () => {
             <Link href="#">
               <Announcement>
                 <AnnouncementTag>Latest</AnnouncementTag>
-                <AnnouncementTitle>A/B test hundreds of ad variants with one click.
+                <AnnouncementTitle>
+                  A/B test hundreds of ad variants with one click.
                 </AnnouncementTitle>
               </Announcement>
             </Link>
-            <h1 className="mb-0 text-balance text-5xl font-semibold md:text-6xl xl:text-[5.25rem]">
+            <h1 className="mb-0 text-balance font-semibold text-5xl md:text-6xl xl:text-[5.25rem]">
               Stop Guessing. Start Converting.
             </h1>
             <p className="mt-0 mb-0 text-balance text-lg text-muted-foreground">
-              sellma.ai — the platform that de-risks advertising for small and medium businesses (SMBs) through explainable simulations.
+              sellma.ai — the platform that de-risks advertising for small and
+              medium businesses (SMBs) through explainable simulations.
             </p>
             <div className="flex items-center gap-2">
               <Button asChild>

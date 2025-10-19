@@ -1,7 +1,16 @@
 "use client";
 
+import {
+  IconMicrophone,
+  IconPaperclip,
+  IconPlus,
+  IconSearch,
+  IconSend,
+  IconSparkles,
+  IconWaveSine,
+} from "@tabler/icons-react";
 import type React from "react";
-
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,16 +21,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import {
-  IconMicrophone,
-  IconPaperclip,
-  IconPlus,
-  IconSearch,
-  IconSend,
-  IconSparkles,
-  IconWaveSine,
-} from "@tabler/icons-react";
-import { useRef, useState } from "react";
 
 export default function Ai01() {
   const [message, setMessage] = useState("");
@@ -62,26 +61,28 @@ export default function Ai01() {
 
   return (
     <div className="w-full">
-      <h1 className="mb-7 mx-auto max-w-2xl text-center text-2xl font-semibold leading-9 text-foreground px-1 text-pretty whitespace-pre-wrap">
+      <h1 className="mx-auto mb-7 max-w-2xl whitespace-pre-wrap text-pretty px-1 text-center font-semibold text-2xl text-foreground leading-9">
         How can I help you today?
       </h1>
 
-      <form onSubmit={handleSubmit} className="group/composer w-full">
+      <form className="group/composer w-full" onSubmit={handleSubmit}>
         <input
+          className="sr-only"
+          multiple
+          onChange={() => {
+            // Hidden file input - onChange handled elsewhere
+          }}
           ref={fileInputRef}
           type="file"
-          multiple
-          className="sr-only"
-          onChange={() => {}}
         />
 
         <div
           className={cn(
-            "w-full max-w-2xl mx-auto bg-transparent dark:bg-muted/50 cursor-text overflow-clip bg-clip-padding p-2.5 shadow-lg border border-border transition-all duration-200",
+            "mx-auto w-full max-w-2xl cursor-text overflow-clip border border-border bg-transparent bg-clip-padding p-2.5 shadow-lg transition-all duration-200 dark:bg-muted/50",
             {
-              "rounded-3xl grid grid-cols-1 grid-rows-[auto_1fr_auto]":
+              "grid grid-cols-1 grid-rows-[auto_1fr_auto] rounded-3xl":
                 isExpanded,
-              "rounded-[28px] grid grid-cols-[auto_1fr_auto] grid-rows-[auto_1fr_auto]":
+              "grid grid-cols-[auto_1fr_auto] grid-rows-[auto_1fr_auto] rounded-[28px]":
                 !isExpanded,
             }
           )}
@@ -95,21 +96,21 @@ export default function Ai01() {
             className={cn(
               "flex min-h-14 items-center overflow-x-hidden px-1.5",
               {
-                "px-2 py-1 mb-0": isExpanded,
+                "mb-0 px-2 py-1": isExpanded,
                 "-my-2.5": !isExpanded,
               }
             )}
             style={{ gridArea: "primary" }}
           >
-            <div className="flex-1 overflow-auto max-h-52">
+            <div className="max-h-52 flex-1 overflow-auto">
               <Textarea
-                ref={textareaRef}
-                value={message}
+                className="scrollbar-thin min-h-0 resize-none rounded-none border-0 p-0 text-base placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
                 onChange={handleTextareaChange}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask anything"
-                className="min-h-0 resize-none rounded-none border-0 p-0 text-base placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 scrollbar-thin dark:bg-transparent"
+                ref={textareaRef}
                 rows={1}
+                value={message}
               />
             </div>
           </div>
@@ -121,10 +122,10 @@ export default function Ai01() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
+                  className="h-9 w-9 rounded-full outline-none ring-0 hover:bg-accent"
+                  size="icon"
                   type="button"
                   variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-full hover:bg-accent outline-none ring-0"
                 >
                   <IconPlus className="size-6 text-muted-foreground" />
                 </Button>
@@ -139,23 +140,27 @@ export default function Ai01() {
                     className="rounded-[calc(1rem-6px)]"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <IconPaperclip size={20} className="opacity-60" />
+                    <IconPaperclip className="opacity-60" size={20} />
                     Add photos & files
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="rounded-[calc(1rem-6px)]"
-                    onClick={() => {}}
+                    onClick={() => {
+                      // Placeholder for future agent mode functionality
+                    }}
                   >
                     <div className="flex items-center gap-2">
-                      <IconSparkles size={20} className="opacity-60" />
+                      <IconSparkles className="opacity-60" size={20} />
                       Agent mode
                     </div>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="rounded-[calc(1rem-6px)]"
-                    onClick={() => {}}
+                    onClick={() => {
+                      // Placeholder for future deep research functionality
+                    }}
                   >
-                    <IconSearch size={20} className="opacity-60" />
+                    <IconSearch className="opacity-60" size={20} />
                     Deep Research
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
@@ -169,28 +174,28 @@ export default function Ai01() {
           >
             <div className="ms-auto flex items-center gap-1.5">
               <Button
+                className="h-9 w-9 rounded-full hover:bg-accent"
+                size="icon"
                 type="button"
                 variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-full hover:bg-accent"
               >
                 <IconMicrophone className="size-5 text-muted-foreground" />
               </Button>
 
               <Button
+                className="relative h-9 w-9 rounded-full hover:bg-accent"
+                size="icon"
                 type="button"
                 variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-full hover:bg-accent relative"
               >
                 <IconWaveSine className="size-5 text-muted-foreground" />
               </Button>
 
               {message.trim() && (
                 <Button
-                  type="submit"
-                  size="icon"
                   className="h-9 w-9 rounded-full"
+                  size="icon"
+                  type="submit"
                 >
                   <IconSend className="size-5" />
                 </Button>

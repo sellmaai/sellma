@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 // Minimal ad variant shape: no id, no ctr
 export const AdVariantSchema = z.object({
@@ -8,5 +8,3 @@ export const AdVariantSchema = z.object({
 });
 
 export type AdVariant = z.infer<typeof AdVariantSchema>;
-
-

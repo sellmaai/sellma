@@ -1,11 +1,10 @@
-'use server';
+"use server";
 
-import { generateObject, NoObjectGeneratedError } from 'ai';
-import { z } from 'zod';
-import { google } from '@ai-sdk/google';
-import { PersonaSchema } from './schemas';
-// No static audience groups; accept dynamic ids
-import { buildPersonaPrompt } from './prompt';
+import { google } from "@ai-sdk/google";
+import { generateObject, NoObjectGeneratedError } from "ai";
+import { z } from "zod";
+import { buildPersonaPrompt } from "./prompt";
+import { type PersonaAIOutput, PersonaSchema } from "./schemas";
 
 const InputSchema = z.object({
   group: z.string().min(1),
@@ -15,35 +14,35 @@ const InputSchema = z.object({
 
 export type GeneratePersonasInput = z.infer<typeof InputSchema>;
 
-export async function generatePersonas(input: GeneratePersonasInput) {
+/**
+ * Generates personas using AI without persisting them to the database.
+ * Returns personas in flattened format (PersonaAIOutput) without DB-specific fields (id, userId).
+ */
+export async function generatePersonas(
+  input: GeneratePersonasInput
+): Promise<PersonaAIOutput[]> {
   const { group, count, context } = InputSchema.parse(input);
 
   const prompt = buildPersonaPrompt({ group, count, context });
 
   try {
     const { object } = await generateObject({
-      model: google('gemini-2.5-flash'),
-      output: 'array',
+      model: google("gemini-2.5-flash"),
+      output: "array",
       schema: PersonaSchema,
-      schemaName: 'Persona',
-      schemaDescription: 'A standardized marketing persona used for ad simulations.',
+      schemaName: "Persona",
+      schemaDescription:
+        "A standardized marketing persona used for ad simulations.",
       prompt,
       temperature: 0.2,
     });
 
-    // object is Persona[] due to output: 'array' with Persona element schema
-    return object;
+    // object is PersonaAIOutput[] - flattened personas without DB-specific fields
+    return object as PersonaAIOutput[];
   } catch (error) {
     if (NoObjectGeneratedError.isInstance(error)) {
-      console.error('generatePersonas NoObjectGeneratedError', {
-        cause: error.cause,
-        text: error.text,
-        response: error.response,
-        usage: error.usage,
-      });
+      // Log error details if needed for debugging
     }
     throw error;
   }
 }
-
-

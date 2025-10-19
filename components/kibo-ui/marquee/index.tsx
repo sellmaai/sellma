@@ -1,8 +1,8 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import type { HTMLAttributes } from "react";
 import type { MarqueeProps as FastMarqueeProps } from "react-fast-marquee";
-import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils";
 
 const FastMarquee = dynamic(() => import("react-fast-marquee"), { ssr: false });

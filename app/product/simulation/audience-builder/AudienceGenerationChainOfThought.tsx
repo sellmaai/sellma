@@ -1,5 +1,6 @@
-'use client'
+"use client";
 
+import { Search, Sparkles } from "lucide-react";
 import {
   ChainOfThought,
   ChainOfThoughtContent,
@@ -7,8 +8,7 @@ import {
   ChainOfThoughtSearchResult,
   ChainOfThoughtSearchResults,
   ChainOfThoughtStep,
-} from '@/components/ai-elements/chain-of-thought';
-import { Search, Sparkles } from 'lucide-react';
+} from "@/components/ai-elements/chain-of-thought";
 
 interface Group {
   id: string;
@@ -20,8 +20,8 @@ interface Group {
 export interface AudienceGenerationChainOfThought {
   isThinking: boolean;
   groups: Group[];
-  groupSuggestStatus: 'pending' | 'active' | 'complete';
-  perGroupStatus: Record<string, 'pending' | 'active' | 'complete'>;
+  groupSuggestStatus: "pending" | "active" | "complete";
+  perGroupStatus: Record<string, "pending" | "active" | "complete">;
 }
 
 export default function GenerationChainOfThought({
@@ -30,8 +30,21 @@ export default function GenerationChainOfThought({
   groupSuggestStatus,
   perGroupStatus,
 }: AudienceGenerationChainOfThought) {
-  const shouldShow = isThinking || groups.length > 0 || Object.keys(perGroupStatus).length > 0;
-  if (!shouldShow) return null;
+  const shouldShow =
+    isThinking || groups.length > 0 || Object.keys(perGroupStatus).length > 0;
+  if (!shouldShow) {
+    return null;
+  }
+
+  const getGroupSuggestStatusValue = () => {
+    if (groupSuggestStatus === "active") {
+      return "active";
+    }
+    if (groupSuggestStatus === "complete") {
+      return "complete";
+    }
+    return "pending";
+  };
 
   return (
     <div className="mt-6">
@@ -41,7 +54,7 @@ export default function GenerationChainOfThought({
           <ChainOfThoughtStep
             icon={Search}
             label="Suggesting audience groups..."
-            status={groupSuggestStatus === 'active' ? 'active' : groupSuggestStatus === 'complete' ? 'complete' : 'pending'}
+            status={getGroupSuggestStatusValue()}
           >
             {groups.length > 0 && (
               <ChainOfThoughtSearchResults>
@@ -56,10 +69,10 @@ export default function GenerationChainOfThought({
 
           {groups.map((g) => (
             <ChainOfThoughtStep
-              key={`step-${g.id}`}
               icon={Sparkles}
+              key={`step-${g.id}`}
               label={`Generating persona for ${g.label}`}
-              status={perGroupStatus[g.id] ?? 'pending'}
+              status={perGroupStatus[g.id] ?? "pending"}
             />
           ))}
         </ChainOfThoughtContent>
@@ -67,5 +80,3 @@ export default function GenerationChainOfThought({
     </div>
   );
 }
-
-

@@ -1,11 +1,11 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const BehaviorEnum = z.enum([
-  'CLICK',
-  'SAVE_FOR_LATER',
-  'RESEARCH_FURTHER',
-  'IGNORE',
-  'SHARE',
+  "CLICK",
+  "SAVE_FOR_LATER",
+  "RESEARCH_FURTHER",
+  "IGNORE",
+  "SHARE",
 ]);
 
 export const ReactionToAdSchema = z.object({
@@ -24,5 +24,3 @@ export const AdReactionsSchema = z.object({
 
 export type ReactionToAd = z.infer<typeof ReactionToAdSchema>;
 export type AdReactions = z.infer<typeof AdReactionsSchema>;
-
-

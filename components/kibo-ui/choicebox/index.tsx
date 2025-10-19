@@ -1,11 +1,6 @@
 "use client";
 
 import {
-  RadioGroup,
-  RadioGroupItem,
-} from "@/components/ui/radio-group";
-import {cn} from "@/lib/utils";
-import {
   type ComponentProps,
   createContext,
   type HTMLAttributes,
@@ -18,6 +13,8 @@ import {
   FieldLabel,
   FieldTitle,
 } from "@/components/ui/field";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { cn } from "@/lib/utils";
 
 export type ChoiceboxProps = ComponentProps<typeof RadioGroup>;
 

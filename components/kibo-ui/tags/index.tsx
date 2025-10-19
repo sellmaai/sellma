@@ -41,7 +41,9 @@ const TagsContext = createContext<TagsContextType>({
   value: undefined,
   setValue: undefined,
   open: false,
-  onOpenChange: () => {},
+  onOpenChange: () => {
+    // Default no-op - should be overridden by provider
+  },
   width: undefined,
   setWidth: undefined,
 });
@@ -119,7 +121,6 @@ export const TagsTrigger = ({
   <PopoverTrigger asChild>
     <Button
       className={cn("h-auto w-full justify-between p-2", className)}
-      // biome-ignore lint/a11y/useSemanticElements: "Required"
       role="combobox"
       variant="outline"
       {...props}
@@ -142,7 +143,7 @@ export const TagsValue = ({
   onRemove,
   ...props
 }: TagsValueProps & { onRemove?: () => void }) => {
-  const handleRemove: MouseEventHandler<HTMLDivElement> = (event) => {
+  const handleRemove: MouseEventHandler<HTMLButtonElement> = (event) => {
     event.preventDefault();
     event.stopPropagation();
     onRemove?.();
@@ -152,14 +153,13 @@ export const TagsValue = ({
     <Badge className={cn("flex items-center gap-2", className)} {...props}>
       {children}
       {onRemove && (
-        // biome-ignore lint/a11y/noStaticElementInteractions: "This is a clickable badge"
-        // biome-ignore lint/a11y/useKeyWithClickEvents: "This is a clickable badge"
-        <div
-          className="size-auto cursor-pointer hover:text-muted-foreground"
+        <button
+          className="size-auto cursor-pointer border-none bg-transparent p-0 hover:text-muted-foreground"
           onClick={handleRemove}
+          type="button"
         >
           <XIcon size={12} />
-        </div>
+        </button>
       )}
     </Badge>
   );

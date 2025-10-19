@@ -5,9 +5,9 @@
  * You can safely delete it and remove it from package.json scripts.
  */
 
-import fs from "fs";
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
 import { config as loadEnvFile } from "dotenv";
-import { spawnSync } from "child_process";
 
 if (!fs.existsSync(".env.local")) {
   // Something is off, skip the script.
@@ -26,7 +26,7 @@ if (runOnceWorkflow && config.SETUP_SCRIPT_RAN !== undefined) {
 
 // The fallback should never be used.
 const deploymentName =
-  config.CONVEX_DEPLOYMENT.split(":").slice(-1)[0] ?? "<your deployment name>";
+  config.CONVEX_DEPLOYMENT.split(":").at(-1) ?? "<your deployment name>";
 
 const variables = JSON.stringify({
   help:
@@ -71,17 +71,17 @@ const variables = JSON.stringify({
 console.error(
   "You chose Convex Auth as the auth solution. " +
     "This command will walk you through setting up " +
-    "the required Convex environment variables",
+    "the required Convex environment variables"
 );
 
 const result = spawnSync(
   "npx",
   ["@convex-dev/auth", "--variables", variables, "--skip-git-check"],
-  { stdio: "inherit" },
+  { stdio: "inherit" }
 );
 
 if (runOnceWorkflow) {
-  fs.writeFileSync(".env.local", `\nSETUP_SCRIPT_RAN=1\n`, { flag: "a" });
+  fs.writeFileSync(".env.local", "\nSETUP_SCRIPT_RAN=1\n", { flag: "a" });
 }
 
 process.exit(result.status);

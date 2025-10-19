@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Rocket } from "lucide-react"
-import { useQuery } from "convex/react"
+import { useQuery } from "convex/react";
+import { Rocket } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { type ComponentProps, useMemo } from "react";
 
-import { NavUser } from "@/components/nav-user"
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -21,21 +21,21 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import { api } from "@/convex/_generated/api"
+} from "@/components/ui/sidebar";
+import { api } from "@/convex/_generated/api";
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname()
-  const viewer = useQuery(api.users.viewer, {})
+export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname();
+  const viewer = useQuery(api.users.viewer, {});
 
-  const user = React.useMemo(
+  const user = useMemo(
     () => ({
       name: viewer?.name ?? "",
       email: viewer?.email ?? "",
       avatar: "/avatars/shadcn.jpg",
     }),
     [viewer]
-  )
+  );
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -45,7 +45,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname?.startsWith("/product/simulation")}>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname?.startsWith("/product/simulation")}
+              >
                 <Link href="/product/simulation">
                   <Rocket />
                   <span>Simulation</span>
@@ -53,7 +56,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenuButton>
               <SidebarMenuSub>
                 <SidebarMenuSubItem>
-                  <SidebarMenuSubButton asChild isActive={pathname?.startsWith("/product/simulation/audience-builder")}>
+                  <SidebarMenuSubButton
+                    asChild
+                    isActive={pathname?.startsWith(
+                      "/product/simulation/audience-builder"
+                    )}
+                  >
                     <Link href="/product/simulation/audience-builder">
                       <span>Audience Builder</span>
                     </Link>
@@ -69,5 +77,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

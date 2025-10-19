@@ -1,19 +1,19 @@
 "use client";
 
+import { useAuthActions } from "@convex-dev/auth/react";
+import { GitHubLogoIcon } from "@radix-ui/react-icons";
+import { useState } from "react";
+import { Toaster, toast } from "sonner";
 import { SignInMethodDivider } from "@/components/SignInMethodDivider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuthActions } from "@convex-dev/auth/react";
-import { GitHubLogoIcon } from "@radix-ui/react-icons";
-import { toast, Toaster } from "sonner";
-import { useState } from "react";
 
 export default function SignInPage() {
   const [step, setStep] = useState<"signIn" | "linkSent">("signIn");
 
   return (
-    <div className="flex min-h-screen w-full container my-auto mx-auto">
-      <div className="max-w-[384px] mx-auto flex flex-col my-auto gap-4 pb-8">
+    <div className="container mx-auto my-auto flex min-h-screen w-full">
+      <div className="mx-auto my-auto flex max-w-[384px] flex-col gap-4 pb-8">
         {step === "signIn" ? (
           <>
             <h2 className="font-semibold text-2xl tracking-tight">
@@ -30,9 +30,9 @@ export default function SignInPage() {
             </h2>
             <p>A sign-in link has been sent to your email address.</p>
             <Button
-              className="p-0 self-start"
-              variant="link"
+              className="self-start p-0"
               onClick={() => setStep("signIn")}
+              variant="link"
             >
               Cancel
             </Button>
@@ -48,9 +48,11 @@ function SignInWithGitHub() {
   return (
     <Button
       className="flex-1"
-      variant="outline"
+      onClick={() => {
+        signIn("github", { redirectTo: "/product" });
+      }}
       type="button"
-      onClick={() => void signIn("github", { redirectTo: "/product" })}
+      variant="outline"
     >
       <GitHubLogoIcon className="mr-2 h-4 w-4" /> GitHub
     </Button>
@@ -72,14 +74,13 @@ function SignInWithMagicLink({
         formData.set("redirectTo", "/product");
         signIn("resend", formData)
           .then(handleLinkSent)
-          .catch((error) => {
-            console.error(error);
+          .catch((_error) => {
             toast.error("Could not send sign-in link");
           });
       }}
     >
       <label htmlFor="email">Email</label>
-      <Input name="email" id="email" className="mb-4" autoComplete="email" />
+      <Input autoComplete="email" className="mb-4" id="email" name="email" />
       <Button type="submit">Send sign-in link</Button>
       <Toaster />
     </form>

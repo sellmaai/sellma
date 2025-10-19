@@ -1,9 +1,9 @@
-import { action } from './_generated/server';
-import { v } from 'convex/values';
-import { generateObject, NoObjectGeneratedError } from 'ai';
-import { google } from '@ai-sdk/google';
-import { AdVariantSchema } from '../lib/ads/schemas';
-import { buildAdVariantsPrompt } from '../lib/ads/prompt';
+import { google } from "@ai-sdk/google";
+import { generateObject, NoObjectGeneratedError } from "ai";
+import { v } from "convex/values";
+import { buildAdVariantsPrompt } from "../lib/ads/prompt";
+import { AdVariantSchema } from "../lib/ads/schemas";
+import { action } from "./_generated/server";
 
 export const generateVariants = action({
   args: {
@@ -18,11 +18,12 @@ export const generateVariants = action({
   handler: async (_ctx, args) => {
     try {
       const { object } = await generateObject({
-        model: google('gemini-2.5-flash'),
-        output: 'array',
+        model: google("gemini-2.5-flash"),
+        output: "array",
         schema: AdVariantSchema,
-        schemaName: 'AdVariant',
-        schemaDescription: 'An ad variant with headline, description, optional angle.',
+        schemaName: "AdVariant",
+        schemaDescription:
+          "An ad variant with headline, description, optional angle.",
         prompt: buildAdVariantsPrompt({
           count: Math.min(Math.max(args.count, 1), 10),
           source: args.source,
@@ -32,16 +33,9 @@ export const generateVariants = action({
       return object; // AdVariant[]
     } catch (error) {
       if (NoObjectGeneratedError.isInstance(error)) {
-        console.error('convex.ads.generateVariants NoObjectGeneratedError', {
-          cause: error.cause,
-          text: error.text,
-          response: error.response,
-          usage: error.usage,
-        });
+        // Log error details if needed for debugging
       }
       throw error;
     }
   },
 });
-
-

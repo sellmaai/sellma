@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const AudienceGroupSuggestionSchema = z.object({
   id: z.string().min(1),
@@ -8,8 +8,9 @@ export const AudienceGroupSuggestionSchema = z.object({
   percent: z.number().int().min(1).max(100),
 });
 
-export type AudienceGroupSuggestion = z.infer<typeof AudienceGroupSuggestionSchema>;
-
+export type AudienceGroupSuggestion = z.infer<
+  typeof AudienceGroupSuggestionSchema
+>;
 
 export const AudienceSuggestionBundleSchema = z.object({
   description: z.string().min(20).max(1200),
@@ -19,5 +20,3 @@ export const AudienceSuggestionBundleSchema = z.object({
 export const AudienceOverviewSchema = z.object({
   description: z.string().min(20).max(1200),
 });
-
-

@@ -1,9 +1,13 @@
-import { action, mutation, query } from './_generated/server';
-import { v } from 'convex/values';
-import { generateObject, NoObjectGeneratedError } from 'ai';
-import { google } from '@ai-sdk/google';
-import { PersonaSchema } from '../lib/personas/schemas';
-import { buildPersonaPrompt, buildBatchPersonaPrompt } from '../lib/personas/prompt';
+import { google } from "@ai-sdk/google";
+import { getAuthUserId } from "@convex-dev/auth/server";
+import { generateObject, NoObjectGeneratedError } from "ai";
+import { v } from "convex/values";
+import {
+  buildBatchPersonaPrompt,
+  buildPersonaPrompt,
+} from "../lib/personas/prompt";
+import { type PersonaAIOutput, PersonaSchema } from "../lib/personas/schemas";
+import { action, mutation, query } from "./_generated/server";
 
 export const generate = action({
   args: {
@@ -26,16 +30,15 @@ export const generate = action({
   },
   handler: async (_ctx, args) => {
     try {
-      const normalizeGroupId = (raw: string): string => {
-        return raw;
-      };
+      const normalizeGroupId = (raw: string): string => raw;
       const group = normalizeGroupId(args.group);
       const { object } = await generateObject({
-        model: google('gemini-2.5-flash'),
-        output: 'array',
+        model: google("gemini-2.5-flash"),
+        output: "array",
         schema: PersonaSchema,
-        schemaName: 'Persona',
-        schemaDescription: 'A standardized marketing persona used for ad simulations.',
+        schemaName: "Persona",
+        schemaDescription:
+          "A standardized marketing persona used for ad simulations.",
         prompt: buildPersonaPrompt({
           group: group as any,
           count: Math.min(Math.max(args.count, 1), 10),
@@ -49,22 +52,30 @@ export const generate = action({
         temperature: 0.2,
       });
 
-      // Tag with audienceId if provided and persist
-      const personasWithAudience = (object as any[]).map((p) => ({
+      // Get the authenticated user ID
+      const userId = await getAuthUserId(_ctx);
+      if (userId === null) {
+        throw new Error("Must be signed in to generate personas");
+      }
+
+      // AI now generates flattened personas directly - just add DB-specific fields
+      const personasWithMetadata = (object as PersonaAIOutput[]).map((p) => ({
         ...p,
-        audienceGroup: group,
-        audienceId: args.audienceId ?? 'default',
+        audienceGroup: group, // Ensure the group is set correctly
+        audienceId: args.audienceId ?? "default",
+        userId,
       }));
-      await _ctx.runMutation((api as any).personas.saveMany, { personas: personasWithAudience });
-      return personasWithAudience; // Persona[]
+
+      const savedPersonas = await _ctx.runMutation(
+        (api as any).personas.saveMany,
+        {
+          personas: personasWithMetadata,
+        }
+      );
+      return savedPersonas;
     } catch (error) {
       if (NoObjectGeneratedError.isInstance(error)) {
-        console.error('convex.personas.generate NoObjectGeneratedError', {
-          cause: error.cause,
-          text: error.text,
-          response: error.response,
-          usage: error.usage,
-        });
+        // Log error details if needed for debugging
       }
       throw error;
     }
@@ -72,7 +83,7 @@ export const generate = action({
 });
 
 // Save many personas mutation
-import { api } from './_generated/api';
+import { api } from "./_generated/api";
 
 export const saveMany = mutation({
   args: {
@@ -80,9 +91,16 @@ export const saveMany = mutation({
   },
   handler: async (ctx, args) => {
     const table = ctx.db;
+    const insertedIds: string[] = [];
     for (const p of args.personas) {
-      await table.insert('personas', p);
+      const id = await table.insert("personas", p);
+      insertedIds.push(id);
     }
+    // Return the saved personas with their IDs
+    const savedPersonas = await Promise.all(
+      insertedIds.map((id) => table.get(id))
+    );
+    return savedPersonas.filter((p) => p !== null);
   },
 });
 
@@ -91,19 +109,19 @@ export const listByGroup = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? 100;
     return await ctx.db
-      .query('personas')
-      .withIndex('by_group', (q) => q.eq('audienceGroup', args.group))
-      .order('desc')
+      .query("personas")
+      .withIndex("by_group", (q) => q.eq("audienceGroup", args.group))
+      .order("desc")
       .take(limit);
   },
 });
 
 export const getByPersonaId = query({
-  args: { persona_id: v.string() },
+  args: { personaId: v.string() },
   handler: async (ctx, args) => {
     const results = await ctx.db
-      .query('personas')
-      .withIndex('by_persona_id', (q) => q.eq('persona_id', args.persona_id))
+      .query("personas")
+      .withIndex("by_persona_id", (q) => q.eq("personaId", args.personaId))
       .collect();
     return results[0] ?? null;
   },
@@ -114,9 +132,9 @@ export const listByAudienceId = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? 100;
     return await ctx.db
-      .query('personas')
-      .withIndex('by_audience', (q) => q.eq('audienceId', args.audienceId))
-      .order('desc')
+      .query("personas")
+      .withIndex("by_audience", (q) => q.eq("audienceId", args.audienceId))
+      .order("desc")
       .take(limit);
   },
 });
@@ -124,26 +142,36 @@ export const listByAudienceId = query({
 export const generateForGroups = action({
   args: {
     groups: v.array(
-      v.object({ id: v.string(), label: v.string(), color: v.string(), description: v.string(), percent: v.optional(v.number()) })
+      v.object({
+        id: v.string(),
+        label: v.string(),
+        color: v.string(),
+        description: v.string(),
+        percent: v.optional(v.number()),
+      })
     ),
     total: v.optional(v.number()),
     audienceId: v.optional(v.string()),
-    context: v.optional(v.object({
-      location: v.optional(v.string()),
-      audienceDescription: v.optional(v.string()),
-      segment: v.optional(
-        v.object({
-          id: v.string(),
-          label: v.string(),
-          description: v.string(),
-          color: v.optional(v.string()),
-        })
-      ),
-    })),
+    context: v.optional(
+      v.object({
+        location: v.optional(v.string()),
+        audienceDescription: v.optional(v.string()),
+        segment: v.optional(
+          v.object({
+            id: v.string(),
+            label: v.string(),
+            description: v.string(),
+            color: v.optional(v.string()),
+          })
+        ),
+      })
+    ),
   },
   handler: async (ctx, args) => {
     const total = Math.max(1, Math.min(args.total ?? 16, 32));
-    if (args.groups.length === 0) return [];
+    if (args.groups.length === 0) {
+      return [];
+    }
 
     // Evenly distribute totals across provided groups (previous behavior), but batch into a single LLM call
     const perGroupBase = Math.floor(total / args.groups.length);
@@ -161,34 +189,41 @@ export const generateForGroups = action({
 
     try {
       const { object } = await generateObject({
-        model: google('gemini-2.5-flash'),
-        output: 'array',
+        model: google("gemini-2.5-flash"),
+        output: "array",
         schema: PersonaSchema,
-        schemaName: 'Persona',
-        schemaDescription: 'A standardized marketing persona used for ad simulations.',
+        schemaName: "Persona",
+        schemaDescription:
+          "A standardized marketing persona used for ad simulations.",
         prompt,
         temperature: 0.2,
       });
 
-      const personasWithAudience = (object as any[]).map((p) => ({
+      // Get the authenticated user ID
+      const userId = await getAuthUserId(ctx);
+      if (userId === null) {
+        throw new Error("Must be signed in to generate personas");
+      }
+
+      // AI now generates flattened personas directly - just add DB-specific fields
+      const personasWithMetadata = (object as PersonaAIOutput[]).map((p) => ({
         ...p,
-        audienceId: args.audienceId ?? 'default',
+        audienceId: args.audienceId ?? "default",
+        userId,
       }));
 
-      await ctx.runMutation((api as any).personas.saveMany, { personas: personasWithAudience });
-      return personasWithAudience;
+      const savedPersonas = await ctx.runMutation(
+        (api as any).personas.saveMany,
+        {
+          personas: personasWithMetadata,
+        }
+      );
+      return savedPersonas;
     } catch (error) {
       if (NoObjectGeneratedError.isInstance(error)) {
-        console.error('convex.personas.generateForGroups NoObjectGeneratedError', {
-          cause: error.cause,
-          text: error.text,
-          response: error.response,
-          usage: error.usage,
-        });
+        // Log error details if needed for debugging
       }
       throw error;
     }
   },
 });
-
-

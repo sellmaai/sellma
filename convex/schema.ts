@@ -11,43 +11,51 @@ export default defineSchema({
     body: v.string(),
   }),
   personas: defineTable({
+    // Core fields
     audienceId: v.string(),
-    persona_id: v.string(),
+    personaId: v.string(),
     audienceGroup: v.string(),
-    last_updated: v.string(),
-    profile: v.object({
-      firstName: v.string(),
-      lastName: v.string(),
-      age: v.number(),
-      gender: v.optional(v.string()),
-      ethnicity: v.optional(v.string()),
-      location: v.object({ city: v.string(), state: v.string(), country: v.optional(v.string()) }),
-      education: v.object({ level: v.string(), field: v.string() }),
-      occupation: v.string(),
-      income: v.object({ annual_usd: v.number(), type: v.string() }),
-      living_situation: v.object({ homeownership: v.string(), household: v.string() }),
-      relationship_status: v.optional(v.string()),
-    }),
-    personality: v.object({
-      ocean_summary: v.string(),
-      ocean_scores: v.object({
-        openness: v.number(),
-        conscientiousness: v.number(),
-        extraversion: v.number(),
-        agreeableness: v.number(),
-        neuroticism: v.number(),
-      }),
-    }),
-    goals_and_motivations: v.array(v.string()),
-    pain_points: v.array(v.string()),
-    pre_ad_context: v.object({
-      scenario: v.string(),
-      current_activity: v.string(),
-      emotional_state: v.array(v.string()),
-      chain_of_thought: v.string(),
-    }),
+    lastUpdated: v.string(),
+    userId: v.id("users"),
+
+    // Flattened 'profile' object
+    profileFirstName: v.string(),
+    profileLastName: v.string(),
+    profileAge: v.number(),
+    profileGender: v.optional(v.string()),
+    profileEthnicity: v.optional(v.string()),
+    profileLocationCity: v.string(),
+    profileLocationState: v.string(),
+    profileLocationCountry: v.optional(v.string()),
+    profileEducationLevel: v.string(),
+    profileEducationField: v.string(),
+    profileOccupation: v.string(),
+    profileIncomeAnnualUsd: v.number(),
+    profileIncomeType: v.string(),
+    profileLivingSituationHomeownership: v.string(),
+    profileLivingSituationHousehold: v.string(),
+    profileRelationshipStatus: v.optional(v.string()),
+
+    // Flattened 'personality' object
+    personalityOceanSummary: v.string(),
+    personalityOceanScoresOpenness: v.number(),
+    personalityOceanScoresConscientiousness: v.number(),
+    personalityOceanScoresExtraversion: v.number(),
+    personalityOceanScoresAgreeableness: v.number(),
+    personalityOceanScoresNeuroticism: v.number(),
+
+    // Arrays
+    goalsAndMotivations: v.array(v.string()),
+    painPoints: v.array(v.string()),
+
+    // Flattened 'pre_ad_context' object
+    preAdContextScenario: v.string(),
+    preAdContextCurrentActivity: v.string(),
+    preAdContextEmotionalState: v.array(v.string()),
+    preAdContextChainOfThought: v.string(),
   })
-    .index('by_group', ['audienceGroup'])
-    .index('by_persona_id', ['persona_id'])
-    .index('by_audience', ['audienceId'])
+    .index("by_group", ["audienceGroup"])
+    .index("by_persona_id", ["personaId"])
+    .index("by_audience", ["audienceId"])
+    .index("by_user", ["userId"]),
 });

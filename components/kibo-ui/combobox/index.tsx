@@ -50,13 +50,21 @@ const ComboboxContext = createContext<ComboboxContextType>({
   data: [],
   type: "item",
   value: "",
-  onValueChange: () => {},
+  onValueChange: () => {
+    // Default no-op - should be overridden by provider
+  },
   open: false,
-  onOpenChange: () => {},
+  onOpenChange: () => {
+    // Default no-op - should be overridden by provider
+  },
   width: 200,
-  setWidth: () => {},
+  setWidth: () => {
+    // Default no-op - should be overridden by provider
+  },
   inputValue: "",
-  setInputValue: () => {},
+  setInputValue: () => {
+    // Default no-op - should be overridden by provider
+  },
 });
 
 export type ComboboxProps = ComponentProps<typeof Popover> & {

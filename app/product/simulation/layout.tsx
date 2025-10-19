@@ -1,7 +1,7 @@
-import { api } from "@/convex/_generated/api";
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { fetchQuery } from "convex/nextjs";
 import type { ReactNode } from "react";
+import { api } from "@/convex/_generated/api";
 
 export default async function SimulationLayout({
   children,
@@ -11,7 +11,7 @@ export default async function SimulationLayout({
   await fetchQuery(
     api.users.viewer,
     {},
-    { token: await convexAuthNextjsToken() },
+    { token: await convexAuthNextjsToken() }
   );
   return (
     <main className="flex max-h-screen grow flex-col overflow-hidden">
@@ -19,5 +19,3 @@ export default async function SimulationLayout({
     </main>
   );
 }
-
-

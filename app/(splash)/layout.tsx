@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function SplashPageLayout({
   children,
@@ -10,9 +10,9 @@ export default function SplashPageLayout({
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="sticky top-0 z-10 flex h-20 border-b bg-background/80 px-4 backdrop-blur md:px-6">
-        <nav className="container hidden w-full justify-between gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+        <nav className="container hidden w-full justify-between gap-6 font-medium text-lg md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
           <Link href="/">
-            <h1 className="text-base font-semibold">sellma.ai</h1>
+            <h1 className="font-semibold text-base">sellma.ai</h1>
           </Link>
           <div className="flex items-center gap-4">
             <SplashPageNav />
@@ -34,8 +34,8 @@ export default function SplashPageLayout({
 function FooterLink({ href, children }: { href: string; children: ReactNode }) {
   return (
     <Link
-      href={href}
       className="underline underline-offset-4 hover:no-underline"
+      href={href}
       target="_blank"
     >
       {children}
@@ -45,10 +45,8 @@ function FooterLink({ href, children }: { href: string; children: ReactNode }) {
 
 function SplashPageNav() {
   return (
-    <>
-      <Link href="/product">
-        <Button>Get Started</Button>
-      </Link>
-    </>
+    <Link href="/product">
+      <Button>Get Started</Button>
+    </Link>
   );
 }
