@@ -1,15 +1,27 @@
 "use server";
 
-import { google } from "@ai-sdk/google";
-import { generateObject, NoObjectGeneratedError } from "ai";
 import { z } from "zod";
 import { buildPersonaPrompt } from "./prompt";
-import { type PersonaAIOutput, PersonaSchema } from "./schemas";
+import { type PersonaAIOutput } from "./schemas";
+import { generatePersonasFromPrompt } from "./aiClient";
 
 const InputSchema = z.object({
   group: z.string().min(1),
   count: z.number().int().min(1).max(10).default(1),
-  context: z.object({ location: z.string().min(1).optional() }).optional(),
+  context: z
+    .object({
+      location: z.string().min(1).optional(),
+      audienceDescription: z.string().min(1).optional(),
+      segment: z
+        .object({
+          id: z.string().min(1),
+          label: z.string().min(1),
+          description: z.string().min(1),
+          color: z.string().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
 });
 
 export type GeneratePersonasInput = z.infer<typeof InputSchema>;
@@ -25,24 +37,5 @@ export async function generatePersonas(
 
   const prompt = buildPersonaPrompt({ group, count, context });
 
-  try {
-    const { object } = await generateObject({
-      model: google("gemini-2.5-flash"),
-      output: "array",
-      schema: PersonaSchema,
-      schemaName: "Persona",
-      schemaDescription:
-        "A standardized marketing persona used for ad simulations.",
-      prompt,
-      temperature: 0.2,
-    });
-
-    // object is PersonaAIOutput[] - flattened personas without DB-specific fields
-    return object as PersonaAIOutput[];
-  } catch (error) {
-    if (NoObjectGeneratedError.isInstance(error)) {
-      // Log error details if needed for debugging
-    }
-    throw error;
-  }
+  return await generatePersonasFromPrompt({ prompt });
 }
