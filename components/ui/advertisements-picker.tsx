@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ExternalLink, Paperclip, X } from "lucide-react";
+import { ChevronDown, ExternalLink, Paperclip, X, Megaphone } from "lucide-react";
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,7 +56,7 @@ export function AdvertisementsPicker({
           >
             <div className="flex flex-wrap gap-1 flex-1">
               {selectedFiles.length === 0 ? (
-                <span className="text-sm">Advertisements</span>
+                <span className="text-sm">Ads</span>
               ) : (
                 selectedFiles.map((file, index) => (
                   <Badge
@@ -80,7 +80,8 @@ export function AdvertisementsPicker({
                 ))
               )}
             </div>
-            <ChevronDown className="h-4 w-4 shrink-0 opacity-50 ml-2" />
+            <Megaphone className="h-4 w-4 shrink-0 opacity-50 mr-1" />
+            <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-64 p-1" align="start">
@@ -92,7 +93,7 @@ export function AdvertisementsPicker({
               className="w-full justify-start text-left h-9 px-3"
             >
               <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span className="text-sm">Choose from Google Ads</span>
+              <span className="text-sm">From Google Ads</span>
             </Button>
             <Button
               variant="ghost"
@@ -101,7 +102,7 @@ export function AdvertisementsPicker({
               className="w-full justify-start text-left h-9 px-3"
             >
               <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span className="text-sm">Choose from Meta Ads</span>
+              <span className="text-sm">From Meta Ads</span>
             </Button>
             <Button
               variant="ghost"

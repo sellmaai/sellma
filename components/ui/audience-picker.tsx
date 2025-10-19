@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, ChevronDown, X, ExternalLink } from "lucide-react";
+import { Search, ChevronDown, X, ExternalLink, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -123,7 +123,8 @@ export function AudiencePicker({
                 ))
               )}
             </div>
-            <ChevronDown className="h-4 w-4 shrink-0 opacity-50 ml-2" />
+            <Users className="h-4 w-4 shrink-0 opacity-50 mr-1" />
+            <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-96 p-0" align="start">
