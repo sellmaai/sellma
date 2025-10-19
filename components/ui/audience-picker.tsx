@@ -115,7 +115,7 @@ export function AudiencePicker({
             aria-expanded={open}
             className="h-auto min-h-[32px] px-2 py-1 justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50"
           >
-            <div className="flex flex-wrap gap-1 flex-1">
+            <div className="flex flex-col gap-1 flex-1">
               {selectedAudiences.length === 0 ? (
                 <span className="text-sm">{placeholder}</span>
               ) : (
@@ -123,20 +123,29 @@ export function AudiencePicker({
                   <Badge
                     key={audience.id}
                     variant={getAudienceBadgeVariant(audience.source)}
-                    className="flex items-center gap-1 px-2 py-1 text-xs"
+                    className="flex items-center gap-1 px-2 py-1 text-xs w-fit"
                   >
                     <span>
                       {getAudienceDisplayName(audience)}
                     </span>
-                    <button
+                    <div
                       onClick={(e) => {
                         e.stopPropagation();
                         handleRemove(audience.id);
                       }}
-                      className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                      className="ml-1 hover:bg-destructive/20 rounded-full p-0.5 cursor-pointer"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleRemove(audience.id);
+                        }
+                      }}
                     >
                       <X className="h-3 w-3" />
-                    </button>
+                    </div>
                   </Badge>
                 ))
               )}

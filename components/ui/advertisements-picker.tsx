@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, ExternalLink, Paperclip, X, Megaphone } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -10,6 +10,7 @@ interface AdvertisementsPickerProps {
   onGoogleAdsClick?: () => void;
   onMetaAdsClick?: () => void;
   onAttachFilesClick?: (files: FileList | null) => void;
+  onFileCountChange?: (count: number) => void;
   className?: string;
 }
 
@@ -17,6 +18,7 @@ export function AdvertisementsPicker({
   onGoogleAdsClick,
   onMetaAdsClick,
   onAttachFilesClick,
+  onFileCountChange,
   className,
 }: AdvertisementsPickerProps) {
   const [open, setOpen] = useState(false);
@@ -31,8 +33,8 @@ export function AdvertisementsPicker({
     const files = event.target.files;
     if (files && files.length > 0) {
       const newFiles = Array.from(files);
-      setSelectedFiles(prev => [...prev, ...newFiles]);
-      onAttachFilesClick?.(files);
+      setSelectedFiles((prev: File[]) => [...prev, ...newFiles]);
+      // Don't call onAttachFilesClick here to avoid duplication
     }
     // Reset the input so the same file can be selected again
     if (fileInputRef.current) {
@@ -41,8 +43,13 @@ export function AdvertisementsPicker({
   };
 
   const handleRemoveFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setSelectedFiles((prev: File[]) => prev.filter((_: File, i: number) => i !== index));
   };
+
+  // Notify parent when file count changes
+  useEffect(() => {
+    onFileCountChange?.(selectedFiles.length);
+  }, [selectedFiles.length, onFileCountChange]);
 
   return (
     <div className={className}>
@@ -54,7 +61,7 @@ export function AdvertisementsPicker({
             aria-expanded={open}
             className="h-auto min-h-[32px] px-2 py-1 justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50"
           >
-            <div className="flex flex-wrap gap-1 flex-1">
+            <div className="flex flex-col gap-1 flex-1">
               {selectedFiles.length === 0 ? (
                 <span className="text-sm">Ads</span>
               ) : (
@@ -62,7 +69,7 @@ export function AdvertisementsPicker({
                   <Badge
                     key={`${file.name}-${index}`}
                     variant="secondary"
-                    className="flex items-center gap-1 px-2 py-1 text-xs"
+                    className="flex items-center gap-1 px-2 py-1 text-xs w-fit"
                   >
                     <span className="truncate max-w-[120px]">
                       {file.name}
