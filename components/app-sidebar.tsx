@@ -68,6 +68,20 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               </SidebarMenuSub>
+              <SidebarMenuSub>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton
+                    asChild
+                    isActive={pathname?.startsWith(
+                      "/product/simulation/ad-simulator"
+                    )}
+                  >
+                    <Link href="/product/simulation/ad-simulator">
+                      <span>Ad Simulator</span>
+                    </Link>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              </SidebarMenuSub>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>

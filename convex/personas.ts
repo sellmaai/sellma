@@ -162,12 +162,16 @@ export const saveMany = mutation({
 });
 
 export const listByGroup = query({
-  args: { group: v.string(), limit: v.optional(v.number()) },
+  args: { group: v.optional(v.string()), limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const limit = args.limit ?? 100;
+    const group = args.group?.trim();
+    if (!group) {
+      return [];
+    }
     return await ctx.db
       .query("personas")
-      .withIndex("by_group", (q) => q.eq("audienceGroup", args.group))
+      .withIndex("by_group", (q) => q.eq("audienceGroup", group))
       .order("desc")
       .take(limit);
   },
@@ -185,14 +189,71 @@ export const getByPersonaId = query({
 });
 
 export const listByAudienceId = query({
-  args: { audienceId: v.string(), limit: v.optional(v.number()) },
+  args: { audienceId: v.optional(v.string()), limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const limit = args.limit ?? 100;
+    const audienceId = args.audienceId?.trim();
+    if (!audienceId) {
+      return [];
+    }
     return await ctx.db
       .query("personas")
-      .withIndex("by_audience", (q) => q.eq("audienceId", args.audienceId))
+      .withIndex("by_audience", (q) => q.eq("audienceId", audienceId))
       .order("desc")
       .take(limit);
+  },
+});
+
+export const listAudiencesForUser = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) {
+      return [];
+    }
+    const recentPersonas = await ctx.db
+      .query("personas")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .order("desc")
+      .take(200);
+
+    const sessions = new Map<
+      string,
+      {
+        personaCount: number;
+        lastUpdated: string;
+        groups: Set<string>;
+      }
+    >();
+
+    for (const persona of recentPersonas) {
+      const current = sessions.get(persona.audienceId);
+      const nextLastUpdated = current
+        ? persona.lastUpdated > current.lastUpdated
+          ? persona.lastUpdated
+          : current.lastUpdated
+        : persona.lastUpdated;
+      if (current) {
+        current.personaCount += 1;
+        current.lastUpdated = nextLastUpdated;
+        current.groups.add(persona.audienceGroup);
+      } else {
+        sessions.set(persona.audienceId, {
+          personaCount: 1,
+          lastUpdated: nextLastUpdated,
+          groups: new Set([persona.audienceGroup]),
+        });
+      }
+    }
+
+    return Array.from(sessions.entries())
+      .map(([audienceId, info]) => ({
+        audienceId,
+        personaCount: info.personaCount,
+        lastUpdated: info.lastUpdated,
+        groups: Array.from(info.groups).slice(0, 5),
+      }))
+      .sort((a, b) => b.lastUpdated.localeCompare(a.lastUpdated));
   },
 });
 
