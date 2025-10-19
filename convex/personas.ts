@@ -8,6 +8,7 @@ import {
 import {
   type PersonaAIOutput,
   TrustedPersonaSchema,
+  type PersistedPersona,
 } from "../lib/personas/schemas";
 import { api } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
@@ -56,15 +57,15 @@ const coercePersonaId = (candidate: string): string => {
   return `pers_${generateRandomId()}`;
 };
 
-const applyTrustedMetadata = (
+const buildTrustedPersona = (
   persona: PersonaAIOutput,
   metadata: {
     audienceGroup: string;
     audienceId: string;
     userId: Id<"users">;
   }
-): PersonaInsert => {
-  const parsed = TrustedPersonaSchema.parse({
+): PersistedPersona =>
+  TrustedPersonaSchema.parse({
     ...persona,
     personaId: coercePersonaId(persona.personaId),
     audienceGroup: metadata.audienceGroup,
@@ -72,10 +73,50 @@ const applyTrustedMetadata = (
     audienceId: metadata.audienceId,
     userId: metadata.userId,
   });
-  return {
-    ...parsed,
-    userId: metadata.userId,
-  } as PersonaInsert;
+
+const generateTrustedPersonas = async (
+  ctx: ActionContext,
+  args: {
+    group: string;
+    count: number;
+    audienceId?: string;
+    context?: {
+      location?: string;
+      audienceDescription?: string;
+      segment?: {
+        id: string;
+        label: string;
+        description: string;
+        color?: string;
+      };
+    };
+  }
+): Promise<PersistedPersona[]> => {
+  const group = normalizeGroupId(args.group);
+  const prompt = buildPersonaPrompt({
+    group,
+    count: Math.min(Math.max(args.count, 1), 10),
+    context: args.context
+      ? {
+          location: args.context.location ?? undefined,
+          audienceDescription: args.context.audienceDescription ?? undefined,
+          segment: args.context.segment ?? undefined,
+        }
+      : undefined,
+  });
+
+  const personas = await generatePersonasFromPrompt({ prompt });
+
+  const userId = await requireUserId(ctx);
+  const audienceId = normalizeAudienceId(args.audienceId);
+
+  return personas.map((persona) =>
+    buildTrustedPersona(persona, {
+      audienceGroup: group,
+      audienceId,
+      userId,
+    })
+  );
 };
 
 export const generate = action({
@@ -99,35 +140,41 @@ export const generate = action({
     ),
   },
   handler: async (ctx, args): Promise<Doc<"personas">[]> => {
-    const group = normalizeGroupId(args.group);
-    const prompt = buildPersonaPrompt({
-      group,
-      count: Math.min(Math.max(args.count, 1), 10),
-      context: args.context
-        ? {
-            location: args.context.location ?? undefined,
-            audienceDescription: args.context.audienceDescription ?? undefined,
-            segment: args.context.segment ?? undefined,
-          }
-        : undefined,
-    });
-
-    const personas = await generatePersonasFromPrompt({ prompt });
-
-    const userId = await requireUserId(ctx);
-    const audienceId = normalizeAudienceId(args.audienceId);
-
-    const personasWithMetadata = personas.map((persona) =>
-      applyTrustedMetadata(persona, {
-        audienceGroup: group,
-        audienceId,
-        userId,
-      })
-    );
+    const personasWithMetadata = await generateTrustedPersonas(ctx, args);
 
     return await ctx.runMutation(api.personas.saveMany, {
       personas: personasWithMetadata,
     });
+  },
+});
+
+export const generatePreview = action({
+  args: {
+    group: v.string(),
+    count: v.number(),
+    audienceId: v.optional(v.string()),
+    context: v.optional(
+      v.object({
+        location: v.optional(v.string()),
+        audienceDescription: v.optional(v.string()),
+        segment: v.optional(
+          v.object({
+            id: v.string(),
+            label: v.string(),
+            description: v.string(),
+            color: v.optional(v.string()),
+          })
+        ),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const personasWithMetadata = await generateTrustedPersonas(ctx, args);
+
+    return personasWithMetadata.map((persona) => ({
+      ...persona,
+      _id: `preview_${generateRandomId()}`,
+    }));
   },
 });
 
