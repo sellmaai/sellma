@@ -51,10 +51,34 @@ export default function AudienceGenerationPage() {
     "pending"
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [audienceNotice, setAudienceNotice] = useState<
+    null | "saved" | "rejected"
+  >(null);
+
+  const resetBuilderState = () => {
+    setSaveError(null);
+    setError(null);
+    setPersonasById({});
+    setGroups([]);
+    setPerGroupStatus({});
+    setGroupSuggestStatus("pending");
+    setIsThinking(false);
+    setAudienceDescription(null);
+    setIsExpanded(false);
+    setMessage("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+    setPeople([]);
+    prevPersonaCountRef.current = 0;
+    currentAudienceIdRef.current = null;
+  };
+
+  const isComposerLocked = decision === "saved";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim()) {
+    if (!message.trim() || isComposerLocked) {
       return;
     }
     setError(null);
@@ -67,6 +91,7 @@ export default function AudienceGenerationPage() {
     setAudienceDescription(null);
     setDecision("pending");
     setSaveError(null);
+    setAudienceNotice(null);
     const newAudienceId = Math.random().toString(36).slice(2);
     currentAudienceIdRef.current = newAudienceId;
     startTransition(async () => {
@@ -189,6 +214,8 @@ export default function AudienceGenerationPage() {
       );
       setPersonasById(mapped);
       setDecision("saved");
+      setAudienceNotice("saved");
+      currentAudienceIdRef.current = null;
     } catch (err) {
       setSaveError(
         err instanceof Error ? err.message : "Failed to save the generated audience"
@@ -203,23 +230,15 @@ export default function AudienceGenerationPage() {
       return;
     }
 
-    setSaveError(null);
-    setError(null);
-    setPersonasById({});
-    setGroups([]);
-    setPerGroupStatus({});
-    setGroupSuggestStatus("pending");
-    setIsThinking(false);
-    setAudienceDescription(null);
-    setIsExpanded(false);
-    setMessage("");
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
-    setPeople([]);
-    prevPersonaCountRef.current = 0;
-    currentAudienceIdRef.current = null;
+    setAudienceNotice("rejected");
+    setDecision("rejected");
+    resetBuilderState();
+  };
+
+  const handleStartNewAudience = () => {
+    resetBuilderState();
     setDecision("pending");
+    setAudienceNotice(null);
   };
 
   const handleSimulationSubmit = (simulationMessage: string) => {
@@ -328,6 +347,7 @@ export default function AudienceGenerationPage() {
               <div className="max-h-52 flex-1 overflow-auto">
                 <Textarea
                   className="scrollbar-thin min-h-0 resize-none rounded-none border-0 p-0 text-base placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
+                  disabled={isComposerLocked}
                   onChange={handleTextareaChange}
                   onKeyDown={handleKeyDown}
                   placeholder="Describe your audience (add a location, e.g., Austin, TX)"
@@ -344,7 +364,7 @@ export default function AudienceGenerationPage() {
               <div className="ms-auto flex items-center gap-1.5">
                 <Button
                   className="h-9 w-9 rounded-full"
-                  disabled={isPending || !message.trim()}
+                  disabled={isPending || isComposerLocked}
                   size="icon"
                   type="submit"
                 >
@@ -367,11 +387,21 @@ export default function AudienceGenerationPage() {
       )}
 
       {mode === "build" && error ? <p className="mt-4 text-red-600 text-sm">{error}</p> : null}
-      {decision === "saved" ? (
-        <p className="mt-4 text-emerald-600 text-sm">Audience saved successfully.</p>
+      {audienceNotice === "saved" ? (
+        <div className="mt-4 flex items-center justify-between gap-3 text-sm">
+          <p className="text-emerald-600">Audience saved successfully.</p>
+          <Button onClick={handleStartNewAudience} size="sm" type="button" variant="ghost">
+            Create another audience
+          </Button>
+        </div>
       ) : null}
-      {decision === "rejected" ? (
-        <p className="mt-4 text-muted-foreground text-sm">Audience discarded.</p>
+      {audienceNotice === "rejected" ? (
+        <div className="mt-4 flex items-center justify-between gap-3 text-sm">
+          <p className="text-muted-foreground">Audience discarded.</p>
+          <Button onClick={handleStartNewAudience} size="sm" type="button" variant="ghost">
+            Start over
+          </Button>
+        </div>
       ) : null}
 
       {mode === "build" && (
@@ -398,14 +428,6 @@ export default function AudienceGenerationPage() {
         </>
       )}
 
-      <div
-        className="mx-auto w-full max-w-2xl scroll-mt-24"
-        ref={personaSectionRef}
-      >
-        {groups.length > 0 && personaValues.length > 0 && (
-          <PersonaBrowser personas={personaValues} />
-        )}
-      </div>
 
       {canDecide ? (
         <div className="mx-auto mt-6 w-full max-w-2xl">
