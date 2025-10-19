@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AudiencePicker, type Audience } from "@/components/ui/audience-picker";
+import { AdvertisementsPicker } from "@/components/ui/advertisements-picker";
 import { cn } from "@/lib/utils";
 
 interface SimulationModeProps {
@@ -41,6 +42,13 @@ export function SimulationMode({ onSubmit, isPending, error }: SimulationModePro
   const handleMetaAdsClick = () => {
     // TODO: Implement Meta Ads integration
     console.log("Meta Ads clicked");
+  };
+
+  const handleAttachFilesClick = (files: FileList | null) => {
+    if (files && files.length > 0) {
+      console.log("Files selected:", Array.from(files).map(file => file.name));
+      // TODO: Implement file processing/upload logic
+    }
   };
 
   const getTooltipText = () => {
@@ -109,14 +117,21 @@ export function SimulationMode({ onSubmit, isPending, error }: SimulationModePro
                 value={message}
               />
               
-              {/* Audience Picker - positioned at bottom left */}
-              <div className="absolute bottom-2 left-2 right-2">
-                <AudiencePicker
-                  selectedAudiences={selectedAudiences}
-                  onAudiencesChange={setSelectedAudiences}
+              {/* Audience Picker and Advertisements - positioned at bottom */}
+              <div className="absolute bottom-2 left-2 right-2 flex gap-2">
+                <div className="flex-1">
+                  <AudiencePicker
+                    selectedAudiences={selectedAudiences}
+                    onAudiencesChange={setSelectedAudiences}
+                    onGoogleAdsClick={handleGoogleAdsClick}
+                    onMetaAdsClick={handleMetaAdsClick}
+                    placeholder="Audience"
+                  />
+                </div>
+                <AdvertisementsPicker
                   onGoogleAdsClick={handleGoogleAdsClick}
                   onMetaAdsClick={handleMetaAdsClick}
-                  placeholder="Audience"
+                  onAttachFilesClick={handleAttachFilesClick}
                 />
               </div>
             </div>
