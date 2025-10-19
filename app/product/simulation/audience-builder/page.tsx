@@ -54,6 +54,7 @@ export default function AudienceGenerationPage() {
   const [audienceNotice, setAudienceNotice] = useState<
     null | "saved" | "rejected"
   >(null);
+  const [modeChangeKey, setModeChangeKey] = useState(0);
 
   const resetBuilderState = () => {
     setSaveError(null);
@@ -72,6 +73,23 @@ export default function AudienceGenerationPage() {
     setPeople([]);
     prevPersonaCountRef.current = 0;
     currentAudienceIdRef.current = null;
+  };
+
+  const resetSimulationState = () => {
+    setError(null);
+    setIsExpanded(false);
+    setMessage("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+  };
+
+  const resetAllState = () => {
+    resetBuilderState();
+    resetSimulationState();
+    setDecision("pending");
+    setAudienceNotice(null);
+    setIsSaving(false);
   };
 
   const isComposerLocked = decision === "saved";
@@ -276,7 +294,13 @@ export default function AudienceGenerationPage() {
         <ToggleGroup 
           type="single" 
           value={mode} 
-          onValueChange={(value) => value && setMode(value as "build" | "simulate")}
+          onValueChange={(value) => {
+            if (value && value !== mode) {
+              resetAllState();
+              setModeChangeKey(prev => prev + 1);
+              setMode(value as "build" | "simulate");
+            }
+          }}
           className="bg-muted rounded-lg p-1 shadow-sm"
         >
           <ToggleGroupItem 
@@ -380,6 +404,7 @@ export default function AudienceGenerationPage() {
         </form>
       ) : (
         <SimulationMode
+          key={modeChangeKey}
           onSubmit={handleSimulationSubmit}
           isPending={isPending}
           error={error}
