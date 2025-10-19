@@ -1,8 +1,6 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "extends": [
-    "ultracite"
-  ],
+  "extends": ["ultracite"],
   "files": {
     "ignoreUnknown": true
   },
@@ -42,9 +40,7 @@
   },
   "overrides": [
     {
-      "includes": [
-        "convex/tsconfig.json"
-      ],
+      "includes": ["convex/tsconfig.json"],
       "json": {
         "parser": {
           "allowComments": true

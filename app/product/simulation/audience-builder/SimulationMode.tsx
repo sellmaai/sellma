@@ -52,7 +52,7 @@ export function SimulationMode({
   };
 
   const handleMetaAdsClick = () => {
-    // TODO: Integrate Meta Ads audience import.
+    // TODO: Integrate Mta Ads audience import.
   };
 
   const handleAttachFilesClick = (files: FileList | null) => {
