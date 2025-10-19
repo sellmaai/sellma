@@ -204,7 +204,7 @@ export function AudiencePicker({
                         key={audience.id}
                         value={audience.name}
                         onSelect={() => handleSelect(audience)}
-                        className="flex items-center justify-between data-[selected=true]:bg-transparent data-[selected=true]:text-foreground"
+                        className="flex items-center justify-between"
                       >
                         <span>{audience.name}</span>
                         {selectedAudiences.some(a => a.id === audience.id) && (
