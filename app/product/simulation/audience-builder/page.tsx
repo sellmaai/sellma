@@ -1,11 +1,12 @@
 "use client";
 
 import { useAction, useMutation } from "convex/react";
-import { Send } from "lucide-react";
+import { Send, CornerDownLeft } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { PersonaBrowser } from "@/components/personas/PersonaBrowser";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { api } from "@/convex/_generated/api";
 import type { Persona } from "@/lib/personas/types";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ export default function AudienceGenerationPage() {
   const savePersonas = useMutation(api.personas.saveMany);
   const [message, setMessage] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
+  const [mode, setMode] = useState<"build" | "simulate">("build");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
@@ -242,78 +244,184 @@ export default function AudienceGenerationPage() {
 
   return (
     <div className="w-full overflow-x-hidden p-6 pb-24">
+      {/* Mode Toggle Switch */}
+      <div className="mx-auto mb-8 flex justify-center">
+        <ToggleGroup 
+          type="single" 
+          value={mode} 
+          onValueChange={(value) => value && setMode(value as "build" | "simulate")}
+          className="bg-muted rounded-lg p-1 shadow-sm"
+        >
+          <ToggleGroupItem 
+            value="build" 
+            className={cn(
+              "px-6 py-2 text-sm font-medium transition-all duration-200",
+              "data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm",
+              "data-[state=off]:text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Build Audience
+          </ToggleGroupItem>
+          <ToggleGroupItem 
+            value="simulate" 
+            className={cn(
+              "px-6 py-2 text-sm font-medium transition-all duration-200",
+              "data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm",
+              "data-[state=off]:text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Run Simulations
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+
       <h1 className="mx-auto mb-7 max-w-2xl whitespace-pre-wrap text-pretty px-1 text-center font-semibold text-2xl text-foreground leading-9">
-        Describe Your Target Audience
+        {mode === "build" ? "Describe Your Target Audience" : "Ask Your Chosen Audience, Anything!"}
       </h1>
 
-      <form className="group/composer w-full" onSubmit={handleSubmit}>
-        <input
-          className="sr-only"
-          multiple
-          onChange={() => {
-            // Hidden file input - onChange handled elsewhere
-          }}
-          ref={fileInputRef}
-          type="file"
-        />
+      {mode === "build" ? (
+        <form className="group/composer w-full" onSubmit={handleSubmit}>
+          <input
+            className="sr-only"
+            multiple
+            onChange={() => {
+              // Hidden file input - onChange handled elsewhere
+            }}
+            ref={fileInputRef}
+            type="file"
+          />
 
-        <div
-          className={cn(
-            "mx-auto w-full max-w-2xl cursor-text overflow-clip border border-border bg-transparent bg-clip-padding p-2.5 shadow-lg transition-all duration-200 dark:bg-muted/50",
-            {
-              "grid grid-cols-1 grid-rows-[auto_1fr_auto] rounded-3xl":
-                isExpanded,
-              "grid grid-cols-[auto_1fr_auto] grid-rows-[auto_1fr_auto] rounded-[28px]":
-                !isExpanded,
-            }
-          )}
-          style={{
-            gridTemplateAreas: isExpanded
-              ? "'header' 'primary' 'footer'"
-              : "'header header header' 'leading primary trailing' '. footer .'",
-          }}
-        >
           <div
             className={cn(
-              "flex min-h-14 items-center overflow-x-hidden px-1.5",
+              "mx-auto w-full max-w-2xl cursor-text overflow-clip border border-border bg-transparent bg-clip-padding p-2.5 shadow-lg transition-all duration-200 dark:bg-muted/50",
               {
-                "mb-0 px-2 py-1": isExpanded,
-                "-my-2.5": !isExpanded,
+                "grid grid-cols-1 grid-rows-[auto_1fr_auto] rounded-3xl":
+                  isExpanded,
+                "grid grid-cols-[auto_1fr_auto] grid-rows-[auto_1fr_auto] rounded-[28px]":
+                  !isExpanded,
               }
             )}
-            style={{ gridArea: "primary" }}
+            style={{
+              gridTemplateAreas: isExpanded
+                ? "'header' 'primary' 'footer'"
+                : "'header header header' 'leading primary trailing' '. footer .'",
+            }}
           >
-            <div className="max-h-52 flex-1 overflow-auto">
-              <Textarea
-                className="scrollbar-thin min-h-0 resize-none rounded-none border-0 p-0 text-base placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
-                onChange={handleTextareaChange}
-                onKeyDown={handleKeyDown}
-                placeholder="Describe your audience (add a location, e.g., Austin, TX)"
-                ref={textareaRef}
-                rows={1}
-                value={message}
-              />
+            <div
+              className={cn(
+                "flex min-h-14 items-center overflow-x-hidden px-1.5",
+                {
+                  "mb-0 px-2 py-1": isExpanded,
+                  "-my-2.5": !isExpanded,
+                }
+              )}
+              style={{ gridArea: "primary" }}
+            >
+              <div className="max-h-52 flex-1 overflow-auto">
+                <Textarea
+                  className="scrollbar-thin min-h-0 resize-none rounded-none border-0 p-0 text-base placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
+                  onChange={handleTextareaChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Describe your audience (add a location, e.g., Austin, TX)"
+                  ref={textareaRef}
+                  rows={1}
+                  value={message}
+                />
+              </div>
             </div>
-          </div>
-          <div
-            className="flex items-center gap-2"
-            style={{ gridArea: isExpanded ? "footer" : "trailing" }}
-          >
-            <div className="ms-auto flex items-center gap-1.5">
-              {message.trim() && (
+            <div
+              className="flex items-center gap-2"
+              style={{ gridArea: isExpanded ? "footer" : "trailing" }}
+            >
+              <div className="ms-auto flex items-center gap-1.5">
                 <Button
                   className="h-9 w-9 rounded-full"
-                  disabled={isPending}
+                  disabled={isPending || !message.trim()}
                   size="icon"
                   type="submit"
                 >
-                  <Send className="size-5" />
+                  {message.trim() ? (
+                    <Send className="size-5" />
+                  ) : (
+                    <CornerDownLeft className="size-4 text-muted-foreground" />
+                  )}
                 </Button>
-              )}
+              </div>
             </div>
           </div>
-        </div>
-      </form>
+        </form>
+      ) : (
+        <form className="group/composer w-full" onSubmit={handleSubmit}>
+          <input
+            className="sr-only"
+            multiple
+            onChange={() => {
+              // Hidden file input - onChange handled elsewhere
+            }}
+            ref={fileInputRef}
+            type="file"
+          />
+
+          <div
+            className={cn(
+              "mx-auto w-full max-w-2xl cursor-text overflow-clip border border-border bg-transparent bg-clip-padding p-2.5 shadow-lg transition-all duration-200 dark:bg-muted/50",
+              {
+                "grid grid-cols-1 grid-rows-[auto_1fr_auto] rounded-3xl":
+                  isExpanded,
+                "grid grid-cols-[auto_1fr_auto] grid-rows-[auto_1fr_auto] rounded-[28px]":
+                  !isExpanded,
+              }
+            )}
+            style={{
+              gridTemplateAreas: isExpanded
+                ? "'header' 'primary' 'footer'"
+                : "'header header header' 'leading primary trailing' '. footer .'",
+            }}
+          >
+            <div
+              className={cn(
+                "flex min-h-14 items-center overflow-x-hidden px-1.5",
+                {
+                  "mb-0 px-2 py-1": isExpanded,
+                  "-my-2.5": !isExpanded,
+                }
+              )}
+              style={{ gridArea: "primary" }}
+            >
+              <div className="max-h-52 flex-1 overflow-auto">
+                <Textarea
+                  className="scrollbar-thin min-h-0 resize-none rounded-none border-0 p-0 text-base placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
+                  onChange={handleTextareaChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Add at least 1 audience, and type in what you want to ask"
+                  ref={textareaRef}
+                  rows={1}
+                  value={message}
+                />
+              </div>
+            </div>
+            <div
+              className="flex items-center gap-2"
+              style={{ gridArea: isExpanded ? "footer" : "trailing" }}
+            >
+              <div className="ms-auto flex items-center gap-1.5">
+                <Button
+                  className="h-9 w-9 rounded-full"
+                  disabled={isPending || !message.trim()}
+                  size="icon"
+                  type="submit"
+                >
+                  {message.trim() ? (
+                    <Send className="size-5" />
+                  ) : (
+                    <CornerDownLeft className="size-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </form>
+      )}
 
       {error ? <p className="mt-4 text-red-600 text-sm">{error}</p> : null}
       {decision === "saved" ? (
@@ -323,16 +431,29 @@ export default function AudienceGenerationPage() {
         <p className="mt-4 text-muted-foreground text-sm">Audience discarded.</p>
       ) : null}
 
-      <div className="w-full">
-        <div className="mx-auto w-full max-w-2xl">
-          <GenerationChainOfThought
-            groupSuggestStatus={groupSuggestStatus}
-            groups={groups}
-            isThinking={isThinking}
-            perGroupStatus={perGroupStatus}
-          />
-        </div>
-      </div>
+      {mode === "build" && (
+        <>
+          <div className="w-full">
+            <div className="mx-auto w-full max-w-2xl">
+              <GenerationChainOfThought
+                groupSuggestStatus={groupSuggestStatus}
+                groups={groups}
+                isThinking={isThinking}
+                perGroupStatus={perGroupStatus}
+              />
+            </div>
+          </div>
+
+          <div
+            className="mx-auto w-full max-w-2xl scroll-mt-24"
+            ref={personaSectionRef}
+          >
+            {groups.length > 0 && Object.values(personasById).length > 0 && (
+              <PersonaBrowser personas={Object.values(personasById)} />
+            )}
+          </div>
+        </>
+      )}
 
       <div
         className="mx-auto w-full max-w-2xl scroll-mt-24"
