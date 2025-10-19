@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { generatePersonasFromPrompt } from "../lib/personas/aiClient";
@@ -7,18 +6,25 @@ import {
   buildPersonaPrompt,
 } from "../lib/personas/prompt";
 import {
-  type PersistedPersona,
   type PersonaAIOutput,
   TrustedPersonaSchema,
 } from "../lib/personas/schemas";
 import { api } from "./_generated/api";
+import type { Doc, Id } from "./_generated/dataModel";
 import { action, mutation, query } from "./_generated/server";
 
 const PERSONA_ID_PATTERN = /^[a-z0-9_-]{3,64}$/i;
 
 type ActionContext = Parameters<typeof getAuthUserId>[0];
 
-const requireUserId = async (ctx: ActionContext) => {
+type PersonaInsert = Omit<Doc<"personas">, "_id" | "_creationTime">;
+
+const generateRandomId = () =>
+  typeof globalThis.crypto?.randomUUID === "function"
+    ? globalThis.crypto.randomUUID()
+    : Math.random().toString(36).slice(2);
+
+const requireUserId = async (ctx: ActionContext): Promise<Id<"users">> => {
   const userId = await getAuthUserId(ctx);
   if (userId === null) {
     throw new Error("Must be signed in to generate personas");
@@ -31,7 +37,7 @@ const normalizeGroupId = (raw: string): string => {
   if (trimmed.length > 0) {
     return trimmed;
   }
-  return `group-${randomUUID()}`;
+  return `group-${generateRandomId()}`;
 };
 
 const normalizeAudienceId = (audienceId?: string | null): string => {
@@ -47,7 +53,7 @@ const coercePersonaId = (candidate: string): string => {
   if (PERSONA_ID_PATTERN.test(trimmed)) {
     return trimmed;
   }
-  return `pers_${randomUUID()}`;
+  return `pers_${generateRandomId()}`;
 };
 
 const applyTrustedMetadata = (
@@ -55,10 +61,10 @@ const applyTrustedMetadata = (
   metadata: {
     audienceGroup: string;
     audienceId: string;
-    userId: string;
+    userId: Id<"users">;
   }
-): PersistedPersona =>
-  TrustedPersonaSchema.parse({
+): PersonaInsert => {
+  const parsed = TrustedPersonaSchema.parse({
     ...persona,
     personaId: coercePersonaId(persona.personaId),
     audienceGroup: metadata.audienceGroup,
@@ -66,6 +72,11 @@ const applyTrustedMetadata = (
     audienceId: metadata.audienceId,
     userId: metadata.userId,
   });
+  return {
+    ...parsed,
+    userId: metadata.userId,
+  } as PersonaInsert;
+};
 
 export const generate = action({
   args: {
@@ -87,7 +98,7 @@ export const generate = action({
       })
     ),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<Doc<"personas">[]> => {
     const group = normalizeGroupId(args.group);
     const prompt = buildPersonaPrompt({
       group,
@@ -124,14 +135,19 @@ export const saveMany = mutation({
   args: {
     personas: v.array(v.any()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<Doc<"personas">[]> => {
     const table = ctx.db;
-    const trustedPersonas = args.personas.map((persona) =>
+    const trusted = args.personas.map((persona) =>
       TrustedPersonaSchema.parse(persona)
     );
 
-    const insertedIds: any[] = [];
-    for (const persona of trustedPersonas) {
+    const personasToInsert: PersonaInsert[] = trusted.map((persona) => ({
+      ...persona,
+      userId: persona.userId as Id<"users">,
+    }));
+
+    const insertedIds: Id<"personas">[] = [];
+    for (const persona of personasToInsert) {
       const id = await table.insert("personas", persona);
       insertedIds.push(id);
     }
@@ -139,7 +155,9 @@ export const saveMany = mutation({
     const savedPersonas = await Promise.all(
       insertedIds.map((id) => table.get(id))
     );
-    return savedPersonas.filter((p) => p !== null);
+    return savedPersonas.filter(
+      (p): p is Doc<"personas"> => p !== null
+    );
   },
 });
 
@@ -206,7 +224,7 @@ export const generateForGroups = action({
       })
     ),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<Doc<"personas">[]> => {
     if (args.groups.length === 0) {
       return [];
     }
