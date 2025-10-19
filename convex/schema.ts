@@ -10,6 +10,15 @@ export default defineSchema({
     userId: v.id("users"),
     body: v.string(),
   }),
+  user_audiences: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    userId: v.id("users"),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_name", ["userId", "name"]),
   personas: defineTable({
     // Core fields
     audienceId: v.string(),

@@ -7,6 +7,7 @@ import { PersonaBrowser } from "@/components/personas/PersonaBrowser";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { SaveAudienceDialog } from "@/components/ui/save-audience-dialog";
 import { api } from "@/convex/_generated/api";
 import type { Persona } from "@/lib/personas/types";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ export default function AudienceGenerationPage() {
   const generateAudienceSegments = useAction(api.audienceGroups.suggestBundle);
   const generatePreview = useAction(api.personas.generatePreview);
   const savePersonas = useMutation(api.personas.saveMany);
+  const saveAudience = useMutation(api.userAudiences.save);
   const [message, setMessage] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [mode, setMode] = useState<"build" | "simulate">("build");
@@ -55,6 +57,7 @@ export default function AudienceGenerationPage() {
     null | "saved" | "rejected"
   >(null);
   const [modeChangeKey, setModeChangeKey] = useState(0);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
 
   const resetBuilderState = () => {
     setSaveError(null);
@@ -213,7 +216,14 @@ export default function AudienceGenerationPage() {
   const canDecide =
     allGroupsComplete && personaValues.length > 0;
 
-  const handleSaveAudience = async () => {
+  const handleSaveAudience = () => {
+    if (!canDecide || decision !== "pending") {
+      return;
+    }
+    setShowSaveDialog(true);
+  };
+
+  const handleSaveWithMetadata = async (name: string, description: string) => {
     if (!canDecide || decision !== "pending") {
       return;
     }
@@ -221,6 +231,14 @@ export default function AudienceGenerationPage() {
     setSaveError(null);
     setIsSaving(true);
     try {
+      // First save the audience metadata
+      await saveAudience({
+        name,
+        description,
+        audienceId: currentAudienceIdRef.current || "",
+      });
+
+      // Then save the personas
       const payload = personaValues.map((persona) => {
         const { _id: _previewId, ...rest } = persona;
         void _previewId;
@@ -480,6 +498,13 @@ export default function AudienceGenerationPage() {
           ) : null}
         </div>
       ) : null}
+
+      <SaveAudienceDialog
+        open={showSaveDialog}
+        onOpenChange={setShowSaveDialog}
+        onSave={handleSaveWithMetadata}
+        isSaving={isSaving}
+      />
     </div>
   );
 }

@@ -111,7 +111,7 @@ export function AdvertisementsPicker({
               className="w-full justify-start text-left h-9 px-3"
             >
               <Paperclip className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span className="text-sm">Attach Files</span>
+              <span className="text-sm">Attach Ad Files</span>
             </Button>
           </div>
         </PopoverContent>
