@@ -1,8 +1,8 @@
 "use client";
 
-import { useAction } from "convex/react";
+import { useAction, useMutation } from "convex/react";
 import { Send, CornerDownLeft } from "lucide-react";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { PersonaBrowser } from "@/components/personas/PersonaBrowser";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,7 +18,8 @@ const LOCATION_TRAILING_PATTERN = /-\s*([A-Z][A-Za-z\s]+,\s*[A-Z]{2})$/;
 
 export default function AudienceGenerationPage() {
   const generateAudienceSegments = useAction(api.audienceGroups.suggestBundle);
-  const generate = useAction(api.personas.generate);
+  const generatePreview = useAction(api.personas.generatePreview);
+  const savePersonas = useMutation(api.personas.saveMany);
   const [message, setMessage] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [mode, setMode] = useState<"build" | "simulate">("build");
@@ -33,6 +34,7 @@ export default function AudienceGenerationPage() {
   >([]);
   const [personasById, setPersonasById] = useState<Record<string, Persona>>({});
   const [error, setError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [groupSuggestStatus, setGroupSuggestStatus] = useState<
     "pending" | "active" | "complete"
@@ -44,6 +46,10 @@ export default function AudienceGenerationPage() {
   const [, setAudienceDescription] = useState<string | null>(null);
   const personaSectionRef = useRef<HTMLDivElement | null>(null);
   const prevPersonaCountRef = useRef<number>(0);
+  const [decision, setDecision] = useState<"pending" | "saved" | "rejected">(
+    "pending"
+  );
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +62,10 @@ export default function AudienceGenerationPage() {
     setPerGroupStatus({});
     setGroups([]);
     setPeople([]);
+    setPersonasById({});
     setAudienceDescription(null);
+    setDecision("pending");
+    setSaveError(null);
     const newAudienceId = Math.random().toString(36).slice(2);
     currentAudienceIdRef.current = newAudienceId;
     startTransition(async () => {
@@ -88,7 +97,7 @@ export default function AudienceGenerationPage() {
             setPerGroupStatus((prev) => ({ ...prev, [g.id]: "active" }));
           }
           // Feed the selected dynamic group as the segment to the personas generator
-          generate({
+          generatePreview({
             group: g.id,
             count: 1,
             audienceId: newAudienceId,
@@ -151,6 +160,67 @@ export default function AudienceGenerationPage() {
     }
   };
 
+  const personaValues = useMemo(
+    () => Object.values(personasById),
+    [personasById]
+  );
+  const allGroupsComplete =
+    groups.length > 0 && groups.every((group) => perGroupStatus[group.id] === "complete");
+  const canDecide =
+    allGroupsComplete && personaValues.length > 0;
+
+  const handleSaveAudience = async () => {
+    if (!canDecide || decision !== "pending") {
+      return;
+    }
+
+    setSaveError(null);
+    setIsSaving(true);
+    try {
+      const payload = personaValues.map((persona) => {
+        const { _id: _previewId, ...rest } = persona;
+        void _previewId;
+        return rest;
+      });
+      const saved = await savePersonas({ personas: payload });
+      const mapped = Object.fromEntries(
+        saved.map((persona) => [persona.personaId, persona as Persona])
+      );
+      setPersonasById(mapped);
+      setDecision("saved");
+    } catch (err) {
+      setSaveError(
+        err instanceof Error ? err.message : "Failed to save the generated audience"
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRejectAudience = () => {
+    if (!canDecide || decision !== "pending") {
+      return;
+    }
+
+    setSaveError(null);
+    setError(null);
+    setPersonasById({});
+    setGroups([]);
+    setPerGroupStatus({});
+    setGroupSuggestStatus("pending");
+    setIsThinking(false);
+    setAudienceDescription(null);
+    setIsExpanded(false);
+    setMessage("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+    setPeople([]);
+    prevPersonaCountRef.current = 0;
+    currentAudienceIdRef.current = null;
+    setDecision("pending");
+  };
+
   function extractLocationHint(text: string): string | null {
     // Very lightweight heuristic; users are encouraged (placeholder) to include a location
     // Look for patterns like "in City, ST" or trailing "- City, ST"
@@ -161,7 +231,7 @@ export default function AudienceGenerationPage() {
 
   // Smoothly scroll to personas once the first persona is available
   useEffect(() => {
-    const count = Object.values(personasById).length;
+    const count = personaValues.length;
     const prev = prevPersonaCountRef.current;
     if (prev === 0 && count > 0 && personaSectionRef.current) {
       personaSectionRef.current.scrollIntoView({
@@ -170,7 +240,7 @@ export default function AudienceGenerationPage() {
       });
     }
     prevPersonaCountRef.current = count;
-  }, [personasById]);
+  }, [personaValues]);
 
   return (
     <div className="w-full overflow-x-hidden p-6 pb-24">
@@ -354,6 +424,12 @@ export default function AudienceGenerationPage() {
       )}
 
       {error ? <p className="mt-4 text-red-600 text-sm">{error}</p> : null}
+      {decision === "saved" ? (
+        <p className="mt-4 text-emerald-600 text-sm">Audience saved successfully.</p>
+      ) : null}
+      {decision === "rejected" ? (
+        <p className="mt-4 text-muted-foreground text-sm">Audience discarded.</p>
+      ) : null}
 
       {mode === "build" && (
         <>
@@ -379,6 +455,41 @@ export default function AudienceGenerationPage() {
         </>
       )}
 
+      <div
+        className="mx-auto w-full max-w-2xl scroll-mt-24"
+        ref={personaSectionRef}
+      >
+        {groups.length > 0 && personaValues.length > 0 && (
+          <PersonaBrowser personas={personaValues} />
+        )}
+      </div>
+
+      {canDecide ? (
+        <div className="mx-auto mt-6 w-full max-w-2xl">
+          {decision === "pending" ? (
+            <div className="flex items-center justify-end gap-3">
+              <Button
+                onClick={handleRejectAudience}
+                type="button"
+                variant="ghost"
+              >
+                Reject audience
+              </Button>
+              <Button
+                className="min-w-32"
+                disabled={isSaving}
+                onClick={handleSaveAudience}
+                type="button"
+              >
+                {isSaving ? "Saving..." : "Save audience"}
+              </Button>
+            </div>
+          ) : null}
+          {saveError ? (
+            <p className="mt-2 text-right text-red-600 text-sm">{saveError}</p>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
