@@ -67,4 +67,16 @@ export default defineSchema({
     .index("by_persona_id", ["personaId"])
     .index("by_audience", ["audienceId"])
     .index("by_user", ["userId"]),
+  sessions: defineTable({
+    userId: v.id("users"),
+    title: v.string(),
+    description: v.optional(v.string()),
+    audienceId: v.optional(v.string()),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+    isActive: v.boolean(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_active", ["userId", "isActive"])
+    .index("by_user_and_created", ["userId", "createdAt"]),
 });

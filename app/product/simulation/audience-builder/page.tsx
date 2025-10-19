@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { SaveAudienceDialog } from "@/components/ui/save-audience-dialog";
+import { useSession } from "@/contexts/session-context";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import type { Persona } from "@/lib/personas/types";
 import { cn } from "@/lib/utils";
 import GenerationChainOfThought from "./AudienceGenerationChainOfThought";
@@ -19,6 +21,7 @@ const LOCATION_IN_PATTERN = /\bin\s+([A-Z][A-Za-z\s]+,\s*[A-Z]{2})\b/;
 const LOCATION_TRAILING_PATTERN = /-\s*([A-Z][A-Za-z\s]+,\s*[A-Z]{2})$/;
 
 export default function AudienceGenerationPage() {
+  const { activeSession, createSessionWithContext, updateSession, generateTitle } = useSession();
   const generateAudienceSegments = useAction(api.audienceGroups.suggestBundle);
   const generatePreview = useAction(api.personas.generatePreview);
   const savePersonas = useMutation(api.personas.saveMany);
@@ -97,7 +100,7 @@ export default function AudienceGenerationPage() {
 
   const isComposerLocked = decision === "saved";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() || isComposerLocked) {
       return;
@@ -115,6 +118,23 @@ export default function AudienceGenerationPage() {
     setAudienceNotice(null);
     const newAudienceId = Math.random().toString(36).slice(2);
     currentAudienceIdRef.current = newAudienceId;
+
+    // Create session on first prompt submission
+    try {
+      if (!activeSession) {
+        await createSessionWithContext(message);
+      } else {
+        const context = `Audience Building: ${message}`;
+        const titleData = await generateTitle(context);
+        await updateSession(activeSession._id, {
+          title: titleData.title,
+          description: titleData.description,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to create/update session:", error);
+    }
+
     startTransition(async () => {
       // Suggest including a location in the prompt; default to a broad region if missing
       const location = extractLocationHint(message) ?? "United States";
@@ -277,7 +297,24 @@ export default function AudienceGenerationPage() {
     setAudienceNotice(null);
   };
 
-  const handleSimulationSubmit = (simulationMessage: string) => {
+  const handleSimulationSubmit = async (simulationMessage: string) => {
+    try {
+      // Create session on first simulation prompt submission
+      if (!activeSession) {
+        await createSessionWithContext(simulationMessage);
+      } else {
+        // Update existing session with new context for better title generation
+        const context = `${activeSession.title} - ${simulationMessage}`;
+        const titleData = await generateTitle(context);
+        await updateSession(activeSession._id, {
+          title: titleData.title,
+          description: titleData.description,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to create/update session:", error);
+    }
+    
     // TODO: Implement simulation logic
     console.log("Simulation message:", simulationMessage);
     // For now, just show a placeholder

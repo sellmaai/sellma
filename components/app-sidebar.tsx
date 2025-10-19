@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { type ComponentProps, useMemo } from "react";
 
 import { NavUser } from "@/components/nav-user";
+import { NavSessions } from "@/components/nav-sessions";
 import {
   Sidebar,
   SidebarContent,
@@ -41,6 +42,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader />
       <SidebarContent>
+        <NavSessions />
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarMenu>
