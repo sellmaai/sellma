@@ -4,6 +4,8 @@ import { Send, CornerDownLeft } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AudiencePicker, type Audience } from "@/components/ui/audience-picker";
 import { cn } from "@/lib/utils";
 
 interface SimulationModeProps {
@@ -15,11 +17,12 @@ interface SimulationModeProps {
 export function SimulationMode({ onSubmit, isPending, error }: SimulationModeProps) {
   const [message, setMessage] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
+  const [selectedAudiences, setSelectedAudiences] = useState<Audience[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim()) {
+    if (!message.trim() || selectedAudiences.length === 0) {
       return;
     }
     onSubmit(message);
@@ -28,6 +31,26 @@ export function SimulationMode({ onSubmit, isPending, error }: SimulationModePro
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
+  };
+
+  const handleGoogleAdsClick = () => {
+    // TODO: Implement Google Ads integration
+    console.log("Google Ads clicked");
+  };
+
+  const handleMetaAdsClick = () => {
+    // TODO: Implement Meta Ads integration
+    console.log("Meta Ads clicked");
+  };
+
+  const getTooltipText = () => {
+    if (selectedAudiences.length === 0) {
+      return "Please select at least one audience";
+    }
+    if (!message.trim()) {
+      return "Please enter your question";
+    }
+    return "Send message";
   };
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -47,7 +70,7 @@ export function SimulationMode({ onSubmit, isPending, error }: SimulationModePro
   };
 
   return (
-    <>
+    <TooltipProvider delayDuration={300}>
       <form className="group/composer w-full" onSubmit={handleSubmit}>
         <div
           className={cn(
@@ -67,7 +90,7 @@ export function SimulationMode({ onSubmit, isPending, error }: SimulationModePro
         >
           <div
             className={cn(
-              "flex min-h-14 items-center overflow-x-hidden px-1.5",
+              "flex min-h-20 items-start overflow-x-hidden px-1.5 relative",
               {
                 "mb-0 px-2 py-1": isExpanded,
                 "-my-2.5": !isExpanded,
@@ -77,14 +100,25 @@ export function SimulationMode({ onSubmit, isPending, error }: SimulationModePro
           >
             <div className="max-h-52 flex-1 overflow-auto">
               <Textarea
-                className="scrollbar-thin min-h-0 resize-none rounded-none border-0 p-0 text-base placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
+                className="scrollbar-thin min-h-0 resize-none rounded-none border-0 pt-3 px-0 pb-12 text-base placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
                 onChange={handleTextareaChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Add at least 1 audience, and type in what you want to ask"
+                placeholder="Type in what you want to ask your selected audiences..."
                 ref={textareaRef}
-                rows={1}
+                rows={3}
                 value={message}
               />
+              
+              {/* Audience Picker - positioned at bottom left */}
+              <div className="absolute bottom-2 left-2 right-2">
+                <AudiencePicker
+                  selectedAudiences={selectedAudiences}
+                  onAudiencesChange={setSelectedAudiences}
+                  onGoogleAdsClick={handleGoogleAdsClick}
+                  onMetaAdsClick={handleMetaAdsClick}
+                  placeholder="Audience"
+                />
+              </div>
             </div>
           </div>
           <div
@@ -92,24 +126,33 @@ export function SimulationMode({ onSubmit, isPending, error }: SimulationModePro
             style={{ gridArea: isExpanded ? "footer" : "trailing" }}
           >
             <div className="ms-auto flex items-center gap-1.5">
-              <Button
-                className="h-9 w-9 rounded-full"
-                disabled={isPending || !message.trim()}
-                size="icon"
-                type="submit"
-              >
-                {message.trim() ? (
-                  <Send className="size-5" />
-                ) : (
-                  <CornerDownLeft className="size-4 text-muted-foreground" />
-                )}
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Button
+                      className="h-9 w-9 rounded-full"
+                      disabled={isPending || !message.trim() || selectedAudiences.length === 0}
+                      size="icon"
+                      type="submit"
+                    >
+                      {message.trim() ? (
+                        <Send className="size-5" />
+                      ) : (
+                        <CornerDownLeft className="size-4 text-muted-foreground" />
+                      )}
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{getTooltipText()}</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </div>
       </form>
 
       {error && <p className="mt-4 text-red-600 text-sm">{error}</p>}
-    </>
+    </TooltipProvider>
   );
 }
