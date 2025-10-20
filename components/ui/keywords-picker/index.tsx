@@ -14,6 +14,9 @@ interface KeywordsPickerProps {
   onKeywordsClear: () => void;
   validationError?: string | null;
   className?: string;
+  goal?: string;
+  goalError?: string | null;
+  onGoalChange?: (value: string) => void;
 }
 
 export function KeywordsPicker({
@@ -24,8 +27,12 @@ export function KeywordsPicker({
   onKeywordsClear,
   validationError,
   className,
+  goal,
+  goalError,
+  onGoalChange,
 }: KeywordsPickerProps) {
   const [open, setOpen] = useState(false);
+  const [internalGoal, setInternalGoal] = useState("");
 
   const summary = useMemo(() => {
     const nonEmpty = keywords.filter(
@@ -87,12 +94,24 @@ export function KeywordsPicker({
 
       <ManualKeywordsDialog
         keywords={keywords}
+        goal={goal ?? internalGoal}
+        goalError={goalError}
         onKeywordAdd={onKeywordAdd}
         onKeywordChange={onKeywordChange}
         onKeywordRemove={onKeywordRemove}
         onKeywordsClear={() => {
           onKeywordsClear();
+          if (!onGoalChange) {
+            setInternalGoal("");
+          }
           setOpen(false);
+        }}
+        onGoalChange={(value) => {
+          if (onGoalChange) {
+            onGoalChange(value);
+          } else {
+            setInternalGoal(value);
+          }
         }}
         onOpenChange={setOpen}
         open={open}
