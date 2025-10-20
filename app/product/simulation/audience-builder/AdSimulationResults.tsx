@@ -2,6 +2,8 @@
 
 import {
   Brain,
+  ChevronDown,
+  ChevronUp,
   Heart,
   Loader2,
   MessageSquare,
@@ -263,6 +265,7 @@ export function AdSimulationResults({
   isLoading,
   error,
 }: AdSimulationResultsProps) {
+  const [isIndividualPersonasExpanded, setIsIndividualPersonasExpanded] = useState(true);
   if (isLoading) {
     return (
       <div className="flex items-center justify-center gap-2 rounded-2xl border border-muted-foreground/40 border-dashed bg-muted/10 p-6 text-muted-foreground">
@@ -298,20 +301,40 @@ export function AdSimulationResults({
           <h3 className="font-semibold text-lg">
             Individual Persona Reactions
           </h3>
+          <Button
+            onClick={() => setIsIndividualPersonasExpanded(!isIndividualPersonasExpanded)}
+            size="sm"
+            variant="ghost"
+            className="flex items-center gap-2"
+          >
+            {isIndividualPersonasExpanded ? (
+              <>
+                <ChevronUp className="h-4 w-4" />
+                Collapse
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-4 w-4" />
+                Expand
+              </>
+            )}
+          </Button>
         </div>
-        <div className="max-h-[640px] space-y-4 overflow-y-auto pr-2">
-          {results.map((result) =>
-            result.reactions.reactions_to_variants.map((reaction) => (
-              <PersonaReactionCard
-                ads={result.ads}
-                audienceName={result.audience.name}
-                key={`${result.persona.personaId}-${reaction.variant_id}`}
-                persona={result.persona}
-                reaction={reaction}
-              />
-            ))
-          )}
-        </div>
+        {isIndividualPersonasExpanded && (
+          <div className="max-h-[640px] space-y-4 overflow-y-auto pr-2">
+            {results.map((result) =>
+              result.reactions.reactions_to_variants.map((reaction) => (
+                <PersonaReactionCard
+                  ads={result.ads}
+                  audienceName={result.audience.name}
+                  key={`${result.persona.personaId}-${reaction.variant_id}`}
+                  persona={result.persona}
+                  reaction={reaction}
+                />
+              ))
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
