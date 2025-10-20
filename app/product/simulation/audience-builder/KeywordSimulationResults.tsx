@@ -8,10 +8,23 @@ import {
   Target,
   User,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { PersonaDisplay } from "@/components/ui/persona-display";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import type { KeywordSimulationResult } from "./types";
 
 const groupPalette = [
@@ -72,7 +85,6 @@ interface KeywordResultCardProps {
 }
 
 const KeywordResultCard = ({ result }: KeywordResultCardProps) => {
-  const [showPersonaDetails, setShowPersonaDetails] = useState(false);
   const { persona, audience, keywords, seedKeywords, advertisingGoal } = result;
   const groupColor = useMemo(
     () => getGroupColor(persona.audienceGroup),
@@ -133,87 +145,70 @@ const KeywordResultCard = ({ result }: KeywordResultCardProps) => {
             )}
           </div>
         </div>
-
-        <div className="flex flex-col gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-700 sm:w-64 dark:text-amber-400">
-          <div className="flex items-center gap-2 font-semibold text-sm uppercase tracking-wide">
-            <Lightbulb className="h-4 w-4" />
-            Model reasoning
-          </div>
-          <p className="text-amber-800 text-sm leading-6 dark:text-amber-200">
-            {keywords.reasoning}
-          </p>
-        </div>
       </div>
-
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        <div className="space-y-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+        <div className="space-y-2 rounded-2xl border border-border/60 bg-background p-4">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 font-semibold text-emerald-700 text-sm uppercase tracking-wide dark:text-emerald-300">
+            <div className="flex items-center gap-2 font-semibold text-foreground text-sm uppercase tracking-wide">
               <ListChecks className="h-4 w-4" />
-              Positive Keywords
+              <span>
+                <span className="text-emerald-600">Positive</span> Keywords
+              </span>
             </div>
             <span className="text-muted-foreground text-xs">
               {keywords.positive_keywords.length} suggestions
             </span>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {keywords.positive_keywords.map((item) => {
               const matchTypeLabel = formatMatchType(item.matchType);
               const confidenceLabel = formatConfidenceLabel(item.confidence);
-              const intent = item.intent?.trim();
               return (
                 <div
-                  className="rounded-xl border border-emerald-500/30 bg-background p-3"
+                  className="rounded-xl border border-border/50 bg-muted/10 px-3 py-2"
                   key={`${persona.personaId}-positive-${item.keyword}`}
                 >
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <span className="font-semibold text-emerald-700 dark:text-emerald-300">
+                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                    <span className="font-semibold text-foreground">
                       {item.keyword}
                     </span>
-                    <div className="flex items-center gap-2 text-xs">
+                    <div className="flex items-center gap-2 text-muted-foreground text-xs">
                       {matchTypeLabel ? (
                         <Badge className="rounded-md px-2 py-0.5 text-xs">
                           {matchTypeLabel}
                         </Badge>
                       ) : null}
-                      {confidenceLabel ? (
-                        <span className="text-emerald-600 dark:text-emerald-200">
-                          {confidenceLabel}
-                        </span>
-                      ) : null}
+                      {confidenceLabel ? <span>{confidenceLabel}</span> : null}
                     </div>
                   </div>
-                  {intent ? (
-                    <p className="mt-1 text-muted-foreground text-xs uppercase tracking-wide">
-                      Intent: {intent}
-                    </p>
-                  ) : null}
                 </div>
               );
             })}
           </div>
         </div>
 
-        <div className="space-y-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4">
+        <div className="space-y-2 rounded-2xl border border-border/60 bg-background p-4">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 font-semibold text-rose-700 text-sm uppercase tracking-wide dark:text-rose-300">
+            <div className="flex items-center gap-2 font-semibold text-foreground text-sm uppercase tracking-wide">
               <AlertTriangle className="h-4 w-4" />
-              Negative Keywords
+              <span>
+                <span className="text-rose-600">Negative</span> Keywords
+              </span>
             </div>
             <span className="text-muted-foreground text-xs">
               {keywords.negative_keywords.length} exclusions
             </span>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {keywords.negative_keywords.map((item) => {
               const matchTypeLabel = formatMatchType(item.matchType);
               return (
                 <div
-                  className="rounded-xl border border-rose-500/30 bg-background p-3"
+                  className="rounded-xl border border-border/50 bg-muted/10 px-3 py-2"
                   key={`${persona.personaId}-negative-${item.keyword}`}
                 >
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <span className="font-semibold text-rose-700 dark:text-rose-300">
+                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                    <span className="font-semibold text-foreground">
                       {item.keyword}
                     </span>
                     {matchTypeLabel ? (
@@ -228,21 +223,30 @@ const KeywordResultCard = ({ result }: KeywordResultCardProps) => {
           </div>
         </div>
       </div>
-
-      <div className="mt-6">
-        <Button
-          onClick={() => setShowPersonaDetails((prev) => !prev)}
-          size="sm"
-          type="button"
-          variant="ghost"
-        >
-          {showPersonaDetails ? "Hide persona profile" : "View persona profile"}
-        </Button>
-        {showPersonaDetails ? (
-          <div className="mt-4">
-            <PersonaDisplay defaultOpen persona={persona} />
-          </div>
-        ) : null}
+      <div className="mt-6 flex flex-wrap items-center gap-2">
+        <PersonaDisplay
+          persona={persona}
+          trigger={
+            <Button size="sm" type="button" variant="outline">
+              View persona profile
+            </Button>
+          }
+        />
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button size="sm" type="button" variant="ghost">
+              <Lightbulb className="mr-2 h-4 w-4" />
+              View reasoning
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="end"
+            className="max-w-lg text-muted-foreground"
+            side="top"
+          >
+            <p className="text-sm leading-6">{keywords.reasoning}</p>
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   );
@@ -259,6 +263,15 @@ export function KeywordSimulationResults({
   isLoading,
   error,
 }: KeywordSimulationResultsProps) {
+  const [open, setOpen] = useState(false);
+  const hasResults = results.length > 0;
+
+  useEffect(() => {
+    if (!isLoading && hasResults) {
+      setOpen(true);
+    }
+  }, [hasResults, isLoading]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center gap-2 rounded-2xl border border-muted-foreground/40 border-dashed bg-muted/10 p-6 text-muted-foreground">
@@ -277,14 +290,35 @@ export function KeywordSimulationResults({
     );
   }
 
+  const personaCount = results.length;
+  const triggerLabel = `View ${personaCount} keyword recommendation${personaCount === 1 ? "" : "s"}`;
+
   return (
-    <div className="flex flex-col gap-4">
-      {results.map((result) => (
-        <KeywordResultCard
-          key={`${result.persona.personaId}-${result.audience.id}`}
-          result={result}
-        />
-      ))}
-    </div>
+    <Dialog onOpenChange={setOpen} open={open}>
+      <div className="flex justify-end">
+        <DialogTrigger asChild>
+          <Button type="button" variant="outline">
+            {triggerLabel}
+          </Button>
+        </DialogTrigger>
+      </div>
+      <DialogContent className="max-h-[85vh] max-w-5xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Keyword simulation results</DialogTitle>
+          <DialogDescription>
+            Review persona-aligned keyword suggestions, including positive and
+            negative matches.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          {results.map((result) => (
+            <KeywordResultCard
+              key={`${result.persona.personaId}-${result.audience.id}`}
+              result={result}
+            />
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
