@@ -49,43 +49,55 @@ const fetchCampaignsAndAdGroups = async (accountId: string): Promise<Campaign[]>
   return [
     {
       id: "campaign-1",
-      name: "Summer Sale Campaign",
+      name: "Tub-to-Shower Conversion",
       status: "ENABLED",
       adGroups: [
         {
           id: "adgroup-1",
-          name: "Electronics",
+          name: "One Day / Quick Conversions",
           status: "ENABLED",
           campaignId: "campaign-1",
         },
         {
           id: "adgroup-2",
-          name: "Clothing",
+          name: "Custom / Premium Conversion",
           status: "ENABLED",
           campaignId: "campaign-1",
         },
         {
           id: "adgroup-3",
-          name: "Home & Garden",
-          status: "PAUSED",
+          name: "Tub to Shower Conversion",
+          status: "ENABLED",
+          campaignId: "campaign-1",
+        },
+        {
+          id: "adgroup-4",
+          name: "Safety / Aging in Place",
+          status: "ENABLED",
           campaignId: "campaign-1",
         },
       ],
     },
     {
       id: "campaign-2",
-      name: "Holiday Specials",
+      name: "Shower Remodeling Core",
       status: "ENABLED",
       adGroups: [
         {
-          id: "adgroup-4",
-          name: "Gift Cards",
+          id: "adgroup-5",
+          name: "Accessible / WalkIn Shower",
           status: "ENABLED",
           campaignId: "campaign-2",
         },
         {
-          id: "adgroup-5",
-          name: "Decorations",
+          id: "adgroup-6",
+          name: "Custom Shower / Upgrades",
+          status: "ENABLED",
+          campaignId: "campaign-2",
+        },
+        {
+          id: "adgroup-7",
+          name: "Shower Remodel / Replacement",
           status: "ENABLED",
           campaignId: "campaign-2",
         },
@@ -93,26 +105,45 @@ const fetchCampaignsAndAdGroups = async (accountId: string): Promise<Campaign[]>
     },
     {
       id: "campaign-3",
-      name: "Brand Awareness",
+      name: "Search",
       status: "PAUSED",
       adGroups: [
         {
-          id: "adgroup-6",
-          name: "Social Media",
+          id: "adgroup-8",
+          name: "Bath Tubs",
           status: "ENABLED",
           campaignId: "campaign-3",
         },
         {
-          id: "adgroup-7",
-          name: "Display Ads",
+          id: "adgroup-9",
+          name: "Bathroom Remodeling",
           status: "PAUSED",
           campaignId: "campaign-3",
         },
         {
-          id: "adgroup-8",
-          name: "Video Ads",
+          id: "adgroup-10",
+          name: "One Day Bath Remodel",
           status: "ENABLED",
           campaignId: "campaign-3",
+        },
+        {
+          id: "adgroup-11",
+          name: "Shower Replacement",
+          status: "ENABLED",
+          campaignId: "campaign-3",
+        },
+      ],
+    },
+    {
+      id: "campaign-4",
+      name: "Bathroom Remodeling",
+      status: "PAUSED",
+      adGroups: [
+        {
+          id: "adgroup-12",
+          name: "Bathroom Remodeling",
+          status: "PAUSED",
+          campaignId: "campaign-4",
         },
       ],
     },
