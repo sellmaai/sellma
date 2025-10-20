@@ -11,9 +11,17 @@ import {
   ThumbsDown,
   User,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { PersonaDisplay } from "@/components/ui/persona-display";
 import type { Behavior } from "@/lib/personas/types";
 import { AggregateSimulationResults } from "./AggregateSimulationResults";
@@ -89,7 +97,6 @@ const PersonaReactionCard = ({
   ads,
   audienceName,
 }: PersonaReactionCardProps) => {
-  const [showPersonaDetails, setShowPersonaDetails] = useState(false);
   const behavior = behaviorMeta[reaction.predicted_behavior];
   const engagementPercent = Math.round(reaction.engagement_score * 100);
   const groupColor = getGroupColor(persona.audienceGroup);
@@ -233,20 +240,15 @@ const PersonaReactionCard = ({
         </div>
       </div>
 
-      <div className="mt-6">
-        <Button
-          onClick={() => setShowPersonaDetails((prev) => !prev)}
-          size="sm"
-          type="button"
-          variant="ghost"
-        >
-          {showPersonaDetails ? "Hide persona profile" : "View persona profile"}
-        </Button>
-        {showPersonaDetails ? (
-          <div className="mt-4">
-            <PersonaDisplay defaultOpen persona={persona} />
-          </div>
-        ) : null}
+      <div className="mt-6 flex flex-wrap items-center gap-2">
+        <PersonaDisplay
+          persona={persona}
+          trigger={
+            <Button size="sm" type="button" variant="outline">
+              View persona profile
+            </Button>
+          }
+        />
       </div>
     </div>
   );
@@ -263,6 +265,23 @@ export function AdSimulationResults({
   isLoading,
   error,
 }: AdSimulationResultsProps) {
+  const [open, setOpen] = useState(false);
+  const totalReactions = useMemo(
+    () =>
+      results.reduce(
+        (acc, result) => acc + result.reactions.reactions_to_variants.length,
+        0
+      ),
+    [results]
+  );
+  const hasResults = results.length > 0;
+
+  useEffect(() => {
+    if (!isLoading && hasResults) {
+      setOpen(true);
+    }
+  }, [hasResults, isLoading]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center gap-2 rounded-2xl border border-muted-foreground/40 border-dashed bg-muted/10 p-6 text-muted-foreground">
@@ -272,7 +291,7 @@ export function AdSimulationResults({
     );
   }
 
-  if (!isLoading && results.length === 0) {
+  if (!(isLoading || hasResults)) {
     return (
       <div className="rounded-2xl border border-muted-foreground/40 border-dashed bg-muted/10 p-6 text-center text-muted-foreground text-sm">
         {error ??
@@ -281,38 +300,68 @@ export function AdSimulationResults({
     );
   }
 
+  const countForLabel = totalReactions > 0 ? totalReactions : results.length;
+  const triggerLabel =
+    countForLabel === 1
+      ? "View ad simulation result"
+      : `View ${countForLabel} ad simulation results`;
+
   return (
-    <div className="flex flex-col gap-4">
-      {error ? (
-        <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-destructive text-sm">
-          {error}
-        </div>
-      ) : null}
+    <Dialog onOpenChange={setOpen} open={open}>
+      <div className="flex justify-end">
+        <DialogTrigger asChild>
+          <Button type="button" variant="outline">
+            {triggerLabel}
+          </Button>
+        </DialogTrigger>
+      </div>
+      <DialogContent className="max-h-[85vh] max-w-5xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Ad simulation results</DialogTitle>
+          <DialogDescription>
+            Inspect persona reactions, engagement, and predicted behaviors for
+            each ad variant.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          {error ? (
+            <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-destructive text-sm">
+              {error}
+            </div>
+          ) : null}
 
-      {/* Aggregate Results Section */}
-      <AggregateSimulationResults results={results} />
-
-      {/* Individual Persona Results */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-lg">
-            Individual Persona Reactions
-          </h3>
-        </div>
-        <div className="max-h-[640px] space-y-4 overflow-y-auto pr-2">
-          {results.map((result) =>
-            result.reactions.reactions_to_variants.map((reaction) => (
-              <PersonaReactionCard
-                ads={result.ads}
-                audienceName={result.audience.name}
-                key={`${result.persona.personaId}-${reaction.variant_id}`}
-                persona={result.persona}
-                reaction={reaction}
-              />
-            ))
+          {totalReactions === 0 ? (
+            <div className="rounded-2xl border border-muted-foreground/40 border-dashed bg-muted/10 p-4 text-muted-foreground text-sm">
+              No persona reactions were returned for the selected ads.
+            </div>
+          ) : (
+            <>
+              <AggregateSimulationResults results={results} />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-lg">
+                    Individual Persona Reactions
+                  </h3>
+                  <span className="text-muted-foreground text-sm">
+                    {totalReactions} reaction{totalReactions === 1 ? "" : "s"}
+                  </span>
+                </div>
+                {results.map((result) =>
+                  result.reactions.reactions_to_variants.map((reaction) => (
+                    <PersonaReactionCard
+                      ads={result.ads}
+                      audienceName={result.audience.name}
+                      key={`${result.persona.personaId}-${reaction.variant_id}`}
+                      persona={result.persona}
+                      reaction={reaction}
+                    />
+                  ))
+                )}
+              </div>
+            </>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

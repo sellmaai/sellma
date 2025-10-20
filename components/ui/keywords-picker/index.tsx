@@ -93,9 +93,16 @@ export function KeywordsPicker({
       </Button>
 
       <ManualKeywordsDialog
-        keywords={keywords}
         goal={goal ?? internalGoal}
         goalError={goalError}
+        keywords={keywords}
+        onGoalChange={(value) => {
+          if (onGoalChange) {
+            onGoalChange(value);
+          } else {
+            setInternalGoal(value);
+          }
+        }}
         onKeywordAdd={onKeywordAdd}
         onKeywordChange={onKeywordChange}
         onKeywordRemove={onKeywordRemove}
@@ -105,13 +112,6 @@ export function KeywordsPicker({
             setInternalGoal("");
           }
           setOpen(false);
-        }}
-        onGoalChange={(value) => {
-          if (onGoalChange) {
-            onGoalChange(value);
-          } else {
-            setInternalGoal(value);
-          }
         }}
         onOpenChange={setOpen}
         open={open}

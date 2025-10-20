@@ -35,13 +35,13 @@ export function AggregateSimulationResults({
     const relevanceScore = Math.floor(Math.random() * (95 - 65 + 1)) + 65;
 
     // Calculate estimated CPC (Cost Per Click) - random between $0.25 to $3.50
-    const estimatedCPC = Math.random() * (3.50 - 0.25) + 0.25;
+    const estimatedCPC = Math.random() * (3.5 - 0.25) + 0.25;
 
     // Calculate estimated CPA (Cost Per Acquisition) - random between $5.00 to $45.00
-    const estimatedCPA = Math.random() * (45.00 - 5.00) + 5.00;
+    const estimatedCPA = Math.random() * (45.0 - 5.0) + 5.0;
 
     // Calculate estimated CPM (Cost Per Mille) - random between $2.00 to $15.00
-    const estimatedCPM = Math.random() * (15.00 - 2.00) + 2.00;
+    const estimatedCPM = Math.random() * (15.0 - 2.0) + 2.0;
 
     // Calculate total personas simulated
     const totalPersonas = results.length;
@@ -60,9 +60,12 @@ export function AggregateSimulationResults({
   return (
     <div className="mb-8 space-y-6">
       <div className="text-center">
-        <h2 className="font-bold text-2xl text-foreground">Simulation Summary</h2>
+        <h2 className="font-bold text-2xl text-foreground">
+          Simulation Summary
+        </h2>
         <p className="mt-2 text-muted-foreground">
-          Aggregate results from {aggregateData.simulatedReach.toLocaleString()} personas tested
+          Aggregate results from {aggregateData.simulatedReach.toLocaleString()}{" "}
+          personas tested
         </p>
       </div>
 
@@ -77,9 +80,7 @@ export function AggregateSimulationResults({
             <div className="font-bold text-2xl">
               {aggregateData.simulatedReach.toLocaleString()}
             </div>
-            <p className="text-muted-foreground text-xs">
-              Simulated Reach
-            </p>
+            <p className="text-muted-foreground text-xs">Simulated Reach</p>
             <div className="mt-2 h-2 w-full rounded-full bg-muted">
               <div
                 className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"
@@ -98,10 +99,10 @@ export function AggregateSimulationResults({
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="font-bold text-2xl">{aggregateData.ctr.toFixed(2)}%</div>
-            <p className="text-muted-foreground text-xs">
-              Click-through Rate
-            </p>
+            <div className="font-bold text-2xl">
+              {aggregateData.ctr.toFixed(2)}%
+            </div>
+            <p className="text-muted-foreground text-xs">Click-through Rate</p>
             <div className="mt-2 h-2 w-full rounded-full bg-muted">
               <div
                 className="h-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500"
@@ -120,10 +121,10 @@ export function AggregateSimulationResults({
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="font-bold text-2xl">{aggregateData.relevanceScore}/100</div>
-            <p className="text-muted-foreground text-xs">
-              Relevance Score
-            </p>
+            <div className="font-bold text-2xl">
+              {aggregateData.relevanceScore}/100
+            </div>
+            <p className="text-muted-foreground text-xs">Relevance Score</p>
             <div className="mt-2 h-2 w-full rounded-full bg-muted">
               <div
                 className="h-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
@@ -142,15 +143,15 @@ export function AggregateSimulationResults({
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="font-bold text-2xl">${aggregateData.estimatedCPC.toFixed(2)}</div>
-            <p className="text-muted-foreground text-xs">
-              Cost Per Click
-            </p>
+            <div className="font-bold text-2xl">
+              ${aggregateData.estimatedCPC.toFixed(2)}
+            </div>
+            <p className="text-muted-foreground text-xs">Cost Per Click</p>
             <div className="mt-2 h-2 w-full rounded-full bg-muted">
               <div
                 className="h-2 rounded-full bg-gradient-to-r from-orange-500 to-red-500"
                 style={{
-                  width: `${Math.min(100, (aggregateData.estimatedCPC / 3.50) * 100)}%`,
+                  width: `${Math.min(100, (aggregateData.estimatedCPC / 3.5) * 100)}%`,
                 }}
               />
             </div>
@@ -164,7 +165,9 @@ export function AggregateSimulationResults({
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="font-bold text-2xl">${aggregateData.estimatedCPA.toFixed(2)}</div>
+            <div className="font-bold text-2xl">
+              ${aggregateData.estimatedCPA.toFixed(2)}
+            </div>
             <p className="text-muted-foreground text-xs">
               Cost Per Acquisition
             </p>
@@ -172,7 +175,7 @@ export function AggregateSimulationResults({
               <div
                 className="h-2 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500"
                 style={{
-                  width: `${Math.min(100, (aggregateData.estimatedCPA / 45.00) * 100)}%`,
+                  width: `${Math.min(100, (aggregateData.estimatedCPA / 45.0) * 100)}%`,
                 }}
               />
             </div>
@@ -186,22 +189,21 @@ export function AggregateSimulationResults({
             <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="font-bold text-2xl">${aggregateData.estimatedCPM.toFixed(2)}</div>
-            <p className="text-muted-foreground text-xs">
-              Cost Per Mille
-            </p>
+            <div className="font-bold text-2xl">
+              ${aggregateData.estimatedCPM.toFixed(2)}
+            </div>
+            <p className="text-muted-foreground text-xs">Cost Per Mille</p>
             <div className="mt-2 h-2 w-full rounded-full bg-muted">
               <div
                 className="h-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500"
                 style={{
-                  width: `${Math.min(100, (aggregateData.estimatedCPM / 15.00) * 100)}%`,
+                  width: `${Math.min(100, (aggregateData.estimatedCPM / 15.0) * 100)}%`,
                 }}
               />
             </div>
           </CardContent>
         </Card>
       </div>
-
     </div>
   );
 }
