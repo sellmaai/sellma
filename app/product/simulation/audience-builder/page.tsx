@@ -9,6 +9,7 @@ import { SaveAudienceDialog } from "@/components/ui/save-audience-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { api } from "@/convex/_generated/api";
+import type { Doc } from "@/convex/_generated/dataModel";
 import type { Persona } from "@/lib/personas/types";
 import { cn } from "@/lib/utils";
 import { AdSimulationResults } from "./AdSimulationResults";
@@ -19,6 +20,27 @@ import type { SimulationResult } from "./types";
 // Regex patterns for location extraction
 const LOCATION_IN_PATTERN = /\bin\s+([A-Z][A-Za-z\s]+,\s*[A-Z]{2})\b/;
 const LOCATION_TRAILING_PATTERN = /-\s*([A-Z][A-Za-z\s]+,\s*[A-Z]{2})$/;
+
+type PersonaLike = Persona | Doc<"personas">;
+
+const isDocPersona = (persona: PersonaLike): persona is Doc<"personas"> =>
+  "_creationTime" in persona;
+
+const normalizePersona = (persona: PersonaLike): Persona => {
+  if (isDocPersona(persona)) {
+    const { _creationTime: _discard, ...rest } = persona;
+    return rest as Persona;
+  }
+  return persona;
+};
+
+const isFulfilled = <T,>(
+  result: PromiseSettledResult<T>
+): result is PromiseFulfilledResult<T> => result.status === "fulfilled";
+
+const isRejected = <T,>(
+  result: PromiseSettledResult<T>
+): result is PromiseRejectedResult => result.status === "rejected";
 
 export default function AudienceGenerationPage() {
   const convex = useConvex();
@@ -332,7 +354,10 @@ export default function AudienceGenerationPage() {
               (await convex.query(api.personas.listByAudienceId, {
                 audienceId: personaAudienceId,
               })) ?? [];
-            return { audience, personas };
+            return {
+              audience,
+              personas: personas.map((persona) => normalizePersona(persona)),
+            };
           } catch (err) {
             throw new Error(
               err instanceof Error
@@ -350,20 +375,22 @@ export default function AudienceGenerationPage() {
         ({ personas }) => personas.length > 0
       );
 
-      const simulationPromises = pairsWithPersonas.flatMap(
-        ({ audience, personas }) =>
+      const simulationPromises: Promise<SimulationResult>[] =
+        pairsWithPersonas.flatMap(({ audience, personas }) =>
           personas.map((persona) =>
             runSimulation({
               persona,
               ads: adsForSimulation,
-            }).then((reactions) => ({
-              audience,
-              persona,
-              reactions,
-              ads: adsForSimulation,
-            }))
+            }).then(
+              (reactions): SimulationResult => ({
+                audience,
+                persona,
+                reactions,
+                ads: adsForSimulation,
+              })
+            )
           )
-      );
+        );
 
       if (simulationPromises.length === 0) {
         setSimulationError(
@@ -377,22 +404,8 @@ export default function AudienceGenerationPage() {
       }
 
       const settledResults = await Promise.allSettled(simulationPromises);
-      const successful = settledResults.filter(
-        (
-          result
-        ): result is Extract<
-          PromiseSettledResult<SimulationResult>,
-          { status: "fulfilled" }
-        > => result.status === "fulfilled"
-      );
-      const failed = settledResults.filter(
-        (
-          result
-        ): result is Extract<
-          PromiseSettledResult<SimulationResult>,
-          { status: "rejected" }
-        > => result.status === "rejected"
-      );
+      const successful = settledResults.filter(isFulfilled);
+      const failed = settledResults.filter(isRejected);
 
       const collected = successful.map((item) => item.value);
       setSimulationResults(collected);
