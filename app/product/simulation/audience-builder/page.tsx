@@ -588,7 +588,7 @@ export default function AudienceGenerationPage() {
         </ToggleGroup>
       </div>
 
-      <h1 className="mx-auto mb-7 max-w-2xl whitespace-pre-wrap text-pretty px-1 text-center font-semibold text-2xl text-foreground leading-9">
+      <h1 className="mx-auto mb-7 max-w-4xl whitespace-pre-wrap text-pretty px-4 text-center font-semibold text-2xl text-foreground leading-9">
         {mode === "build"
           ? "Describe Your Target Audience"
           : "Ask Your Chosen Audience, Anything!"}
@@ -608,7 +608,7 @@ export default function AudienceGenerationPage() {
 
           <div
             className={cn(
-              "mx-auto w-full max-w-2xl cursor-text overflow-clip border border-border bg-transparent bg-clip-padding p-2.5 shadow-lg transition-all duration-200 dark:bg-muted/50",
+              "mx-auto w-full max-w-6xl cursor-text overflow-clip border border-border bg-transparent bg-clip-padding p-4 shadow-lg transition-all duration-200 dark:bg-muted/50",
               {
                 "grid grid-cols-1 grid-rows-[auto_1fr_auto] rounded-3xl":
                   isExpanded,
@@ -624,10 +624,10 @@ export default function AudienceGenerationPage() {
           >
             <div
               className={cn(
-                "flex min-h-14 items-center overflow-x-hidden px-1.5",
+                "flex min-h-14 items-center overflow-x-hidden px-3",
                 {
-                  "mb-0 px-2 py-1": isExpanded,
-                  "-my-2.5": !isExpanded,
+                  "mb-0 px-4 py-2": isExpanded,
+                  "-my-4": !isExpanded,
                 }
               )}
               style={{ gridArea: "primary" }}
@@ -676,7 +676,7 @@ export default function AudienceGenerationPage() {
       )}
 
       {mode === "simulate" ? (
-        <div className="mx-auto mt-6 w-full max-w-3xl">
+        <div className="mx-auto mt-6 w-full max-w-6xl px-4">
           {activeSimulationKind === "ads" ? (
             <AdSimulationResults
               error={simulationError}
