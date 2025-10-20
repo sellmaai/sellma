@@ -157,8 +157,8 @@ export function AdvertisementsPicker({
           onManualAdsClear();
           setShowManualDialog(false);
         }}
-        open={showManualDialog}
         onOpenChange={setShowManualDialog}
+        open={showManualDialog}
       />
     </div>
   );

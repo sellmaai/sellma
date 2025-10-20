@@ -1,7 +1,6 @@
+import { X } from "lucide-react";
 import type { ManualAdDraft } from "@/app/product/simulation/audience-builder/types";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -9,8 +8,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X } from "lucide-react";
 
 interface ManualAdsDialogProps {
   open: boolean;
@@ -45,7 +45,8 @@ export function ManualAdsDialog({
         <DialogHeader>
           <DialogTitle>Manual ad entry</DialogTitle>
           <DialogDescription>
-            Provide custom headlines and descriptions you want personas to react to.
+            Provide custom headlines and descriptions you want personas to react
+            to.
           </DialogDescription>
         </DialogHeader>
 
@@ -56,7 +57,7 @@ export function ManualAdsDialog({
               key={ad.id}
             >
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <span className="font-semibold text-muted-foreground text-sm uppercase tracking-wide">
                   Ad {index + 1}
                 </span>
                 {manualAds.length > 1 ? (
@@ -73,7 +74,9 @@ export function ManualAdsDialog({
 
               <div className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor={`manual-ad-${ad.id}-headline`}>Headline</Label>
+                  <Label htmlFor={`manual-ad-${ad.id}-headline`}>
+                    Headline
+                  </Label>
                   <Input
                     id={`manual-ad-${ad.id}-headline`}
                     onChange={(event) =>
@@ -105,13 +108,16 @@ export function ManualAdsDialog({
         {(() => {
           if (manualValidationError) {
             return (
-              <p className="text-sm text-destructive">{manualValidationError}</p>
+              <p className="text-destructive text-sm">
+                {manualValidationError}
+              </p>
             );
           }
           if (hasIncompleteManualAds) {
             return (
-              <p className="text-sm text-muted-foreground">
-                Finish filling in every headline and description to run the simulation.
+              <p className="text-muted-foreground text-sm">
+                Finish filling in every headline and description to run the
+                simulation.
               </p>
             );
           }
@@ -123,11 +129,7 @@ export function ManualAdsDialog({
             <Button onClick={onManualAdAdd} type="button" variant="outline">
               Add ad
             </Button>
-            <Button
-              onClick={onManualAdsClear}
-              type="button"
-              variant="ghost"
-            >
+            <Button onClick={onManualAdsClear} type="button" variant="ghost">
               Clear all
             </Button>
           </div>
@@ -139,4 +141,3 @@ export function ManualAdsDialog({
     </Dialog>
   );
 }
-
