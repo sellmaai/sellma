@@ -1,25 +1,31 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "convex/react";
 import { Check, Mail, User } from "lucide-react";
-import { api } from "@/convex/_generated/api";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { api } from "@/convex/_generated/api";
 
 // Integration icons - using simple text representations for Google and Meta
 const GoogleIcon = () => (
-  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-red-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-red-500 font-bold text-sm text-white">
     G
   </div>
 );
 
 const MetaIcon = () => (
-  <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 font-bold text-sm text-white">
     M
   </div>
 );
@@ -33,7 +39,14 @@ interface IntegrationCardProps {
   onDisconnect: () => void;
 }
 
-function IntegrationCard({ name, description, icon, isConnected, onConnect, onDisconnect }: IntegrationCardProps) {
+function IntegrationCard({
+  name,
+  description,
+  icon,
+  isConnected,
+  onConnect,
+  onDisconnect,
+}: IntegrationCardProps) {
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
@@ -44,8 +57,11 @@ function IntegrationCard({ name, description, icon, isConnected, onConnect, onDi
             <CardDescription>{description}</CardDescription>
           </div>
           {isConnected ? (
-            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-              <Check className="w-3 h-3 mr-1" />
+            <Badge
+              className="border-green-200 bg-green-100 text-green-800"
+              variant="secondary"
+            >
+              <Check className="mr-1 h-3 w-3" />
               Connected
             </Badge>
           ) : (
@@ -55,11 +71,11 @@ function IntegrationCard({ name, description, icon, isConnected, onConnect, onDi
       </CardHeader>
       <CardContent className="pt-0">
         {isConnected ? (
-          <Button variant="outline" onClick={onDisconnect} className="w-full">
+          <Button className="w-full" onClick={onDisconnect} variant="outline">
             Disconnect
           </Button>
         ) : (
-          <Button onClick={onConnect} className="w-full">
+          <Button className="w-full" onClick={onConnect}>
             Connect
           </Button>
         )}
@@ -70,7 +86,7 @@ function IntegrationCard({ name, description, icon, isConnected, onConnect, onDi
 
 export function UserSettings() {
   const viewer = useQuery(api.users.viewer, {});
-  
+
   // Mock state for integrations - in a real app, this would come from your backend
   const [integrations, setIntegrations] = useState({
     googleAds: false,
@@ -78,32 +94,32 @@ export function UserSettings() {
   });
 
   const handleGoogleAdsConnect = () => {
-    setIntegrations(prev => ({ ...prev, googleAds: true }));
+    setIntegrations((prev) => ({ ...prev, googleAds: true }));
     // Here you would implement the actual OAuth flow
     console.log("Connecting to Google Ads...");
   };
 
   const handleGoogleAdsDisconnect = () => {
-    setIntegrations(prev => ({ ...prev, googleAds: false }));
+    setIntegrations((prev) => ({ ...prev, googleAds: false }));
     console.log("Disconnecting from Google Ads...");
   };
 
   const handleMetaAdsConnect = () => {
-    setIntegrations(prev => ({ ...prev, metaAds: true }));
+    setIntegrations((prev) => ({ ...prev, metaAds: true }));
     // Here you would implement the actual OAuth flow
     console.log("Connecting to Meta Ads...");
   };
 
   const handleMetaAdsDisconnect = () => {
-    setIntegrations(prev => ({ ...prev, metaAds: false }));
+    setIntegrations((prev) => ({ ...prev, metaAds: false }));
     console.log("Disconnecting from Meta Ads...");
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+        <h1 className="font-bold text-3xl tracking-tight">Settings</h1>
         <p className="text-muted-foreground">
           Manage your account settings and integrations.
         </p>
@@ -113,7 +129,7 @@ export function UserSettings() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <User className="w-5 h-5" />
+            <User className="h-5 w-5" />
             User Information
           </CardTitle>
           <CardDescription>
@@ -121,36 +137,34 @@ export function UserSettings() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <User className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                 <Input
+                  className="pl-10"
+                  defaultValue={viewer?.name || ""}
                   id="name"
                   placeholder="Enter your name"
-                  defaultValue={viewer?.name || ""}
-                  className="pl-10"
                 />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Mail className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  defaultValue={viewer?.email || ""}
                   className="pl-10"
+                  defaultValue={viewer?.email || ""}
+                  id="email"
+                  placeholder="Enter your email"
+                  type="email"
                 />
               </div>
             </div>
           </div>
-          <Button className="w-full md:w-auto">
-            Save Changes
-          </Button>
+          <Button className="w-full md:w-auto">Save Changes</Button>
         </CardContent>
       </Card>
 
@@ -165,20 +179,20 @@ export function UserSettings() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <IntegrationCard
-              name="Google Ads"
               description="Connect your Google Ads account to manage campaigns and track performance."
               icon={<GoogleIcon />}
               isConnected={integrations.googleAds}
+              name="Google Ads"
               onConnect={handleGoogleAdsConnect}
               onDisconnect={handleGoogleAdsDisconnect}
             />
             <IntegrationCard
-              name="Meta Ads"
               description="Connect your Meta Ads account to manage Facebook and Instagram campaigns."
               icon={<MetaIcon />}
               isConnected={integrations.metaAds}
+              name="Meta Ads"
               onConnect={handleMetaAdsConnect}
               onDisconnect={handleMetaAdsDisconnect}
             />

@@ -6,6 +6,11 @@ import { AdvertisementsPicker } from "@/components/ui/advertisements-picker";
 import { AttachFilesPicker } from "@/components/ui/attach-files-picker";
 import { type Audience, AudiencePicker } from "@/components/ui/audience-picker";
 import { Button } from "@/components/ui/button";
+import {
+  type GoogleAdsAccount,
+  GoogleAdsAccountPicker,
+} from "@/components/ui/google-ads-account-picker";
+import { type AdGroup } from "@/components/ui/campaign-ad-group-picker";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
@@ -55,6 +60,12 @@ export function SimulationMode({
   ]);
   const [manualError, setManualError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [isGoogleAdsAccountPickerOpen, setIsGoogleAdsAccountPickerOpen] =
+    useState(false);
+  const [isGoogleAdsAdsPickerOpen, setIsGoogleAdsAdsPickerOpen] =
+    useState(false);
+  const [selectedAdGroups, setSelectedAdGroups] = useState<AdGroup[]>([]);
+  const [selectedAdsAdGroups, setSelectedAdsAdGroups] = useState<AdGroup[]>([]);
 
   const { cleanedAds, hasAnyAds, hasCompleteAds, hasIncompleteAds } =
     useMemo(() => {
@@ -77,15 +88,15 @@ export function SimulationMode({
           headline: ad.headline,
           description: ad.description,
         })),
-        hasAnyAds: nonEmpty.length > 0,
-        hasCompleteAds: complete,
+        hasAnyAds: nonEmpty.length > 0 || selectedAdsAdGroups.length > 0,
+        hasCompleteAds: complete || selectedAdsAdGroups.length > 0,
         hasIncompleteAds:
           nonEmpty.length > 0 &&
           nonEmpty.some(
             (ad) => ad.headline.length === 0 || ad.description.length === 0
           ),
       };
-    }, [manualAds]);
+    }, [manualAds, selectedAdsAdGroups]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,22 +111,109 @@ export function SimulationMode({
     }
     if (!hasCompleteAds) {
       setFormError(null);
-      setManualError(
-        "Provide both a headline and description for every ad copy."
-      );
+      // Only show this error if there are manual ads that are incomplete
+      if (cleanedAds.length > 0) {
+        setManualError(
+          "Provide both a headline and description for every ad copy."
+        );
+      } else {
+        setManualError("Add at least one ad copy to simulate.");
+      }
       return;
     }
     setFormError(null);
     setManualError(null);
+    
+    // Convert Google Ads ad groups to the expected ad format
+    const googleAdsAds = selectedAdsAdGroups.map((adGroup, index) => ({
+      id: 1000 + index, // Use high IDs to avoid conflicts with manual ads
+      headline: `Google Ads: ${adGroup.name}`,
+      description: `Ad Group from campaign ${adGroup.campaignId}`,
+    }));
+    
     onSubmit({
       audiences: selectedAudiences,
-      ads: cleanedAds,
+      ads: [...cleanedAds, ...googleAdsAds],
       notes: message.trim() ? message.trim() : undefined,
     });
   };
 
   const handleGoogleAdsClick = () => {
-    // TODO: Integrate Google Ads audience import.
+    setIsGoogleAdsAccountPickerOpen(true);
+  };
+
+  const handleGoogleAdsAdsClick = () => {
+    // Open Google Ads advertisements picker (different from audience picker)
+    setIsGoogleAdsAdsPickerOpen(true);
+  };
+
+  const handleGoogleAdsAccountSelect = (account: GoogleAdsAccount) => {
+    // Don't add audience here - only store the account for later use
+    // The audience will be added when ad groups are actually selected
+    setFormError(null);
+  };
+
+  const handleAdGroupsSelect = (adGroups: AdGroup[]) => {
+    setSelectedAdGroups(adGroups);
+    
+    // Only add Google Ads audience if ad groups are actually selected
+    if (adGroups.length > 0) {
+      // Find the account that was selected (we need to get this from the picker)
+      // For now, we'll use a placeholder - in a real implementation, 
+      // we'd need to pass the account info through the ad groups selection
+      const googleAdsAudience: Audience = {
+        id: `google-ads-${Date.now()}`, // Use timestamp to ensure uniqueness
+        name: `Google Ads (${adGroups.length} Ad Groups)`,
+        source: "google-ads",
+        count: adGroups.length,
+      };
+
+      // Check if we already have a Google Ads audience
+      const existingGoogleAdsAudience = selectedAudiences.find(
+        (audience) => audience.source === "google-ads"
+      );
+
+      if (existingGoogleAdsAudience) {
+        // Update the existing audience instead of adding a new one
+        setSelectedAudiences((prev) =>
+          prev.map((audience) =>
+            audience.source === "google-ads"
+              ? { ...audience, name: `Google Ads (${adGroups.length} Ad Groups)`, count: adGroups.length }
+              : audience
+          )
+        );
+      } else {
+        // Add new Google Ads audience
+        setSelectedAudiences((prev) => [...prev, googleAdsAudience]);
+      }
+    } else {
+      // If no ad groups selected, remove any existing Google Ads audience
+      setSelectedAudiences((prev) => prev.filter((audience) => audience.source !== "google-ads"));
+    }
+  };
+
+  const handleAdGroupsClear = () => {
+    setSelectedAdGroups([]);
+    // Also remove the Google Ads audience when ad groups are cleared
+    setSelectedAudiences((prev) => prev.filter((audience) => audience.source !== "google-ads"));
+  };
+
+  const handleGoogleAdsAdsSelect = (account: GoogleAdsAccount) => {
+    // TODO: Implement actual Google Ads advertisements import logic
+    // For now, we'll just show a success message or add placeholder ads
+    console.log("Selected Google Ads account for advertisements:", account);
+    setIsGoogleAdsAdsPickerOpen(false);
+  };
+
+  const handleGoogleAdsAdsGroupsSelect = (adGroups: AdGroup[]) => {
+    // Store the selected ad groups for advertisements
+    setSelectedAdsAdGroups(adGroups);
+    console.log("Selected ad groups for advertisements:", adGroups);
+    setIsGoogleAdsAdsPickerOpen(false);
+  };
+
+  const handleRemoveAdsAdGroups = () => {
+    setSelectedAdsAdGroups([]);
   };
 
   const handleMetaAdsClick = () => {
@@ -186,7 +284,8 @@ export function SimulationMode({
     selectedAudiences.length +
     attachedFiles.length +
     advertisementFileCount +
-    cleanedAds.length;
+    cleanedAds.length +
+    selectedAdsAdGroups.length;
 
   // Determine if textarea should be expanded based on content or pills
   const shouldExpand =
@@ -221,7 +320,7 @@ export function SimulationMode({
       <form className="group/composer w-full" onSubmit={handleSubmit}>
         <div
           className={cn(
-            "mx-auto w-full max-w-2xl cursor-text overflow-clip border border-border bg-transparent bg-clip-padding p-2.5 shadow-lg transition-all duration-200 dark:bg-muted/50",
+            "mx-auto w-full max-w-4xl cursor-text overflow-clip border border-border bg-transparent bg-clip-padding p-2.5 shadow-lg transition-all duration-200 dark:bg-muted/50",
             {
               "grid grid-cols-1 grid-rows-[auto_1fr_auto] rounded-3xl":
                 shouldExpand,
@@ -260,10 +359,12 @@ export function SimulationMode({
               <div className="absolute right-2 bottom-2 left-2 flex gap-2">
                 <div className="flex-1">
                   <AudiencePicker
+                    onAdGroupsClear={handleAdGroupsClear}
                     onAudiencesChange={handleAudiencesChange}
                     onGoogleAdsClick={handleGoogleAdsClick}
                     onMetaAdsClick={handleMetaAdsClick}
                     placeholder="Audiences"
+                    selectedAdGroupsCount={selectedAdGroups.length}
                     selectedAudiences={selectedAudiences}
                   />
                 </div>
@@ -276,12 +377,14 @@ export function SimulationMode({
                   manualValidationError={manualError}
                   onAttachFilesClick={handleAttachFilesClick}
                   onFileCountChange={setAdvertisementFileCount}
-                  onGoogleAdsClick={handleGoogleAdsClick}
+                  onGoogleAdsClick={handleGoogleAdsAdsClick}
                   onManualAdAdd={handleAddManualAd}
                   onManualAdChange={handleManualAdChange}
                   onManualAdRemove={handleRemoveManualAd}
                   onManualAdsClear={handleClearManualAds}
                   onMetaAdsClick={handleMetaAdsClick}
+                  onRemoveAdGroups={handleRemoveAdsAdGroups}
+                  selectedAdGroups={selectedAdsAdGroups}
                 />
                 <AttachFilesPicker
                   onSelectedFilesChange={setAttachedFiles}
@@ -328,6 +431,21 @@ export function SimulationMode({
         <p className="mt-3 text-destructive text-sm">{manualError}</p>
       ) : null}
       {error && <p className="mt-4 text-red-600 text-sm">{error}</p>}
+
+      <GoogleAdsAccountPicker
+        onAccountSelect={handleGoogleAdsAccountSelect}
+        onAdGroupsSelect={handleAdGroupsSelect}
+        onOpenChange={setIsGoogleAdsAccountPickerOpen}
+        open={isGoogleAdsAccountPickerOpen}
+      />
+
+      {/* Google Ads Advertisements Picker */}
+      <GoogleAdsAccountPicker
+        onAccountSelect={handleGoogleAdsAdsSelect}
+        onAdGroupsSelect={handleGoogleAdsAdsGroupsSelect}
+        onOpenChange={setIsGoogleAdsAdsPickerOpen}
+        open={isGoogleAdsAdsPickerOpen}
+      />
     </TooltipProvider>
   );
 }

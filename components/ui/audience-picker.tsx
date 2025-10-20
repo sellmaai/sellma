@@ -36,6 +36,8 @@ interface AudiencePickerProps {
   className?: string;
   onGoogleAdsClick?: () => void;
   onMetaAdsClick?: () => void;
+  selectedAdGroupsCount?: number;
+  onAdGroupsClear?: () => void;
 }
 
 export function AudiencePicker({
@@ -45,6 +47,8 @@ export function AudiencePicker({
   className,
   onGoogleAdsClick,
   onMetaAdsClick,
+  selectedAdGroupsCount = 0,
+  onAdGroupsClear,
 }: AudiencePickerProps) {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -84,11 +88,19 @@ export function AudiencePicker({
   };
 
   const handleRemove = (audienceId: string) => {
+    const audience = selectedAudiences.find(a => a.id === audienceId);
+    if (audience?.source === "google-ads" && selectedAdGroupsCount > 0) {
+      // If removing Google Ads audience and there are selected ad groups, clear ad groups too
+      onAdGroupsClear?.();
+    }
     onAudiencesChange(selectedAudiences.filter((a) => a.id !== audienceId));
   };
 
   const getAudienceDisplayName = (audience: Audience) => {
     if (audience.source === "google-ads") {
+      if (selectedAdGroupsCount > 0) {
+        return `Google Ads (${selectedAdGroupsCount} Ad Groups)`;
+      }
       return `Google Ads Audience (${audience.count || 0})`;
     }
     if (audience.source === "meta-ads") {
@@ -100,7 +112,7 @@ export function AudiencePicker({
   const getAudienceBadgeVariant = (source: Audience["source"]) => {
     switch (source) {
       case "google-ads":
-        return "default";
+        return "secondary";
       case "meta-ads":
         return "secondary";
       case "saved":
