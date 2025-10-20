@@ -175,6 +175,15 @@ export function GoogleAdsAccountPicker({
                       : "border-border hover:bg-muted/50"
                   )}
                   key={account.id}
+                  onClick={() => setSelectedAccountId(account.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setSelectedAccountId(account.id);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                 >
                   <RadioGroupItem
                     className="mt-1"

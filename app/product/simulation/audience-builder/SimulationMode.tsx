@@ -115,10 +115,20 @@ export function SimulationMode({
     return { seedKeywords: unique, keywordCount: unique.length };
   }, [manualKeywords]);
 
+  const googleAdsAds = useMemo(
+    () =>
+      selectedAdsAdGroups.map((adGroup, index) => ({
+        id: 1000 + index,
+        headline: `Google Ads: ${adGroup.name}`,
+        description: `Ad group from campaign ${adGroup.campaignId}`,
+      })),
+    [selectedAdsAdGroups]
+  );
+
   const totalPills =
     selectedAudiences.length +
     (simulationKind === "ads"
-      ? attachedFiles.length + cleanedAds.length
+      ? attachedFiles.length + cleanedAds.length + selectedAdsAdGroups.length
       : keywordCount + (keywordGoal.trim().length > 0 ? 1 : 0));
 
   const shouldExpand =
@@ -157,7 +167,7 @@ export function SimulationMode({
       onSubmit({
         mode: "ads",
         audiences: selectedAudiences,
-        ads: cleanedAds,
+        ads: [...cleanedAds, ...googleAdsAds],
         notes: trimmedContext ? trimmedContext : undefined,
       });
       return;
@@ -184,7 +194,81 @@ export function SimulationMode({
   };
 
   const handleGoogleAdsClick = () => {
-    // TODO: Integrate Google Ads audience import.
+    setIsGoogleAdsAccountPickerOpen(true);
+  };
+
+  const handleGoogleAdsAccountSelect = (_account: GoogleAdsAccount) => {
+    setFormError(null);
+  };
+
+  const handleAdGroupsSelect = (adGroups: AdGroup[]) => {
+    setSelectedAdGroups(adGroups);
+
+    if (adGroups.length === 0) {
+      setSelectedAudiences((prev) =>
+        prev.filter((audience) => audience.source !== "google-ads")
+      );
+      setIsGoogleAdsAccountPickerOpen(false);
+      return;
+    }
+
+    const googleAdsAudience: Audience = {
+      id: `google-ads-${Date.now()}`,
+      name: `Google Ads (${adGroups.length} Ad Groups)`,
+      source: "google-ads",
+      count: adGroups.length,
+    };
+
+    setSelectedAudiences((prev) => {
+      const existingGoogleAdsAudience = prev.find(
+        (audience) => audience.source === "google-ads"
+      );
+
+      if (existingGoogleAdsAudience) {
+        return prev.map((audience) =>
+          audience.source === "google-ads"
+            ? {
+                ...audience,
+                name: `Google Ads (${adGroups.length} Ad Groups)`,
+                count: adGroups.length,
+              }
+            : audience
+        );
+      }
+
+      return [...prev, googleAdsAudience];
+    });
+    setFormError(null);
+    setIsGoogleAdsAccountPickerOpen(false);
+  };
+
+  const handleAdGroupsClear = () => {
+    setSelectedAdGroups([]);
+    setSelectedAudiences((prev) =>
+      prev.filter((audience) => audience.source !== "google-ads")
+    );
+  };
+
+  const handleGoogleAdsAdsClick = () => {
+    setSimulationKind("ads");
+    setIsGoogleAdsAdsPickerOpen(true);
+  };
+
+  const handleGoogleAdsAdsSelect = (_account: GoogleAdsAccount) => {
+    setManualError(null);
+    setFormError(null);
+  };
+
+  const handleGoogleAdsAdsGroupsSelect = (adGroups: AdGroup[]) => {
+    setSelectedAdsAdGroups(adGroups);
+    if (adGroups.length > 0) {
+      setManualError(null);
+    }
+    setIsGoogleAdsAdsPickerOpen(false);
+  };
+
+  const handleRemoveAdsAdGroups = () => {
+    setSelectedAdsAdGroups([]);
   };
 
   const handleMetaAdsClick = () => {
@@ -364,6 +448,9 @@ export function SimulationMode({
                     hasIncompleteManualAds={
                       hasIncompleteAds && manualError === null
                     }
+                    googleAdsAdGroupCount={selectedAdsAdGroups.length}
+                    onClearGoogleAdsSelection={handleRemoveAdsAdGroups}
+                    onGoogleAdsImport={handleGoogleAdsAdsClick}
                     keywordGoal={keywordGoal}
                     keywordGoalError={keywordGoalError}
                     manualAdCount={cleanedAds.length}
@@ -449,6 +536,21 @@ export function SimulationMode({
         <p className="mt-3 text-destructive text-sm">{keywordGoalError}</p>
       ) : null}
       {error ? <p className="mt-4 text-red-600 text-sm">{error}</p> : null}
+
+      <GoogleAdsAccountPicker
+        onAccountSelect={handleGoogleAdsAccountSelect}
+        onAdGroupsSelect={handleAdGroupsSelect}
+        onOpenChange={setIsGoogleAdsAccountPickerOpen}
+        open={isGoogleAdsAccountPickerOpen}
+        pickerType="audience"
+      />
+
+      <GoogleAdsAccountPicker
+        onAccountSelect={handleGoogleAdsAdsSelect}
+        onAdGroupsSelect={handleGoogleAdsAdsGroupsSelect}
+        onOpenChange={setIsGoogleAdsAdsPickerOpen}
+        open={isGoogleAdsAdsPickerOpen}
+      />
     </TooltipProvider>
   );
 }

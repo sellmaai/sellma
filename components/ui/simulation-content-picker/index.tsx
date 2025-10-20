@@ -31,6 +31,9 @@ interface SimulationContentPickerProps {
   onManualAdsClear: () => void;
   manualValidationError: string | null;
   hasIncompleteManualAds: boolean;
+  googleAdsAdGroupCount?: number;
+  onGoogleAdsImport?: () => void;
+  onClearGoogleAdsSelection?: () => void;
   manualKeywords: ManualKeywordDraft[];
   keywordGoal: string;
   keywordGoalError: string | null;
@@ -52,6 +55,9 @@ export function SimulationContentPicker({
   onManualAdsClear,
   manualValidationError,
   hasIncompleteManualAds,
+  googleAdsAdGroupCount = 0,
+  onGoogleAdsImport,
+  onClearGoogleAdsSelection,
   manualKeywords,
   keywordGoal,
   keywordGoalError,
@@ -70,15 +76,17 @@ export function SimulationContentPicker({
     [manualKeywords]
   );
 
+  const totalAdsCount = manualAdCount + googleAdsAdGroupCount;
+
   const selectedLabel = useMemo(() => {
     if (simulationKind === "ads") {
-      if (manualAdCount === 0) {
+      if (totalAdsCount === 0) {
         return "Configure ad reactions";
       }
-      if (manualAdCount === 1) {
+      if (totalAdsCount === 1) {
         return "1 ad ready";
       }
-      return `${manualAdCount} ads ready`;
+      return `${totalAdsCount} ads ready`;
     }
     if (totalKeywordCount === 0) {
       return "Configure keyword strategy";
@@ -87,18 +95,17 @@ export function SimulationContentPicker({
       return "1 keyword ready";
     }
     return `${totalKeywordCount} keywords ready`;
-  }, [manualAdCount, simulationKind, totalKeywordCount]);
+  }, [simulationKind, totalAdsCount, totalKeywordCount]);
 
   const secondaryContent = useMemo(() => {
     if (simulationKind === "ads") {
-      if (manualAdCount === 0) {
-        return (
-          <span className="text-muted-foreground text-xs">
-            Add manual ad variants for the simulation.
-          </span>
-        );
+      const previewParts: string[] = [];
+
+      if (googleAdsAdGroupCount > 0) {
+        previewParts.push(`Google Ads import (${googleAdsAdGroupCount})`);
       }
-      const previews = manualAds
+
+      const manualPreviews = manualAds
         .filter(
           (ad) =>
             ad.headline.trim().length > 0 || ad.description.trim().length > 0
@@ -109,17 +116,24 @@ export function SimulationContentPicker({
             ? ad.headline.trim()
             : ad.description.trim()
         );
-      if (previews.length === 0) {
+      if (manualPreviews.length > 0) {
+        const label = manualPreviews.join(" • ");
+        previewParts.push(
+          manualAdCount > manualPreviews.length ? `${label} • …` : label
+        );
+      }
+
+      if (previewParts.length === 0) {
         return (
           <span className="text-muted-foreground text-xs">
-            Add manual ad variants for the simulation.
+            Add manual ad variants or import from Google Ads.
           </span>
         );
       }
+
       return (
         <span className="text-muted-foreground text-xs">
-          {previews.join(" • ")}
-          {manualAdCount > previews.length ? " • …" : null}
+          {previewParts.join(" • ")}
         </span>
       );
     }
@@ -158,6 +172,7 @@ export function SimulationContentPicker({
     manualKeywords,
     simulationKind,
     totalKeywordCount,
+    googleAdsAdGroupCount,
   ]);
 
   return (
@@ -199,6 +214,20 @@ export function SimulationContentPicker({
             className="h-9 w-full justify-start px-3 text-left"
             onClick={() => {
               setOpen(false);
+              onSimulationKindChange("ads");
+              onGoogleAdsImport?.();
+            }}
+            size="sm"
+            type="button"
+            variant="ghost"
+          >
+            <Megaphone className="mr-2 h-4 w-4 flex-shrink-0" />
+            <span className="text-sm">Import from Google Ads</span>
+          </Button>
+          <Button
+            className="h-9 w-full justify-start px-3 text-left"
+            onClick={() => {
+              setOpen(false);
               onSimulationKindChange("keywords");
               setShowKeywordsDialog(true);
             }}
@@ -209,6 +238,28 @@ export function SimulationContentPicker({
             <Tag className="mr-2 h-4 w-4 flex-shrink-0" />
             <span className="text-sm">Configure keywords</span>
           </Button>
+          {googleAdsAdGroupCount > 0 ? (
+            <div className="rounded-md bg-muted px-3 py-2 text-muted-foreground text-xs">
+              <div className="flex items-center justify-between gap-2">
+                <span>Google Ads import ready</span>
+                <Button
+                  className="h-6 px-2 text-xs"
+                  onClick={() => {
+                    onClearGoogleAdsSelection?.();
+                    setOpen(false);
+                  }}
+                  type="button"
+                  variant="ghost"
+                >
+                  Clear
+                </Button>
+              </div>
+              <p className="mt-1">
+                {googleAdsAdGroupCount} ad group
+                {googleAdsAdGroupCount === 1 ? "" : "s"} selected.
+              </p>
+            </div>
+          ) : null}
         </PopoverContent>
       </Popover>
 
