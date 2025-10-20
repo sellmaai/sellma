@@ -9,6 +9,7 @@ export interface Audience {
   userId: string;
   createdAt: string;
   updatedAt: string;
+  audienceId?: string;
 }
 
 interface UseInfiniteAudiencesResult {

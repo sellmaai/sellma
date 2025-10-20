@@ -16,6 +16,7 @@ export default defineSchema({
     userId: v.id("users"),
     createdAt: v.string(),
     updatedAt: v.string(),
+    audienceId: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
     .index("by_user_and_name", ["userId", "name"]),

@@ -21,6 +21,7 @@ interface AdvertisementsPickerProps {
   onMetaAdsClick?: () => void;
   onAttachFilesClick?: (files: FileList | null) => void;
   onFileCountChange?: (count: number) => void;
+  onManualEntryClick?: () => void;
   className?: string;
 }
 
@@ -28,6 +29,7 @@ export function AdvertisementsPicker({
   onGoogleAdsClick,
   onMetaAdsClick,
   onFileCountChange,
+  onManualEntryClick,
   className,
 }: AdvertisementsPickerProps) {
   const [open, setOpen] = useState(false);
@@ -104,6 +106,18 @@ export function AdvertisementsPicker({
         </PopoverTrigger>
         <PopoverContent align="start" className="w-64 p-1">
           <div className="space-y-1">
+            <Button
+              className="h-9 w-full justify-start px-3 text-left"
+              onClick={() => {
+                onManualEntryClick?.();
+                setOpen(false);
+              }}
+              size="sm"
+              variant="ghost"
+            >
+              <Megaphone className="mr-2 h-4 w-4 flex-shrink-0" />
+              <span className="text-sm">Manual entry</span>
+            </Button>
             <Button
               className="h-9 w-full justify-start px-3 text-left"
               onClick={onGoogleAdsClick}

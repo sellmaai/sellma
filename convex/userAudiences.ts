@@ -33,6 +33,7 @@ export const save = mutation({
       userId,
       createdAt: now,
       updatedAt: now,
+      audienceId: args.audienceId,
     });
 
     return audienceMetadataId;

@@ -26,6 +26,7 @@ export interface Audience {
   name: string;
   source: "google-ads" | "meta-ads" | "saved";
   count?: number;
+  audienceId?: string;
 }
 
 interface AudiencePickerProps {
@@ -69,6 +70,7 @@ export function AudiencePicker({
     id: audience._id,
     name: audience.name,
     source: "saved" as const,
+    audienceId: audience.audienceId ?? undefined,
   }));
 
   const handleSelect = (audience: Audience) => {
