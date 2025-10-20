@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PersonaDisplay } from "@/components/ui/persona-display";
 import type { Behavior } from "@/lib/personas/types";
-import type { SimulationResult } from "./types";
+import type { AdSimulationResult } from "./types";
 
 const behaviorMeta: Record<
   Behavior,
@@ -67,9 +67,9 @@ const getEngagementColor = (score: number) => {
 };
 
 interface PersonaReactionCardProps {
-  reaction: SimulationResult["reactions"]["reactions_to_variants"][number];
-  persona: SimulationResult["persona"];
-  ads: SimulationResult["ads"];
+  reaction: AdSimulationResult["reactions"]["reactions_to_variants"][number];
+  persona: AdSimulationResult["persona"];
+  ads: AdSimulationResult["ads"];
   audienceName: string;
 }
 
@@ -252,7 +252,7 @@ const PersonaReactionCard = ({
 };
 
 interface AdSimulationResultsProps {
-  results: SimulationResult[];
+  results: AdSimulationResult[];
   isLoading: boolean;
   error: string | null;
 }
