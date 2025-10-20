@@ -2,15 +2,15 @@
 
 import { Send } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AdvertisementsPicker } from "@/components/ui/advertisements-picker";
 import { AttachFilesPicker } from "@/components/ui/attach-files-picker";
 import { type Audience, AudiencePicker } from "@/components/ui/audience-picker";
 import { Button } from "@/components/ui/button";
+import type { AdGroup } from "@/components/ui/campaign-ad-group-picker";
 import {
   type GoogleAdsAccount,
   GoogleAdsAccountPicker,
 } from "@/components/ui/google-ads-account-picker";
-import { type AdGroup } from "@/components/ui/campaign-ad-group-picker";
+import { SimulationContentPicker } from "@/components/ui/simulation-content-picker";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
@@ -18,19 +18,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
 import { cn } from "@/lib/utils";
-import type { ManualAdDraft } from "./types";
-
-export interface SimulationSubmission {
-  audiences: Audience[];
-  ads: Array<{
-    id: number;
-    headline: string;
-    description: string;
-  }>;
-  notes?: string;
-}
+import type {
+  ManualAdDraft,
+  ManualKeywordDraft,
+  SimulationKind,
+  SimulationSubmission,
+} from "./types";
 
 interface SimulationModeProps {
   onSubmit: (payload: SimulationSubmission) => void;
@@ -43,23 +37,38 @@ export function SimulationMode({
   isPending,
   error,
 }: SimulationModeProps) {
-  const [message, setMessage] = useState("");
+  const [simulationKind, setSimulationKind] = useState<SimulationKind>("ads");
+  const [contextValue, setContextValue] = useState("");
+  const [keywordGoal, setKeywordGoal] = useState("");
+  const [keywordGoalError, setKeywordGoalError] = useState<string | null>(null);
   const [, setIsExpanded] = useState(false);
   const [selectedAudiences, setSelectedAudiences] = useState<Audience[]>([]);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
-  const [advertisementFileCount, setAdvertisementFileCount] = useState(0);
   const manualAdIdRef = useRef(1);
+  const manualKeywordIdRef = useRef(1);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [manualError, setManualError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+
   const createManualAd = (): ManualAdDraft => {
     const id = manualAdIdRef.current;
     manualAdIdRef.current += 1;
     return { id, headline: "", description: "" };
   };
+
+  const createManualKeyword = (): ManualKeywordDraft => {
+    const id = manualKeywordIdRef.current;
+    manualKeywordIdRef.current += 1;
+    return { id, value: "" };
+  };
+
   const [manualAds, setManualAds] = useState<ManualAdDraft[]>(() => [
     createManualAd(),
   ]);
-  const [manualError, setManualError] = useState<string | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
+
+  const [manualKeywords, setManualKeywords] = useState<ManualKeywordDraft[]>(
+    () => [createManualKeyword()]
+  );
   const [isGoogleAdsAccountPickerOpen, setIsGoogleAdsAccountPickerOpen] =
     useState(false);
   const [isGoogleAdsAdsPickerOpen, setIsGoogleAdsAdsPickerOpen] =
@@ -98,43 +107,89 @@ export function SimulationMode({
       };
     }, [manualAds, selectedAdsAdGroups]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const { seedKeywords, keywordCount } = useMemo(() => {
+    const trimmed = manualKeywords
+      .map((item) => item.value.trim())
+      .filter((value) => value.length > 0);
+    const unique = Array.from(new Set(trimmed));
+    return { seedKeywords: unique, keywordCount: unique.length };
+  }, [manualKeywords]);
+
+  const googleAdsAds = useMemo(
+    () =>
+      selectedAdsAdGroups.map((adGroup, index) => ({
+        id: 1000 + index,
+        headline: `Google Ads: ${adGroup.name}`,
+        description: `Ad group from campaign ${adGroup.campaignId}`,
+      })),
+    [selectedAdsAdGroups]
+  );
+
+  const totalPills =
+    selectedAudiences.length +
+    (simulationKind === "ads"
+      ? attachedFiles.length + cleanedAds.length + selectedAdsAdGroups.length
+      : keywordCount + (keywordGoal.trim().length > 0 ? 1 : 0));
+
+  const shouldExpand =
+    contextValue.length > 100 || contextValue.includes("\n") || totalPills > 0;
+
+  const textareaPlaceholder =
+    "Add optional context or notes for this simulation (optional)";
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const trimmedContext = contextValue.trim();
+    const trimmedGoal = keywordGoal.trim();
+
     if (selectedAudiences.length === 0) {
       setFormError("Select at least one audience to run simulations.");
       return;
     }
-    if (!hasAnyAds) {
-      setFormError(null);
-      setManualError("Add at least one ad copy to simulate.");
-      return;
-    }
-    if (!hasCompleteAds) {
-      setFormError(null);
-      // Only show this error if there are manual ads that are incomplete
-      if (cleanedAds.length > 0) {
+
+    if (simulationKind === "ads") {
+      if (!hasAnyAds) {
+        setFormError(null);
+        setManualError("Add at least one ad copy to simulate.");
+        return;
+      }
+      if (!hasCompleteAds) {
+        setFormError(null);
         setManualError(
           "Provide both a headline and description for every ad copy."
         );
-      } else {
-        setManualError("Add at least one ad copy to simulate.");
+        return;
       }
+
+      setManualError(null);
+      setFormError(null);
+      setKeywordGoalError(null);
+      onSubmit({
+        mode: "ads",
+        audiences: selectedAudiences,
+        ads: [...cleanedAds, ...googleAdsAds],
+        notes: trimmedContext ? trimmedContext : undefined,
+      });
       return;
     }
-    setFormError(null);
+
+    if (trimmedGoal.length === 0) {
+      setManualError(null);
+      setKeywordGoalError(
+        "Describe the advertising goal to simulate keywords."
+      );
+      return;
+    }
+
     setManualError(null);
-    
-    // Convert Google Ads ad groups to the expected ad format
-    const googleAdsAds = selectedAdsAdGroups.map((adGroup, index) => ({
-      id: 1000 + index, // Use high IDs to avoid conflicts with manual ads
-      headline: `Google Ads: ${adGroup.name}`,
-      description: `Ad Group from campaign ${adGroup.campaignId}`,
-    }));
-    
+    setFormError(null);
+    setKeywordGoalError(null);
     onSubmit({
+      mode: "keywords",
       audiences: selectedAudiences,
-      ads: [...cleanedAds, ...googleAdsAds],
-      notes: message.trim() ? message.trim() : undefined,
+      advertisingGoal: trimmedGoal,
+      seedKeywords,
+      notes: trimmedContext ? trimmedContext : undefined,
     });
   };
 
@@ -142,73 +197,73 @@ export function SimulationMode({
     setIsGoogleAdsAccountPickerOpen(true);
   };
 
-  const handleGoogleAdsAdsClick = () => {
-    // Open Google Ads advertisements picker (different from audience picker)
-    setIsGoogleAdsAdsPickerOpen(true);
-  };
-
-  const handleGoogleAdsAccountSelect = (account: GoogleAdsAccount) => {
-    // Don't add audience here - only store the account for later use
-    // The audience will be added when ad groups are actually selected
+  const handleGoogleAdsAccountSelect = (_account: GoogleAdsAccount) => {
     setFormError(null);
   };
 
   const handleAdGroupsSelect = (adGroups: AdGroup[]) => {
     setSelectedAdGroups(adGroups);
-    
-    // Only add Google Ads audience if ad groups are actually selected
-    if (adGroups.length > 0) {
-      // Find the account that was selected (we need to get this from the picker)
-      // For now, we'll use a placeholder - in a real implementation, 
-      // we'd need to pass the account info through the ad groups selection
-      const googleAdsAudience: Audience = {
-        id: `google-ads-${Date.now()}`, // Use timestamp to ensure uniqueness
-        name: `Google Ads (${adGroups.length} Ad Groups)`,
-        source: "google-ads",
-        count: adGroups.length,
-      };
 
-      // Check if we already have a Google Ads audience
-      const existingGoogleAdsAudience = selectedAudiences.find(
+    if (adGroups.length === 0) {
+      setSelectedAudiences((prev) =>
+        prev.filter((audience) => audience.source !== "google-ads")
+      );
+      setIsGoogleAdsAccountPickerOpen(false);
+      return;
+    }
+
+    const googleAdsAudience: Audience = {
+      id: `google-ads-${Date.now()}`,
+      name: `Google Ads (${adGroups.length} Ad Groups)`,
+      source: "google-ads",
+      count: adGroups.length,
+    };
+
+    setSelectedAudiences((prev) => {
+      const existingGoogleAdsAudience = prev.find(
         (audience) => audience.source === "google-ads"
       );
 
       if (existingGoogleAdsAudience) {
-        // Update the existing audience instead of adding a new one
-        setSelectedAudiences((prev) =>
-          prev.map((audience) =>
-            audience.source === "google-ads"
-              ? { ...audience, name: `Google Ads (${adGroups.length} Ad Groups)`, count: adGroups.length }
-              : audience
-          )
+        return prev.map((audience) =>
+          audience.source === "google-ads"
+            ? {
+                ...audience,
+                name: `Google Ads (${adGroups.length} Ad Groups)`,
+                count: adGroups.length,
+              }
+            : audience
         );
-      } else {
-        // Add new Google Ads audience
-        setSelectedAudiences((prev) => [...prev, googleAdsAudience]);
       }
-    } else {
-      // If no ad groups selected, remove any existing Google Ads audience
-      setSelectedAudiences((prev) => prev.filter((audience) => audience.source !== "google-ads"));
-    }
+
+      return [...prev, googleAdsAudience];
+    });
+    setFormError(null);
+    setIsGoogleAdsAccountPickerOpen(false);
   };
 
   const handleAdGroupsClear = () => {
     setSelectedAdGroups([]);
-    // Also remove the Google Ads audience when ad groups are cleared
-    setSelectedAudiences((prev) => prev.filter((audience) => audience.source !== "google-ads"));
+    setSelectedAudiences((prev) =>
+      prev.filter((audience) => audience.source !== "google-ads")
+    );
   };
 
-  const handleGoogleAdsAdsSelect = (account: GoogleAdsAccount) => {
-    // TODO: Implement actual Google Ads advertisements import logic
-    // For now, we'll just show a success message or add placeholder ads
-    console.log("Selected Google Ads account for advertisements:", account);
-    setIsGoogleAdsAdsPickerOpen(false);
+  const handleGoogleAdsAdsClick = () => {
+    setSimulationKind("ads");
+    setIsGoogleAdsAdsPickerOpen(true);
+  };
+
+  const handleGoogleAdsAdsSelect = (_account: GoogleAdsAccount) => {
+    setManualError(null);
+    setFormError(null);
   };
 
   const handleGoogleAdsAdsGroupsSelect = (adGroups: AdGroup[]) => {
-    // Store the selected ad groups for advertisements
     setSelectedAdsAdGroups(adGroups);
-    console.log("Selected ad groups for advertisements:", adGroups);
+    if (adGroups.length > 0) {
+      setManualError(null);
+    }
     setIsGoogleAdsAdsPickerOpen(false);
   };
 
@@ -217,13 +272,7 @@ export function SimulationMode({
   };
 
   const handleMetaAdsClick = () => {
-    // TODO: Integrate Mta Ads audience import.
-  };
-
-  const handleAttachFilesClick = (files: FileList | null) => {
-    if (files && files.length > 0) {
-      // TODO: Implement file processing/upload logic
-    }
+    // TODO: Integrate Meta Ads audience import.
   };
 
   const handleManualAdChange = (
@@ -259,6 +308,36 @@ export function SimulationMode({
     setManualError(null);
   };
 
+  const handleManualKeywordChange = (id: number, value: string) => {
+    setManualKeywords((prev) =>
+      prev.map((keyword) =>
+        keyword.id === id ? { ...keyword, value } : keyword
+      )
+    );
+    if (formError) {
+      setFormError(null);
+    }
+  };
+
+  const handleAddManualKeyword = () => {
+    setManualKeywords((prev) => [...prev, createManualKeyword()]);
+  };
+
+  const handleRemoveManualKeyword = (id: number) => {
+    setManualKeywords((prev) => {
+      const next = prev.filter((keyword) => keyword.id !== id);
+      if (next.length > 0) {
+        return next;
+      }
+      return [createManualKeyword()];
+    });
+  };
+
+  const handleClearManualKeywords = () => {
+    manualKeywordIdRef.current = 1;
+    setManualKeywords([createManualKeyword()]);
+  };
+
   const handleAudiencesChange = (audiences: Audience[]) => {
     setSelectedAudiences(audiences);
     if (audiences.length > 0) {
@@ -270,30 +349,26 @@ export function SimulationMode({
     if (selectedAudiences.length === 0) {
       return "Please select at least one audience";
     }
-    if (!hasAnyAds) {
-      return "Add at least one ad copy";
+    if (simulationKind === "ads") {
+      if (!hasAnyAds) {
+        return "Add at least one ad copy";
+      }
+      if (hasIncompleteAds) {
+        return "Complete headline and description for every ad";
+      }
+      return "Run simulation";
     }
-    if (hasIncompleteAds) {
-      return "Complete headline and description for every ad";
+    if (keywordGoal.trim().length === 0) {
+      return "Describe the advertising goal";
     }
-    return "Run simulation";
+    return "Run keyword simulation";
   };
 
-  // Calculate total number of pills
-  const totalPills =
-    selectedAudiences.length +
-    attachedFiles.length +
-    advertisementFileCount +
-    cleanedAds.length +
-    selectedAdsAdGroups.length;
-
-  // Determine if textarea should be expanded based on content or pills
-  const shouldExpand =
-    message.length > 100 || message.includes("\n") || totalPills > 0;
-
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const nextValue = e.target.value;
-    setMessage(nextValue);
+  const handleTextareaChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    const nextValue = event.target.value;
+    setContextValue(nextValue);
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
@@ -301,16 +376,18 @@ export function SimulationMode({
     const shouldExpandNext =
       nextValue.length > 100 || nextValue.includes("\n") || totalPills > 0;
     setIsExpanded(shouldExpandNext);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
+    if (formError && nextValue.trim().length > 0) {
+      setFormError(null);
     }
   };
 
-  // Update expansion state when pills change
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      handleSubmit(event);
+    }
+  };
+
   useEffect(() => {
     setIsExpanded(shouldExpand);
   }, [shouldExpand]);
@@ -320,18 +397,17 @@ export function SimulationMode({
       <form className="group/composer w-full" onSubmit={handleSubmit}>
         <div
           className={cn(
-            "mx-auto w-full max-w-4xl cursor-text overflow-clip border border-border bg-transparent bg-clip-padding p-2.5 shadow-lg transition-all duration-200 dark:bg-muted/50",
+            "mx-auto w-full max-w-2xl overflow-clip border border-border bg-transparent bg-clip-padding p-2.5 shadow-lg transition-all duration-200 dark:bg-muted/50",
             {
-              "grid grid-cols-1 grid-rows-[auto_1fr_auto] rounded-3xl":
-                shouldExpand,
-              "grid grid-cols-[auto_1fr_auto] grid-rows-[auto_1fr_auto] rounded-[28px]":
+              "grid grid-cols-1 grid-rows-[1fr_auto] rounded-3xl": shouldExpand,
+              "grid grid-cols-[auto_1fr_auto] grid-rows-[1fr_auto] rounded-[28px]":
                 !shouldExpand,
             }
           )}
           style={{
             gridTemplateAreas: shouldExpand
-              ? "'header' 'primary' 'footer'"
-              : "'header header header' 'leading primary trailing' '. footer .'",
+              ? "'primary' 'footer'"
+              : "'leading primary trailing' '. footer .'",
           }}
         >
           <div
@@ -349,15 +425,14 @@ export function SimulationMode({
                 className="scrollbar-thin min-h-0 resize-none rounded-none border-0 px-0 pt-3 pb-12 text-base placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
                 onChange={handleTextareaChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Add optional context for the simulation (notes, scenario, etc.)"
+                placeholder={textareaPlaceholder}
                 ref={textareaRef}
                 rows={3}
-                value={message}
+                value={contextValue}
               />
 
-              {/* Audience Picker, Advertisements, and Attach Files - positioned at bottom */}
-              <div className="absolute right-2 bottom-2 left-2 flex gap-2">
-                <div className="flex-1">
+              <div className="absolute right-2 bottom-2 left-2 flex min-h-[40px] flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                <div className="min-w-[200px] flex-1">
                   <AudiencePicker
                     onAdGroupsClear={handleAdGroupsClear}
                     onAudiencesChange={handleAudiencesChange}
@@ -368,31 +443,56 @@ export function SimulationMode({
                     selectedAudiences={selectedAudiences}
                   />
                 </div>
-                <AdvertisementsPicker
-                  hasIncompleteManualAds={
-                    hasIncompleteAds && manualError === null
-                  }
-                  manualAdCount={cleanedAds.length}
-                  manualAds={manualAds}
-                  manualValidationError={manualError}
-                  onAttachFilesClick={handleAttachFilesClick}
-                  onFileCountChange={setAdvertisementFileCount}
-                  onGoogleAdsClick={handleGoogleAdsAdsClick}
-                  onManualAdAdd={handleAddManualAd}
-                  onManualAdChange={handleManualAdChange}
-                  onManualAdRemove={handleRemoveManualAd}
-                  onManualAdsClear={handleClearManualAds}
-                  onMetaAdsClick={handleMetaAdsClick}
-                  onRemoveAdGroups={handleRemoveAdsAdGroups}
-                  selectedAdGroups={selectedAdsAdGroups}
-                />
-                <AttachFilesPicker
-                  onSelectedFilesChange={setAttachedFiles}
-                  selectedFiles={attachedFiles}
-                />
+                <div className="min-w-[220px] flex-1 sm:max-w-[280px]">
+                  <SimulationContentPicker
+                    googleAdsAdGroupCount={selectedAdsAdGroups.length}
+                    hasIncompleteManualAds={
+                      hasIncompleteAds && manualError === null
+                    }
+                    keywordGoal={keywordGoal}
+                    keywordGoalError={keywordGoalError}
+                    manualAdCount={cleanedAds.length}
+                    manualAds={manualAds}
+                    manualKeywords={manualKeywords}
+                    manualValidationError={manualError}
+                    onClearGoogleAdsSelection={handleRemoveAdsAdGroups}
+                    onGoogleAdsImport={handleGoogleAdsAdsClick}
+                    onKeywordGoalChange={(value) => {
+                      setKeywordGoal(value);
+                      if (value.trim().length > 0) {
+                        setKeywordGoalError(null);
+                      }
+                    }}
+                    onManualAdAdd={handleAddManualAd}
+                    onManualAdChange={handleManualAdChange}
+                    onManualAdRemove={handleRemoveManualAd}
+                    onManualAdsClear={handleClearManualAds}
+                    onManualKeywordAdd={handleAddManualKeyword}
+                    onManualKeywordChange={handleManualKeywordChange}
+                    onManualKeywordRemove={handleRemoveManualKeyword}
+                    onManualKeywordsClear={handleClearManualKeywords}
+                    onSimulationKindChange={(kind) => {
+                      setSimulationKind(kind);
+                      setFormError(null);
+                      setManualError(null);
+                      setKeywordGoalError(null);
+                    }}
+                    simulationKind={simulationKind}
+                  />
+                </div>
+                {simulationKind === "ads" ? (
+                  <AttachFilesPicker
+                    className="w-full min-w-[200px] sm:w-[220px]"
+                    onSelectedFilesChange={setAttachedFiles}
+                    selectedFiles={attachedFiles}
+                  />
+                ) : (
+                  <div className="hidden min-h-[40px] w-[220px] sm:block" />
+                )}
               </div>
             </div>
           </div>
+
           <div
             className="flex items-center gap-2"
             style={{ gridArea: shouldExpand ? "footer" : "trailing" }}
@@ -406,7 +506,9 @@ export function SimulationMode({
                       disabled={
                         isPending ||
                         selectedAudiences.length === 0 ||
-                        !hasCompleteAds
+                        (simulationKind === "ads"
+                          ? !hasCompleteAds
+                          : keywordGoal.trim().length === 0)
                       }
                       size="icon"
                       type="submit"
@@ -427,10 +529,13 @@ export function SimulationMode({
       {formError ? (
         <p className="mt-3 text-destructive text-sm">{formError}</p>
       ) : null}
-      {manualError ? (
+      {simulationKind === "ads" && manualError ? (
         <p className="mt-3 text-destructive text-sm">{manualError}</p>
       ) : null}
-      {error && <p className="mt-4 text-red-600 text-sm">{error}</p>}
+      {simulationKind === "keywords" && keywordGoalError ? (
+        <p className="mt-3 text-destructive text-sm">{keywordGoalError}</p>
+      ) : null}
+      {error ? <p className="mt-4 text-red-600 text-sm">{error}</p> : null}
 
       <GoogleAdsAccountPicker
         onAccountSelect={handleGoogleAdsAccountSelect}
@@ -440,7 +545,6 @@ export function SimulationMode({
         pickerType="audience"
       />
 
-      {/* Google Ads Advertisements Picker */}
       <GoogleAdsAccountPicker
         onAccountSelect={handleGoogleAdsAdsSelect}
         onAdGroupsSelect={handleGoogleAdsAdsGroupsSelect}

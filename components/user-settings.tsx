@@ -95,24 +95,18 @@ export function UserSettings() {
 
   const handleGoogleAdsConnect = () => {
     setIntegrations((prev) => ({ ...prev, googleAds: true }));
-    // Here you would implement the actual OAuth flow
-    console.log("Connecting to Google Ads...");
   };
 
   const handleGoogleAdsDisconnect = () => {
     setIntegrations((prev) => ({ ...prev, googleAds: false }));
-    console.log("Disconnecting from Google Ads...");
   };
 
   const handleMetaAdsConnect = () => {
     setIntegrations((prev) => ({ ...prev, metaAds: true }));
-    // Here you would implement the actual OAuth flow
-    console.log("Connecting to Meta Ads...");
   };
 
   const handleMetaAdsDisconnect = () => {
     setIntegrations((prev) => ({ ...prev, metaAds: false }));
-    console.log("Disconnecting from Meta Ads...");
   };
 
   return (

@@ -1,8 +1,14 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
 import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Dialog,
   DialogContent,
@@ -11,12 +17,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
 export interface AdGroup {
@@ -41,7 +41,9 @@ interface CampaignAdGroupPickerProps {
 }
 
 // Mock API call to fetch campaigns and ad groups
-const fetchCampaignsAndAdGroups = async (accountId: string): Promise<Campaign[]> => {
+const fetchCampaignsAndAdGroups = async (
+  _accountId: string
+): Promise<Campaign[]> => {
   // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -157,8 +159,12 @@ export function CampaignAdGroupPicker({
   accountId,
 }: CampaignAdGroupPickerProps) {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [selectedAdGroups, setSelectedAdGroups] = useState<Set<string>>(new Set());
-  const [expandedCampaigns, setExpandedCampaigns] = useState<Set<string>>(new Set());
+  const [selectedAdGroups, setSelectedAdGroups] = useState<Set<string>>(
+    new Set()
+  );
+  const [expandedCampaigns, setExpandedCampaigns] = useState<Set<string>>(
+    new Set()
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -169,7 +175,7 @@ export function CampaignAdGroupPicker({
       const fetchedCampaigns = await fetchCampaignsAndAdGroups(accountId);
       setCampaigns(fetchedCampaigns);
       // Expand all campaigns by default
-      setExpandedCampaigns(new Set(fetchedCampaigns.map(c => c.id)));
+      setExpandedCampaigns(new Set(fetchedCampaigns.map((c) => c.id)));
     } catch (_err) {
       setError("Failed to load campaigns and ad groups. Please try again.");
     } finally {
@@ -184,7 +190,7 @@ export function CampaignAdGroupPicker({
   }, [open, loadCampaigns]);
 
   const toggleCampaignExpansion = (campaignId: string) => {
-    setExpandedCampaigns(prev => {
+    setExpandedCampaigns((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(campaignId)) {
         newSet.delete(campaignId);
@@ -196,7 +202,7 @@ export function CampaignAdGroupPicker({
   };
 
   const toggleAdGroupSelection = (adGroupId: string) => {
-    setSelectedAdGroups(prev => {
+    setSelectedAdGroups((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(adGroupId)) {
         newSet.delete(adGroupId);
@@ -208,8 +214,8 @@ export function CampaignAdGroupPicker({
   };
 
   const handleSelectAll = () => {
-    const allAdGroupIds = campaigns.flatMap(campaign => 
-      campaign.adGroups.map(adGroup => adGroup.id)
+    const allAdGroupIds = campaigns.flatMap((campaign) =>
+      campaign.adGroups.map((adGroup) => adGroup.id)
     );
     setSelectedAdGroups(new Set(allAdGroupIds));
   };
@@ -220,9 +226,9 @@ export function CampaignAdGroupPicker({
 
   const handleConfirmSelection = () => {
     const selectedAdGroupsList = campaigns
-      .flatMap(campaign => campaign.adGroups)
-      .filter(adGroup => selectedAdGroups.has(adGroup.id));
-    
+      .flatMap((campaign) => campaign.adGroups)
+      .filter((adGroup) => selectedAdGroups.has(adGroup.id));
+
     onAdGroupsSelect(selectedAdGroupsList);
     onOpenChange(false);
     setSelectedAdGroups(new Set());
@@ -241,40 +247,44 @@ export function CampaignAdGroupPicker({
     }
   };
 
-  const allAdGroupsCount = campaigns.reduce((total, campaign) => total + campaign.adGroups.length, 0);
+  const allAdGroupsCount = campaigns.reduce(
+    (total, campaign) => total + campaign.adGroups.length,
+    0
+  );
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="max-w-4xl max-h-[80vh]">
+      <DialogContent className="max-h-[80vh] max-w-4xl">
         <DialogHeader>
           <DialogTitle>Select Ad Groups</DialogTitle>
           <DialogDescription>
-            Choose ad groups from campaigns. Only ad groups can be selected for audience import.
+            Choose ad groups from campaigns. Only ad groups can be selected for
+            audience import.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4 space-y-4">
+        <div className="space-y-4 py-4">
           {/* Selection Controls */}
           <div className="flex items-center justify-between border-b pb-4">
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSelectAll}
                 disabled={isLoading || campaigns.length === 0}
+                onClick={handleSelectAll}
+                size="sm"
+                variant="outline"
               >
                 Select All ({allAdGroupsCount})
               </Button>
               <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDeselectAll}
                 disabled={isLoading || selectedAdGroups.size === 0}
+                onClick={handleDeselectAll}
+                size="sm"
+                variant="outline"
               >
                 Deselect All
               </Button>
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-muted-foreground text-sm">
               {selectedAdGroups.size} of {allAdGroupsCount} ad groups selected
             </div>
           </div>
@@ -300,16 +310,16 @@ export function CampaignAdGroupPicker({
           )}
 
           {/* Campaigns and Ad Groups Tree */}
-          {!isLoading && !error && (
-            <div className="space-y-2 max-h-96 overflow-y-auto">
+          {!(isLoading || error) && (
+            <div className="max-h-96 space-y-2 overflow-y-auto">
               {campaigns.map((campaign) => (
-                <div key={campaign.id} className="border rounded-lg">
+                <div className="rounded-lg border" key={campaign.id}>
                   <Collapsible
-                    open={expandedCampaigns.has(campaign.id)}
                     onOpenChange={() => toggleCampaignExpansion(campaign.id)}
+                    open={expandedCampaigns.has(campaign.id)}
                   >
                     <CollapsibleTrigger asChild>
-                      <div className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer">
+                      <div className="flex cursor-pointer items-center justify-between p-4 hover:bg-muted/50">
                         <div className="flex items-center gap-3">
                           {expandedCampaigns.has(campaign.id) ? (
                             <ChevronDown className="h-4 w-4" />
@@ -328,7 +338,7 @@ export function CampaignAdGroupPicker({
                             </span>
                           </div>
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-muted-foreground text-sm">
                           {campaign.adGroups.length} ad groups
                         </div>
                       </div>
@@ -337,22 +347,26 @@ export function CampaignAdGroupPicker({
                       <div className="border-t bg-muted/20">
                         {campaign.adGroups.map((adGroup) => (
                           <div
-                            key={adGroup.id}
                             className={cn(
-                              "flex items-center gap-3 p-3 hover:bg-muted/30 transition-colors",
+                              "flex items-center gap-3 p-3 transition-colors hover:bg-muted/30",
                               selectedAdGroups.has(adGroup.id) && "bg-primary/5"
                             )}
+                            key={adGroup.id}
                           >
                             <Checkbox
-                              id={adGroup.id}
                               checked={selectedAdGroups.has(adGroup.id)}
-                              onCheckedChange={() => toggleAdGroupSelection(adGroup.id)}
+                              id={adGroup.id}
+                              onCheckedChange={() =>
+                                toggleAdGroupSelection(adGroup.id)
+                              }
                             />
                             <label
+                              className="flex flex-1 cursor-pointer items-center gap-2"
                               htmlFor={adGroup.id}
-                              className="flex-1 flex items-center gap-2 cursor-pointer"
                             >
-                              <span className="font-medium">{adGroup.name}</span>
+                              <span className="font-medium">
+                                {adGroup.name}
+                              </span>
                               <span
                                 className={cn(
                                   "inline-flex items-center rounded-full px-2 py-1 font-medium text-xs",
