@@ -5,6 +5,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AttachFilesPicker } from "@/components/ui/attach-files-picker";
 import { type Audience, AudiencePicker } from "@/components/ui/audience-picker";
 import { Button } from "@/components/ui/button";
+import {
+  type GoogleAdsAccount,
+  GoogleAdsAccountPicker,
+} from "@/components/ui/google-ads-account-picker";
+import { type AdGroup } from "@/components/ui/campaign-ad-group-picker";
 import { SimulationContentPicker } from "@/components/ui/simulation-content-picker";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -64,6 +69,12 @@ export function SimulationMode({
   const [manualKeywords, setManualKeywords] = useState<ManualKeywordDraft[]>(
     () => [createManualKeyword()]
   );
+  const [isGoogleAdsAccountPickerOpen, setIsGoogleAdsAccountPickerOpen] =
+    useState(false);
+  const [isGoogleAdsAdsPickerOpen, setIsGoogleAdsAdsPickerOpen] =
+    useState(false);
+  const [selectedAdGroups, setSelectedAdGroups] = useState<AdGroup[]>([]);
+  const [selectedAdsAdGroups, setSelectedAdsAdGroups] = useState<AdGroup[]>([]);
 
   const { cleanedAds, hasAnyAds, hasCompleteAds, hasIncompleteAds } =
     useMemo(() => {
@@ -86,15 +97,15 @@ export function SimulationMode({
           headline: ad.headline,
           description: ad.description,
         })),
-        hasAnyAds: nonEmpty.length > 0,
-        hasCompleteAds: complete,
+        hasAnyAds: nonEmpty.length > 0 || selectedAdsAdGroups.length > 0,
+        hasCompleteAds: complete || selectedAdsAdGroups.length > 0,
         hasIncompleteAds:
           nonEmpty.length > 0 &&
           nonEmpty.some(
             (ad) => ad.headline.length === 0 || ad.description.length === 0
           ),
       };
-    }, [manualAds]);
+    }, [manualAds, selectedAdsAdGroups]);
 
   const { seedKeywords, keywordCount } = useMemo(() => {
     const trimmed = manualKeywords
@@ -339,10 +350,12 @@ export function SimulationMode({
               <div className="absolute right-2 bottom-2 left-2 flex min-h-[40px] flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                 <div className="min-w-[200px] flex-1">
                   <AudiencePicker
+                    onAdGroupsClear={handleAdGroupsClear}
                     onAudiencesChange={handleAudiencesChange}
                     onGoogleAdsClick={handleGoogleAdsClick}
                     onMetaAdsClick={handleMetaAdsClick}
                     placeholder="Audiences"
+                    selectedAdGroupsCount={selectedAdGroups.length}
                     selectedAudiences={selectedAudiences}
                   />
                 </div>
