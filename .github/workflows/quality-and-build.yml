@@ -1,0 +1,44 @@
+# .github/workflows/quality-and-build.yml
+name: PR Quality Gates
+
+on:
+  pull_request:
+    branches:
+      - main 
+
+jobs:
+  # Job 1: Check for code style and quality
+  ultracite-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm install
+      - name: Run Ultracite Lint Check
+        # This will fail the job if linting errors are found
+        run: npm run lint
+
+  # Job 2: Check if the application can actually be built for production
+  build-check:
+    runs-on: ubuntu-latest
+    # This ensures the build only starts if the linting check passes
+    needs: [ultracite-check] 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm install
+      - name: Run Production Build
+        # This will fail the job if Next.js/Webpack finds a compilation error
+        run: npm run build
