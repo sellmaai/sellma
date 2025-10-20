@@ -88,7 +88,7 @@ export function AudiencePicker({
   };
 
   const handleRemove = (audienceId: string) => {
-    const audience = selectedAudiences.find(a => a.id === audienceId);
+    const audience = selectedAudiences.find((a) => a.id === audienceId);
     if (audience?.source === "google-ads" && selectedAdGroupsCount > 0) {
       // If removing Google Ads audience and there are selected ad groups, clear ad groups too
       onAdGroupsClear?.();

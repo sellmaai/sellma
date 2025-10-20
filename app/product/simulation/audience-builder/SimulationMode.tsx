@@ -5,11 +5,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AttachFilesPicker } from "@/components/ui/attach-files-picker";
 import { type Audience, AudiencePicker } from "@/components/ui/audience-picker";
 import { Button } from "@/components/ui/button";
+import type { AdGroup } from "@/components/ui/campaign-ad-group-picker";
 import {
   type GoogleAdsAccount,
   GoogleAdsAccountPicker,
 } from "@/components/ui/google-ads-account-picker";
-import { type AdGroup } from "@/components/ui/campaign-ad-group-picker";
 import { SimulationContentPicker } from "@/components/ui/simulation-content-picker";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -445,18 +445,18 @@ export function SimulationMode({
                 </div>
                 <div className="min-w-[220px] flex-1 sm:max-w-[280px]">
                   <SimulationContentPicker
+                    googleAdsAdGroupCount={selectedAdsAdGroups.length}
                     hasIncompleteManualAds={
                       hasIncompleteAds && manualError === null
                     }
-                    googleAdsAdGroupCount={selectedAdsAdGroups.length}
-                    onClearGoogleAdsSelection={handleRemoveAdsAdGroups}
-                    onGoogleAdsImport={handleGoogleAdsAdsClick}
                     keywordGoal={keywordGoal}
                     keywordGoalError={keywordGoalError}
                     manualAdCount={cleanedAds.length}
                     manualAds={manualAds}
                     manualKeywords={manualKeywords}
                     manualValidationError={manualError}
+                    onClearGoogleAdsSelection={handleRemoveAdsAdGroups}
+                    onGoogleAdsImport={handleGoogleAdsAdsClick}
                     onKeywordGoalChange={(value) => {
                       setKeywordGoal(value);
                       if (value.trim().length > 0) {
