@@ -3,6 +3,7 @@
 import { ChevronDown, ExternalLink, Megaphone, Paperclip } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { ManualAdDraft } from "@/app/product/simulation/audience-builder/types";
+import type { AdGroup } from "@/components/ui/campaign-ad-group-picker";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -29,6 +30,8 @@ interface AdvertisementsPickerProps {
   onManualAdsClear: () => void;
   manualValidationError?: string | null;
   hasIncompleteManualAds?: boolean;
+  selectedAdGroups?: AdGroup[];
+  onRemoveAdGroups?: () => void;
   className?: string;
 }
 
@@ -44,6 +47,8 @@ export function AdvertisementsPicker({
   onManualAdsClear,
   manualValidationError,
   hasIncompleteManualAds,
+  selectedAdGroups = [],
+  onRemoveAdGroups,
   className,
 }: AdvertisementsPickerProps) {
   const [open, setOpen] = useState(false);
@@ -87,7 +92,9 @@ export function AdvertisementsPicker({
           >
             <AdsSummary
               manualAdCount={manualAdCount}
+              onRemoveAdGroups={onRemoveAdGroups}
               onRemoveFile={handleRemoveFile}
+              selectedAdGroups={selectedAdGroups}
               selectedFiles={selectedFiles}
             />
             <Megaphone className="mr-1 h-4 w-4 shrink-0 opacity-50" />
