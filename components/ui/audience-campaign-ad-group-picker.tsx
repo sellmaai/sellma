@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -42,7 +42,7 @@ interface AudienceCampaignAdGroupPickerProps {
 
 // Mock API call to fetch campaigns and ad groups
 const fetchCampaignsAndAdGroups = async (
-  accountId: string
+  _accountId: string
 ): Promise<Campaign[]> => {
   // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -167,7 +167,6 @@ export function AudienceCampaignAdGroupPicker({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const checkboxRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
   const loadCampaigns = useCallback(async () => {
     setIsLoading(true);
@@ -216,7 +215,9 @@ export function AudienceCampaignAdGroupPicker({
 
   const toggleCampaignSelection = (campaignId: string) => {
     const campaign = campaigns.find((c) => c.id === campaignId);
-    if (!campaign) return;
+    if (!campaign) {
+      return;
+    }
 
     const campaignAdGroupIds = campaign.adGroups.map((ag) => ag.id);
     const selectedCampaignAdGroups = campaignAdGroupIds.filter((id) =>
@@ -232,10 +233,14 @@ export function AudienceCampaignAdGroupPicker({
       const newSet = new Set(prev);
       if (shouldSelectAll) {
         // Select all ad groups in this campaign
-        campaignAdGroupIds.forEach((id) => newSet.add(id));
+        for (const id of campaignAdGroupIds) {
+          newSet.add(id);
+        }
       } else {
         // Deselect all ad groups in this campaign
-        campaignAdGroupIds.forEach((id) => newSet.delete(id));
+        for (const id of campaignAdGroupIds) {
+          newSet.delete(id);
+        }
       }
       return newSet;
     });
@@ -275,23 +280,28 @@ export function AudienceCampaignAdGroupPicker({
     }
   };
 
-  const getCampaignCheckboxState = (campaignId: string) => {
-    const campaign = campaigns.find((c) => c.id === campaignId);
-    if (!campaign) return { checked: false, indeterminate: false };
+  const getCampaignCheckboxState = useCallback(
+    (campaignId: string) => {
+      const campaign = campaigns.find((c) => c.id === campaignId);
+      if (!campaign) {
+        return { checked: false, indeterminate: false };
+      }
 
-    const campaignAdGroupIds = campaign.adGroups.map((ag) => ag.id);
-    const selectedCampaignAdGroups = campaignAdGroupIds.filter((id) =>
-      selectedAdGroups.has(id)
-    );
+      const campaignAdGroupIds = campaign.adGroups.map((ag) => ag.id);
+      const selectedCampaignAdGroups = campaignAdGroupIds.filter((id) =>
+        selectedAdGroups.has(id)
+      );
 
-    if (selectedCampaignAdGroups.length === 0) {
-      return { checked: false, indeterminate: false };
-    }
-    if (selectedCampaignAdGroups.length === campaignAdGroupIds.length) {
-      return { checked: true, indeterminate: false };
-    }
-    return { checked: false, indeterminate: true };
-  };
+      if (selectedCampaignAdGroups.length === 0) {
+        return { checked: false, indeterminate: false };
+      }
+      if (selectedCampaignAdGroups.length === campaignAdGroupIds.length) {
+        return { checked: true, indeterminate: false };
+      }
+      return { checked: false, indeterminate: true };
+    },
+    [campaigns, selectedAdGroups]
+  );
 
   const allAdGroupsCount = campaigns.reduce(
     (total, campaign) => total + campaign.adGroups.length,
@@ -300,21 +310,24 @@ export function AudienceCampaignAdGroupPicker({
 
   // Update indeterminate state for campaign checkboxes
   useEffect(() => {
-    campaigns.forEach((campaign) => {
-      const checkbox = checkboxRefs.current.get(campaign.id);
+    for (const campaign of campaigns) {
+      const checkbox = document.getElementById(
+        `campaign-${campaign.id}`
+      ) as HTMLButtonElement;
       if (checkbox) {
         const checkboxState = getCampaignCheckboxState(campaign.id);
-        checkbox.setAttribute(
-          "data-state",
-          checkboxState.indeterminate
-            ? "indeterminate"
-            : checkboxState.checked
-              ? "checked"
-              : "unchecked"
-        );
+        let state: string;
+        if (checkboxState.indeterminate) {
+          state = "indeterminate";
+        } else if (checkboxState.checked) {
+          state = "checked";
+        } else {
+          state = "unchecked";
+        }
+        checkbox.setAttribute("data-state", state);
       }
-    });
-  }, [selectedAdGroups, campaigns]);
+    }
+  }, [campaigns, getCampaignCheckboxState]);
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -400,10 +413,6 @@ export function AudienceCampaignAdGroupPicker({
                                   toggleCampaignSelection(campaign.id)
                                 }
                                 onClick={(e) => e.stopPropagation()}
-                                ref={(el) => {
-                                  if (el)
-                                    checkboxRefs.current.set(campaign.id, el);
-                                }}
                               />
                               <span className="font-medium">
                                 {campaign.name}

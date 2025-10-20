@@ -237,25 +237,22 @@ export function GoogleAdsAccountPicker({
       </DialogContent>
 
       {/* Campaign and Ad Group Picker Modal */}
-      {selectedAccount && (
-        <>
-          {pickerType === "audience" ? (
-            <AudienceCampaignAdGroupPicker
-              accountId={selectedAccount.id}
-              onAdGroupsSelect={handleAdGroupsSelect}
-              onOpenChange={setShowCampaignPicker}
-              open={showCampaignPicker}
-            />
-          ) : (
-            <CampaignAdGroupPicker
-              accountId={selectedAccount.id}
-              onAdGroupsSelect={handleAdGroupsSelect}
-              onOpenChange={setShowCampaignPicker}
-              open={showCampaignPicker}
-            />
-          )}
-        </>
-      )}
+      {selectedAccount &&
+        (pickerType === "audience" ? (
+          <AudienceCampaignAdGroupPicker
+            accountId={selectedAccount.id}
+            onAdGroupsSelect={handleAdGroupsSelect}
+            onOpenChange={setShowCampaignPicker}
+            open={showCampaignPicker}
+          />
+        ) : (
+          <CampaignAdGroupPicker
+            accountId={selectedAccount.id}
+            onAdGroupsSelect={handleAdGroupsSelect}
+            onOpenChange={setShowCampaignPicker}
+            open={showCampaignPicker}
+          />
+        ))}
     </Dialog>
   );
 }

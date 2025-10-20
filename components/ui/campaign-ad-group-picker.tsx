@@ -42,7 +42,7 @@ interface CampaignAdGroupPickerProps {
 
 // Mock API call to fetch campaigns and ad groups
 const fetchCampaignsAndAdGroups = async (
-  accountId: string
+  _accountId: string
 ): Promise<Campaign[]> => {
   // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 1000));
