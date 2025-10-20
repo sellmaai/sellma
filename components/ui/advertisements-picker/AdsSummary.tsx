@@ -26,7 +26,10 @@ export function AdsSummary({
       ) : null}
 
       {selectedAdGroups.length > 0 ? (
-        <Badge className="flex w-fit items-center gap-1 px-2 py-1 text-xs" variant="secondary">
+        <Badge
+          className="flex w-fit items-center gap-1 px-2 py-1 text-xs"
+          variant="secondary"
+        >
           <span>Google Ads ({selectedAdGroups.length} Ad Groups)</span>
           {onRemoveAdGroups && (
             <div
@@ -83,7 +86,9 @@ export function AdsSummary({
           ))
         : null}
 
-      {manualAdCount === 0 && selectedFiles.length === 0 && selectedAdGroups.length === 0 ? (
+      {manualAdCount === 0 &&
+      selectedFiles.length === 0 &&
+      selectedAdGroups.length === 0 ? (
         <span className="text-sm">Ads</span>
       ) : null}
     </div>

@@ -2,7 +2,12 @@
 
 import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { AudienceCampaignAdGroupPicker } from "@/components/ui/audience-campaign-ad-group-picker";
 import { Button } from "@/components/ui/button";
+import {
+  type AdGroup,
+  CampaignAdGroupPicker,
+} from "@/components/ui/campaign-ad-group-picker";
 import {
   Dialog,
   DialogContent,
@@ -13,8 +18,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CampaignAdGroupPicker, AdGroup } from "@/components/ui/campaign-ad-group-picker";
-import { AudienceCampaignAdGroupPicker } from "@/components/ui/audience-campaign-ad-group-picker";
 import { cn } from "@/lib/utils";
 
 export interface GoogleAdsAccount {
@@ -72,7 +75,8 @@ export function GoogleAdsAccountPicker({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showCampaignPicker, setShowCampaignPicker] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<GoogleAdsAccount | null>(null);
+  const [selectedAccount, setSelectedAccount] =
+    useState<GoogleAdsAccount | null>(null);
 
   const loadAccounts = useCallback(async () => {
     setIsLoading(true);
@@ -175,6 +179,15 @@ export function GoogleAdsAccountPicker({
                       : "border-border hover:bg-muted/50"
                   )}
                   key={account.id}
+                  onClick={() => setSelectedAccountId(account.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setSelectedAccountId(account.id);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                 >
                   <RadioGroupItem
                     className="mt-1"
@@ -222,27 +235,24 @@ export function GoogleAdsAccountPicker({
           </Button>
         </DialogFooter>
       </DialogContent>
-      
+
       {/* Campaign and Ad Group Picker Modal */}
-      {selectedAccount && (
-        <>
-          {pickerType === "audience" ? (
-            <AudienceCampaignAdGroupPicker
-              open={showCampaignPicker}
-              onOpenChange={setShowCampaignPicker}
-              onAdGroupsSelect={handleAdGroupsSelect}
-              accountId={selectedAccount.id}
-            />
-          ) : (
-            <CampaignAdGroupPicker
-              open={showCampaignPicker}
-              onOpenChange={setShowCampaignPicker}
-              onAdGroupsSelect={handleAdGroupsSelect}
-              accountId={selectedAccount.id}
-            />
-          )}
-        </>
-      )}
+      {selectedAccount &&
+        (pickerType === "audience" ? (
+          <AudienceCampaignAdGroupPicker
+            accountId={selectedAccount.id}
+            onAdGroupsSelect={handleAdGroupsSelect}
+            onOpenChange={setShowCampaignPicker}
+            open={showCampaignPicker}
+          />
+        ) : (
+          <CampaignAdGroupPicker
+            accountId={selectedAccount.id}
+            onAdGroupsSelect={handleAdGroupsSelect}
+            onOpenChange={setShowCampaignPicker}
+            open={showCampaignPicker}
+          />
+        ))}
     </Dialog>
   );
 }

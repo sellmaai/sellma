@@ -88,7 +88,7 @@ export function AudiencePicker({
   };
 
   const handleRemove = (audienceId: string) => {
-    const audience = selectedAudiences.find(a => a.id === audienceId);
+    const audience = selectedAudiences.find((a) => a.id === audienceId);
     if (audience?.source === "google-ads" && selectedAdGroupsCount > 0) {
       // If removing Google Ads audience and there are selected ad groups, clear ad groups too
       onAdGroupsClear?.();
@@ -140,21 +140,28 @@ export function AudiencePicker({
         <PopoverTrigger asChild>
           <Button
             aria-expanded={open}
-            className="h-auto min-h-[32px] justify-start px-2 py-1 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+            className="h-auto min-h-[36px] items-center justify-start gap-2 px-2 py-1 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
             role="combobox"
             variant="ghost"
           >
-            <div className="flex flex-1 flex-col gap-1">
+            <div className="flex flex-1 flex-wrap items-center gap-1">
               {selectedAudiences.length === 0 ? (
-                <span className="text-sm">{placeholder}</span>
+                <span className="truncate text-left text-sm">
+                  {placeholder}
+                </span>
               ) : (
                 selectedAudiences.map((audience) => (
                   <Badge
-                    className="flex w-fit items-center gap-1 px-2 py-1 text-xs"
+                    className="flex max-w-[200px] items-center gap-1 px-2 py-1 text-xs"
                     key={audience.id}
                     variant={getAudienceBadgeVariant(audience.source)}
                   >
-                    <span>{getAudienceDisplayName(audience)}</span>
+                    <span
+                      className="max-w-[150px] truncate"
+                      title={getAudienceDisplayName(audience)}
+                    >
+                      {getAudienceDisplayName(audience)}
+                    </span>
                     <div
                       className="ml-1 cursor-pointer rounded-full p-0.5 hover:bg-destructive/20"
                       onClick={(e) => {
