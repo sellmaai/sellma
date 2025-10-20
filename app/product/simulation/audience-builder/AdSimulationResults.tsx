@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PersonaDisplay } from "@/components/ui/persona-display";
 import type { Behavior } from "@/lib/personas/types";
+import { AggregateSimulationResults } from "./AggregateSimulationResults";
 import type { AdSimulationResult } from "./types";
 
 const behaviorMeta: Record<
@@ -288,18 +289,29 @@ export function AdSimulationResults({
         </div>
       ) : null}
 
-      <div className="max-h-[640px] space-y-4 overflow-y-auto pr-2">
-        {results.map((result) =>
-          result.reactions.reactions_to_variants.map((reaction) => (
-            <PersonaReactionCard
-              ads={result.ads}
-              audienceName={result.audience.name}
-              key={`${result.persona.personaId}-${reaction.variant_id}`}
-              persona={result.persona}
-              reaction={reaction}
-            />
-          ))
-        )}
+      {/* Aggregate Results Section */}
+      <AggregateSimulationResults results={results} />
+
+      {/* Individual Persona Results */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-lg">
+            Individual Persona Reactions
+          </h3>
+        </div>
+        <div className="max-h-[640px] space-y-4 overflow-y-auto pr-2">
+          {results.map((result) =>
+            result.reactions.reactions_to_variants.map((reaction) => (
+              <PersonaReactionCard
+                ads={result.ads}
+                audienceName={result.audience.name}
+                key={`${result.persona.personaId}-${reaction.variant_id}`}
+                persona={result.persona}
+                reaction={reaction}
+              />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
