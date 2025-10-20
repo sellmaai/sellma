@@ -1,6 +1,6 @@
 "use client";
 
-import { useAction, useMutation } from "convex/react";
+import { useAction, useConvex, useMutation } from "convex/react";
 import { CornerDownLeft, Send } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { PersonaBrowser } from "@/components/personas/PersonaBrowser";
@@ -11,16 +11,20 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { api } from "@/convex/_generated/api";
 import type { Persona } from "@/lib/personas/types";
 import { cn } from "@/lib/utils";
+import { AdSimulationResults } from "./AdSimulationResults";
 import GenerationChainOfThought from "./AudienceGenerationChainOfThought";
-import { SimulationMode } from "./SimulationMode";
+import { SimulationMode, type SimulationSubmission } from "./SimulationMode";
+import type { SimulationResult } from "./types";
 
 // Regex patterns for location extraction
 const LOCATION_IN_PATTERN = /\bin\s+([A-Z][A-Za-z\s]+,\s*[A-Z]{2})\b/;
 const LOCATION_TRAILING_PATTERN = /-\s*([A-Z][A-Za-z\s]+,\s*[A-Z]{2})$/;
 
 export default function AudienceGenerationPage() {
+  const convex = useConvex();
   const generateAudienceSegments = useAction(api.audienceGroups.suggestBundle);
   const generatePreview = useAction(api.personas.generatePreview);
+  const runSimulation = useAction(api.simulation.simulate);
   const savePersonas = useMutation(api.personas.saveMany);
   const saveAudience = useMutation(api.userAudiences.save);
   const [message, setMessage] = useState("");
@@ -58,6 +62,11 @@ export default function AudienceGenerationPage() {
   >(null);
   const [modeChangeKey, setModeChangeKey] = useState(0);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [simulationResults, setSimulationResults] = useState<
+    SimulationResult[]
+  >([]);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [simulationError, setSimulationError] = useState<string | null>(null);
 
   const resetBuilderState = () => {
     setSaveError(null);
@@ -85,6 +94,9 @@ export default function AudienceGenerationPage() {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
+    setSimulationError(null);
+    setSimulationResults([]);
+    setIsSimulating(false);
   };
 
   const resetAllState = () => {
@@ -282,8 +294,134 @@ export default function AudienceGenerationPage() {
     setAudienceNotice(null);
   };
 
-  const handleSimulationSubmit = () => {
-    // setError("Simulation feature coming soon!");
+  const handleSimulationSubmit = async (payload: SimulationSubmission) => {
+    if (payload.audiences.length === 0) {
+      setSimulationError("Select at least one audience to run simulations.");
+      return;
+    }
+    if (payload.ads.length === 0) {
+      setSimulationError("Add at least one ad copy to simulate.");
+      return;
+    }
+
+    const savedAudiencesMissingIds = payload.audiences.filter(
+      (audience) => audience.source === "saved" && !audience.audienceId
+    );
+    if (savedAudiencesMissingIds.length > 0) {
+      const audienceNames = savedAudiencesMissingIds
+        .map((audience) => `"${audience.name}"`)
+        .join(", ");
+      setSimulationError(
+        `Saved audience ${audienceNames} is missing persona history. Regenerate and save personas for it before running simulations.`
+      );
+      setSimulationResults([]);
+      return;
+    }
+
+    setSimulationError(null);
+    setIsSimulating(true);
+    setSimulationResults([]);
+
+    try {
+      const adsForSimulation = payload.ads.map((ad) => ({ ...ad }));
+      const audiencePersonaPairs = await Promise.all(
+        payload.audiences.map(async (audience) => {
+          const personaAudienceId = audience.audienceId ?? audience.id;
+          try {
+            const personas =
+              (await convex.query(api.personas.listByAudienceId, {
+                audienceId: personaAudienceId,
+              })) ?? [];
+            return { audience, personas };
+          } catch (err) {
+            throw new Error(
+              err instanceof Error
+                ? err.message
+                : "Failed to load personas for the selected audiences."
+            );
+          }
+        })
+      );
+
+      const audiencesWithoutPersonas = audiencePersonaPairs
+        .filter(({ personas }) => personas.length === 0)
+        .map(({ audience }) => audience.name);
+      const pairsWithPersonas = audiencePersonaPairs.filter(
+        ({ personas }) => personas.length > 0
+      );
+
+      const simulationPromises = pairsWithPersonas.flatMap(
+        ({ audience, personas }) =>
+          personas.map((persona) =>
+            runSimulation({
+              persona,
+              ads: adsForSimulation,
+            }).then((reactions) => ({
+              audience,
+              persona,
+              reactions,
+              ads: adsForSimulation,
+            }))
+          )
+      );
+
+      if (simulationPromises.length === 0) {
+        setSimulationError(
+          audiencesWithoutPersonas.length > 0
+            ? `No personas available for ${audiencesWithoutPersonas
+                .map((name) => `"${name}"`)
+                .join(", ")}. Generate or save personas first.`
+            : "No personas available for the selected audiences. Generate or save personas first."
+        );
+        return;
+      }
+
+      const settledResults = await Promise.allSettled(simulationPromises);
+      const successful = settledResults.filter(
+        (
+          result
+        ): result is Extract<
+          PromiseSettledResult<SimulationResult>,
+          { status: "fulfilled" }
+        > => result.status === "fulfilled"
+      );
+      const failed = settledResults.filter(
+        (
+          result
+        ): result is Extract<
+          PromiseSettledResult<SimulationResult>,
+          { status: "rejected" }
+        > => result.status === "rejected"
+      );
+
+      const collected = successful.map((item) => item.value);
+      setSimulationResults(collected);
+
+      if (failed.length > 0) {
+        const firstError = failed.at(0)?.reason;
+        setSimulationError(
+          firstError instanceof Error
+            ? firstError.message
+            : "Some simulations failed. Please try again."
+        );
+      } else if (collected.length === 0) {
+        setSimulationError(
+          "Simulations completed but no reactions were returned. Please try again."
+        );
+      } else if (audiencesWithoutPersonas.length > 0) {
+        setSimulationError(
+          `Skipped audiences without saved personas: ${audiencesWithoutPersonas
+            .map((name) => `"${name}"`)
+            .join(", ")}.`
+        );
+      }
+    } catch (err) {
+      setSimulationError(
+        err instanceof Error ? err.message : "Failed to run simulations."
+      );
+    } finally {
+      setIsSimulating(false);
+    }
   };
 
   function extractLocationHint(text: string): string | null {
@@ -426,12 +564,22 @@ export default function AudienceGenerationPage() {
         </form>
       ) : (
         <SimulationMode
-          error={error}
-          isPending={isPending}
+          error={simulationError}
+          isPending={isSimulating}
           key={modeChangeKey}
           onSubmit={handleSimulationSubmit}
         />
       )}
+
+      {mode === "simulate" ? (
+        <div className="mx-auto mt-6 w-full max-w-3xl">
+          <AdSimulationResults
+            error={simulationError}
+            isLoading={isSimulating}
+            results={simulationResults}
+          />
+        </div>
+      ) : null}
 
       {mode === "build" && error ? (
         <p className="mt-4 text-red-600 text-sm">{error}</p>
