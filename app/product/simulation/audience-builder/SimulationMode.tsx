@@ -120,7 +120,7 @@ export function SimulationMode({
       selectedAdsAdGroups.map((adGroup, index) => ({
         id: 1000 + index,
         headline: `Google Ads: ${adGroup.name}`,
-        description: `Ad group from campaign ${adGroup.campaignId}`,
+        description: `Ad group from campaign ${adGroup.campaignName}`,
       })),
     [selectedAdsAdGroups]
   );
@@ -397,7 +397,7 @@ export function SimulationMode({
       <form className="group/composer w-full" onSubmit={handleSubmit}>
         <div
           className={cn(
-            "mx-auto w-full max-w-2xl overflow-clip border border-border bg-transparent bg-clip-padding p-2.5 shadow-lg transition-all duration-200 dark:bg-muted/50",
+            "mx-auto w-full max-w-6xl overflow-clip border border-border bg-transparent bg-clip-padding p-4 shadow-lg transition-all duration-200 dark:bg-muted/50",
             {
               "grid grid-cols-1 grid-rows-[1fr_auto] rounded-3xl": shouldExpand,
               "grid grid-cols-[auto_1fr_auto] grid-rows-[1fr_auto] rounded-[28px]":
@@ -412,10 +412,10 @@ export function SimulationMode({
         >
           <div
             className={cn(
-              "relative flex min-h-20 items-start overflow-x-hidden px-1.5",
+              "relative flex min-h-20 items-start overflow-x-hidden px-3",
               {
-                "mb-0 px-2 py-1": shouldExpand,
-                "-my-2.5": !shouldExpand,
+                "mb-0 px-4 py-2": shouldExpand,
+                "-my-4": !shouldExpand,
               }
             )}
             style={{ gridArea: "primary" }}
@@ -431,8 +431,8 @@ export function SimulationMode({
                 value={contextValue}
               />
 
-              <div className="absolute right-2 bottom-2 left-2 flex min-h-[40px] flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                <div className="min-w-[200px] flex-1">
+              <div className="absolute right-3 bottom-3 left-3 flex min-h-[40px] flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
+                <div className="min-w-[200px] flex-1 lg:max-w-[300px]">
                   <AudiencePicker
                     onAdGroupsClear={handleAdGroupsClear}
                     onAudiencesChange={handleAudiencesChange}
@@ -443,7 +443,7 @@ export function SimulationMode({
                     selectedAudiences={selectedAudiences}
                   />
                 </div>
-                <div className="min-w-[220px] flex-1 sm:max-w-[280px]">
+                <div className="min-w-[220px] flex-1 lg:max-w-[350px]">
                   <SimulationContentPicker
                     googleAdsAdGroupCount={selectedAdsAdGroups.length}
                     hasIncompleteManualAds={
@@ -482,12 +482,12 @@ export function SimulationMode({
                 </div>
                 {simulationKind === "ads" ? (
                   <AttachFilesPicker
-                    className="w-full min-w-[200px] sm:w-[220px]"
+                    className="w-full min-w-[200px] lg:w-[250px]"
                     onSelectedFilesChange={setAttachedFiles}
                     selectedFiles={attachedFiles}
                   />
                 ) : (
-                  <div className="hidden min-h-[40px] w-[220px] sm:block" />
+                  <div className="hidden min-h-[40px] w-[250px] lg:block" />
                 )}
               </div>
             </div>

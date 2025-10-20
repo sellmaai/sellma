@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { PersonaDisplay } from "@/components/ui/persona-display";
 import type { Behavior } from "@/lib/personas/types";
+import { AggregateSimulationResults } from "./AggregateSimulationResults";
 import type { AdSimulationResult } from "./types";
 
 const behaviorMeta: Record<
@@ -333,18 +334,31 @@ export function AdSimulationResults({
             <div className="rounded-2xl border border-muted-foreground/40 border-dashed bg-muted/10 p-4 text-muted-foreground text-sm">
               No persona reactions were returned for the selected ads.
             </div>
-          ) : null}
-
-          {results.map((result) =>
-            result.reactions.reactions_to_variants.map((reaction) => (
-              <PersonaReactionCard
-                ads={result.ads}
-                audienceName={result.audience.name}
-                key={`${result.persona.personaId}-${reaction.variant_id}`}
-                persona={result.persona}
-                reaction={reaction}
-              />
-            ))
+          ) : (
+            <>
+              <AggregateSimulationResults results={results} />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-lg">
+                    Individual Persona Reactions
+                  </h3>
+                  <span className="text-muted-foreground text-sm">
+                    {totalReactions} reaction{totalReactions === 1 ? "" : "s"}
+                  </span>
+                </div>
+                {results.map((result) =>
+                  result.reactions.reactions_to_variants.map((reaction) => (
+                    <PersonaReactionCard
+                      ads={result.ads}
+                      audienceName={result.audience.name}
+                      key={`${result.persona.personaId}-${reaction.variant_id}`}
+                      persona={result.persona}
+                      reaction={reaction}
+                    />
+                  ))
+                )}
+              </div>
+            </>
           )}
         </div>
       </DialogContent>
