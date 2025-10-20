@@ -1,13 +1,11 @@
 "use client";
 
-import { Plus, Send, X } from "lucide-react";
+import { Send } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AdvertisementsPicker } from "@/components/ui/advertisements-picker";
 import { AttachFilesPicker } from "@/components/ui/attach-files-picker";
 import { type Audience, AudiencePicker } from "@/components/ui/audience-picker";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
@@ -17,12 +15,7 @@ import {
 } from "@/components/ui/tooltip";
 
 import { cn } from "@/lib/utils";
-
-interface ManualAdEntry {
-  id: number;
-  headline: string;
-  description: string;
-}
+import type { ManualAdDraft } from "./types";
 
 export interface SimulationSubmission {
   audiences: Audience[];
@@ -51,18 +44,17 @@ export function SimulationMode({
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [advertisementFileCount, setAdvertisementFileCount] = useState(0);
   const manualAdIdRef = useRef(1);
-  const manualEntryRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const createManualAd = () => {
+  const createManualAd = (): ManualAdDraft => {
     const id = manualAdIdRef.current;
     manualAdIdRef.current += 1;
     return { id, headline: "", description: "" };
   };
-  const [manualAds, setManualAds] = useState<ManualAdEntry[]>(() => [
+  const [manualAds, setManualAds] = useState<ManualAdDraft[]>(() => [
     createManualAd(),
   ]);
-  const [showManualEntry, setShowManualEntry] = useState(false);
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [manualError, setManualError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const { cleanedAds, hasAnyAds, hasCompleteAds, hasIncompleteAds } =
     useMemo(() => {
@@ -98,20 +90,23 @@ export function SimulationMode({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedAudiences.length === 0) {
-      setValidationError("Select at least one audience to run simulations.");
+      setFormError("Select at least one audience to run simulations.");
       return;
     }
     if (!hasAnyAds) {
-      setValidationError("Add at least one ad copy to simulate.");
+      setFormError(null);
+      setManualError("Add at least one ad copy to simulate.");
       return;
     }
     if (!hasCompleteAds) {
-      setValidationError(
+      setFormError(null);
+      setManualError(
         "Provide both a headline and description for every ad copy."
       );
       return;
     }
-    setValidationError(null);
+    setFormError(null);
+    setManualError(null);
     onSubmit({
       audiences: selectedAudiences,
       ads: cleanedAds,
@@ -133,14 +128,6 @@ export function SimulationMode({
     }
   };
 
-  const handleManualEntryClick = () => {
-    setShowManualEntry(true);
-    setIsExpanded(true);
-    requestAnimationFrame(() => {
-      manualEntryRef.current?.scrollIntoView({ behavior: "smooth" });
-    });
-  };
-
   const handleManualAdChange = (
     id: number,
     field: "headline" | "description",
@@ -149,12 +136,12 @@ export function SimulationMode({
     setManualAds((prev) =>
       prev.map((ad) => (ad.id === id ? { ...ad, [field]: value } : ad))
     );
-    setValidationError(null);
+    setManualError(null);
   };
 
   const handleAddManualAd = () => {
     setManualAds((prev) => [...prev, createManualAd()]);
-    setValidationError(null);
+    setManualError(null);
   };
 
   const handleRemoveManualAd = (id: number) => {
@@ -165,13 +152,19 @@ export function SimulationMode({
       }
       return [createManualAd()];
     });
-    setValidationError(null);
+    setManualError(null);
+  };
+
+  const handleClearManualAds = () => {
+    manualAdIdRef.current = 1;
+    setManualAds([createManualAd()]);
+    setManualError(null);
   };
 
   const handleAudiencesChange = (audiences: Audience[]) => {
     setSelectedAudiences(audiences);
     if (audiences.length > 0) {
-      setValidationError(null);
+      setFormError(null);
     }
   };
 
@@ -197,10 +190,7 @@ export function SimulationMode({
 
   // Determine if textarea should be expanded based on content or pills
   const shouldExpand =
-    message.length > 100 ||
-    message.includes("\n") ||
-    totalPills > 0 ||
-    showManualEntry;
+    message.length > 100 || message.includes("\n") || totalPills > 0;
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const nextValue = e.target.value;
@@ -210,10 +200,7 @@ export function SimulationMode({
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
     const shouldExpandNext =
-      nextValue.length > 100 ||
-      nextValue.includes("\n") ||
-      totalPills > 0 ||
-      showManualEntry;
+      nextValue.length > 100 || nextValue.includes("\n") || totalPills > 0;
     setIsExpanded(shouldExpandNext);
   };
 
@@ -281,10 +268,19 @@ export function SimulationMode({
                   />
                 </div>
                 <AdvertisementsPicker
+                  hasIncompleteManualAds={
+                    hasIncompleteAds && manualError === null
+                  }
+                  manualAdCount={cleanedAds.length}
+                  manualAds={manualAds}
+                  manualValidationError={manualError}
                   onAttachFilesClick={handleAttachFilesClick}
                   onFileCountChange={setAdvertisementFileCount}
                   onGoogleAdsClick={handleGoogleAdsClick}
-                  onManualEntryClick={handleManualEntryClick}
+                  onManualAdAdd={handleAddManualAd}
+                  onManualAdChange={handleManualAdChange}
+                  onManualAdRemove={handleRemoveManualAd}
+                  onManualAdsClear={handleClearManualAds}
                   onMetaAdsClick={handleMetaAdsClick}
                 />
                 <AttachFilesPicker
@@ -323,115 +319,14 @@ export function SimulationMode({
             </div>
           </div>
         </div>
-
-        {(showManualEntry || hasAnyAds) && (
-          <div
-            className="mx-auto mt-4 w-full max-w-2xl rounded-2xl border border-muted-foreground/40 border-dashed bg-muted/10 p-4"
-            ref={manualEntryRef}
-          >
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="font-medium text-sm">Manual ad copies</h3>
-                <p className="text-muted-foreground text-xs">
-                  Provide headlines and descriptions you want personas to react
-                  to.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  onClick={handleAddManualAd}
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  <Plus className="mr-1 h-4 w-4" />
-                  Add ad
-                </Button>
-                <Button
-                  onClick={() => {
-                    setManualAds([createManualAd()]);
-                    setValidationError(null);
-                  }}
-                  size="sm"
-                  type="button"
-                  variant="ghost"
-                >
-                  Clear all
-                </Button>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {manualAds.map((ad, index) => (
-                <div
-                  className="rounded-xl border border-border bg-background/90 p-4 shadow-sm"
-                  key={ad.id}
-                >
-                  <div className="mb-3 flex items-center justify-between">
-                    <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
-                      Ad {index + 1}
-                    </span>
-                    {manualAds.length > 1 ? (
-                      <Button
-                        onClick={() => handleRemoveManualAd(ad.id)}
-                        size="icon"
-                        type="button"
-                        variant="ghost"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    ) : null}
-                  </div>
-                  <div className="space-y-2">
-                    <div className="space-y-1.5">
-                      <Label className="font-medium text-xs uppercase tracking-wide">
-                        Headline
-                      </Label>
-                      <Input
-                        onChange={(event) =>
-                          handleManualAdChange(
-                            ad.id,
-                            "headline",
-                            event.target.value
-                          )
-                        }
-                        placeholder="Enter an attention-grabbing headline"
-                        value={ad.headline}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="font-medium text-xs uppercase tracking-wide">
-                        Description
-                      </Label>
-                      <Textarea
-                        className="min-h-[70px]"
-                        onChange={(event) =>
-                          handleManualAdChange(
-                            ad.id,
-                            "description",
-                            event.target.value
-                          )
-                        }
-                        placeholder="Add supporting copy that explains the offer"
-                        value={ad.description}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {validationError && (
-              <p className="mt-3 text-destructive text-sm">{validationError}</p>
-            )}
-            {!validationError && hasIncompleteAds && (
-              <p className="mt-3 text-muted-foreground text-sm">
-                Finish filling in every headline and description to run the
-                simulation.
-              </p>
-            )}
-          </div>
-        )}
       </form>
 
+      {formError ? (
+        <p className="mt-3 text-destructive text-sm">{formError}</p>
+      ) : null}
+      {manualError ? (
+        <p className="mt-3 text-destructive text-sm">{manualError}</p>
+      ) : null}
       {error && <p className="mt-4 text-red-600 text-sm">{error}</p>}
     </TooltipProvider>
   );
