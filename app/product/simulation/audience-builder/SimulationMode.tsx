@@ -120,7 +120,7 @@ export function SimulationMode({
       selectedAdsAdGroups.map((adGroup, index) => ({
         id: 1000 + index,
         headline: `Google Ads: ${adGroup.name}`,
-        description: `Ad group from campaign ${adGroup.campaignId}`,
+        description: `Ad group from campaign ${adGroup.campaignName}`,
       })),
     [selectedAdsAdGroups]
   );

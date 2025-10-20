@@ -24,6 +24,7 @@ export interface AdGroup {
   name: string;
   status: "ENABLED" | "PAUSED" | "REMOVED";
   campaignId: string;
+  campaignName: string;
 }
 
 export interface Campaign {
@@ -59,24 +60,28 @@ const fetchCampaignsAndAdGroups = async (
           name: "One Day / Quick Conversions",
           status: "ENABLED",
           campaignId: "campaign-1",
+          campaignName: "Tub-to-Shower Conversion",
         },
         {
           id: "adgroup-2",
           name: "Custom / Premium Conversion",
           status: "ENABLED",
           campaignId: "campaign-1",
+          campaignName: "Tub-to-Shower Conversion",
         },
         {
           id: "adgroup-3",
           name: "Tub to Shower Conversion",
           status: "ENABLED",
           campaignId: "campaign-1",
+          campaignName: "Tub-to-Shower Conversion",
         },
         {
           id: "adgroup-4",
           name: "Safety / Aging in Place",
           status: "ENABLED",
           campaignId: "campaign-1",
+          campaignName: "Tub-to-Shower Conversion",
         },
       ],
     },
@@ -90,18 +95,21 @@ const fetchCampaignsAndAdGroups = async (
           name: "Accessible / WalkIn Shower",
           status: "ENABLED",
           campaignId: "campaign-2",
+          campaignName: "Shower Remodeling Core",
         },
         {
           id: "adgroup-6",
           name: "Custom Shower / Upgrades",
           status: "ENABLED",
           campaignId: "campaign-2",
+          campaignName: "Shower Remodeling Core",
         },
         {
           id: "adgroup-7",
           name: "Shower Remodel / Replacement",
           status: "ENABLED",
           campaignId: "campaign-2",
+          campaignName: "Shower Remodeling Core",
         },
       ],
     },
@@ -115,24 +123,28 @@ const fetchCampaignsAndAdGroups = async (
           name: "Bath Tubs",
           status: "ENABLED",
           campaignId: "campaign-3",
+          campaignName: "Search",
         },
         {
           id: "adgroup-9",
           name: "Bathroom Remodeling",
           status: "PAUSED",
           campaignId: "campaign-3",
+          campaignName: "Search",
         },
         {
           id: "adgroup-10",
           name: "One Day Bath Remodel",
           status: "ENABLED",
           campaignId: "campaign-3",
+          campaignName: "Search",
         },
         {
           id: "adgroup-11",
           name: "Shower Replacement",
           status: "ENABLED",
           campaignId: "campaign-3",
+          campaignName: "Search",
         },
       ],
     },
@@ -146,6 +158,7 @@ const fetchCampaignsAndAdGroups = async (
           name: "Bathroom Remodeling",
           status: "PAUSED",
           campaignId: "campaign-4",
+          campaignName: "Bathroom Remodeling",
         },
       ],
     },
