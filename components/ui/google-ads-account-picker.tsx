@@ -14,6 +14,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CampaignAdGroupPicker, AdGroup } from "@/components/ui/campaign-ad-group-picker";
+import { AudienceCampaignAdGroupPicker } from "@/components/ui/audience-campaign-ad-group-picker";
 import { cn } from "@/lib/utils";
 
 export interface GoogleAdsAccount {
@@ -30,6 +31,7 @@ interface GoogleAdsAccountPickerProps {
   onOpenChange: (open: boolean) => void;
   onAccountSelect: (account: GoogleAdsAccount) => void;
   onAdGroupsSelect?: (adGroups: AdGroup[]) => void;
+  pickerType?: "audience" | "advertisement"; // New prop to distinguish picker type
 }
 
 // Mock API call to fetch Google Ads accounts
@@ -63,6 +65,7 @@ export function GoogleAdsAccountPicker({
   onOpenChange,
   onAccountSelect,
   onAdGroupsSelect,
+  pickerType = "advertisement", // Default to advertisement for backward compatibility
 }: GoogleAdsAccountPickerProps) {
   const [accounts, setAccounts] = useState<GoogleAdsAccount[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
@@ -222,12 +225,23 @@ export function GoogleAdsAccountPicker({
       
       {/* Campaign and Ad Group Picker Modal */}
       {selectedAccount && (
-        <CampaignAdGroupPicker
-          open={showCampaignPicker}
-          onOpenChange={setShowCampaignPicker}
-          onAdGroupsSelect={handleAdGroupsSelect}
-          accountId={selectedAccount.id}
-        />
+        <>
+          {pickerType === "audience" ? (
+            <AudienceCampaignAdGroupPicker
+              open={showCampaignPicker}
+              onOpenChange={setShowCampaignPicker}
+              onAdGroupsSelect={handleAdGroupsSelect}
+              accountId={selectedAccount.id}
+            />
+          ) : (
+            <CampaignAdGroupPicker
+              open={showCampaignPicker}
+              onOpenChange={setShowCampaignPicker}
+              onAdGroupsSelect={handleAdGroupsSelect}
+              accountId={selectedAccount.id}
+            />
+          )}
+        </>
       )}
     </Dialog>
   );

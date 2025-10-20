@@ -437,6 +437,7 @@ export function SimulationMode({
         onAdGroupsSelect={handleAdGroupsSelect}
         onOpenChange={setIsGoogleAdsAccountPickerOpen}
         open={isGoogleAdsAccountPickerOpen}
+        pickerType="audience"
       />
 
       {/* Google Ads Advertisements Picker */}
