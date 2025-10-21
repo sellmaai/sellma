@@ -1,6 +1,6 @@
 import { Tag } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { ManualKeywordDraft } from "@/app/product/simulation/audience-builder/types";
+import type { ManualKeywordDraft } from "@/app/product/simulation/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

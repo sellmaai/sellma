@@ -6,7 +6,7 @@ import type {
   ManualAdDraft,
   ManualKeywordDraft,
   SimulationKind,
-} from "@/app/product/simulation/audience-builder/types";
+} from "@/app/product/simulation/types";
 import { ManualAdsDialog } from "@/components/ui/advertisements-picker/ManualAdsDialog";
 import { Button } from "@/components/ui/button";
 import { ManualKeywordsDialog } from "@/components/ui/keywords-picker/ManualKeywordsDialog";

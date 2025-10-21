@@ -2,7 +2,7 @@
 
 import { ChevronDown, ExternalLink, Megaphone, Paperclip } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { ManualAdDraft } from "@/app/product/simulation/audience-builder/types";
+import type { ManualAdDraft } from "@/app/product/simulation/types";
 import { Button } from "@/components/ui/button";
 import type { AdGroup } from "@/components/ui/campaign-ad-group-picker";
 import {
