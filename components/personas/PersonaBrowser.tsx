@@ -54,7 +54,7 @@ export const PersonaBrowser: FC<PersonaBrowserProps> = ({ personas }) => {
           />
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-1">
           {filtered.map((persona) => (
             <PersonaDisplay key={persona.personaId} persona={persona} />
           ))}
