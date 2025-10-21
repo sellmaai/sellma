@@ -19,7 +19,6 @@ import {
   DialogTrigger,
 } from "./dialog";
 import { Progress } from "./progress";
-import { User } from "lucide-react";
 
 type PersonaDisplayProps = {
   persona: Persona;
@@ -284,18 +283,19 @@ export const PersonaDisplay = ({
   const [open, setOpen] = useState(defaultOpen);
 
   const triggerNode = trigger ?? (
-<Card className="cursor-pointer transition-colors hover:bg-muted/50">
-  <CardHeader className="flex justify-between">
-    <div className="flex flex-col gap-1">
-      <CardTitle className="text-lg">
-        {persona.profileFirstName} {persona.profileLastName}
-      </CardTitle>
-      <CardDescription>
-        {persona.profileOccupation} • {persona.profileLocationCity}, {persona.profileLocationState}
-      </CardDescription>
-    </div>
-  </CardHeader>
-</Card>
+    <Card className="cursor-pointer transition-colors hover:bg-muted/50">
+      <CardHeader className="flex justify-between">
+        <div className="flex flex-col gap-1">
+          <CardTitle className="text-lg">
+            {persona.profileFirstName} {persona.profileLastName}
+          </CardTitle>
+          <CardDescription>
+            {persona.profileOccupation} • {persona.profileLocationCity},{" "}
+            {persona.profileLocationState}
+          </CardDescription>
+        </div>
+      </CardHeader>
+    </Card>
   );
 
   return (
