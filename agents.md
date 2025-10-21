@@ -251,7 +251,7 @@ await ctx.db
 - [ ] Client components minimized; RSC where possible
 
 ### UI notes
-- In `app/product/simulation/audience-builder/page.tsx`, audience text is converted into an overview and subsegments via `suggestBundle`.
+- In `app/product/audience-builder/page.tsx`, audience text is converted into an overview and subsegments via `suggestBundle`.
 - For each subsegment, the page calls `generate` to create one persona per group, progressively rendering them as they complete.
 - Personas are displayed using `PersonaBrowser` component, which shows detailed persona information including profile, personality traits, and pre-ad context.
 - The generation chain of thought is visualized using `GenerationChainOfThought` component, showing the progress of audience segmentation and persona generation for each group.
@@ -591,4 +591,3 @@ try {
   console.log(e);
 }
 ```
-

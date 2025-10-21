@@ -25,9 +25,6 @@ export function AggregateSimulationResults({
       };
     }
 
-    // Calculate simulated reach (random number between 1500-4000)
-    const simulatedReach = Math.floor(Math.random() * (4000 - 1500 + 1)) + 1500;
-
     // Calculate CTR (Click-through Rate) - random between 1.5% to 8.5%
     const ctr = Math.random() * (8.5 - 1.5) + 1.5;
 
@@ -48,7 +45,6 @@ export function AggregateSimulationResults({
 
     return {
       totalPersonas,
-      simulatedReach,
       ctr,
       relevanceScore,
       estimatedCPC,
@@ -64,7 +60,7 @@ export function AggregateSimulationResults({
           Simulation Summary
         </h2>
         <p className="mt-2 text-muted-foreground">
-          Aggregate results from {aggregateData.simulatedReach.toLocaleString()}{" "}
+          Aggregate results from {aggregateData.totalPersonas.toLocaleString()}{" "}
           personas tested
         </p>
       </div>
@@ -78,16 +74,7 @@ export function AggregateSimulationResults({
           </CardHeader>
           <CardContent>
             <div className="font-bold text-2xl">
-              {aggregateData.simulatedReach.toLocaleString()}
-            </div>
-            <p className="text-muted-foreground text-xs">Simulated Reach</p>
-            <div className="mt-2 h-2 w-full rounded-full bg-muted">
-              <div
-                className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"
-                style={{
-                  width: `${Math.min(100, (aggregateData.simulatedReach / 4000) * 100)}%`,
-                }}
-              />
+              {aggregateData.totalPersonas.toLocaleString()}
             </div>
           </CardContent>
         </Card>

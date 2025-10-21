@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { Rocket, Settings } from "lucide-react";
+import { Rocket, Settings, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ComponentProps, useMemo } from "react";
@@ -17,9 +17,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { api } from "@/convex/_generated/api";
@@ -47,6 +44,17 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
+                isActive={pathname?.startsWith("/product/audience-builder")}
+              >
+                <Link href="/product/audience-builder">
+                  <Users />
+                  <span>Audience Builder</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
                 isActive={pathname?.startsWith("/product/simulation")}
               >
                 <Link href="/product/simulation">
@@ -54,20 +62,6 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
                   <span>Simulation</span>
                 </Link>
               </SidebarMenuButton>
-              <SidebarMenuSub>
-                <SidebarMenuSubItem>
-                  <SidebarMenuSubButton
-                    asChild
-                    isActive={pathname?.startsWith(
-                      "/product/simulation/audience-builder"
-                    )}
-                  >
-                    <Link href="/product/simulation/audience-builder">
-                      <span>Audience Builder</span>
-                    </Link>
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-              </SidebarMenuSub>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton

@@ -1,24 +1,30 @@
 "use client";
 
-import { Send } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { AttachFilesPicker } from "@/components/ui/attach-files-picker";
+import { useMemo, useRef, useState } from "react";
 import { type Audience, AudiencePicker } from "@/components/ui/audience-picker";
 import { Button } from "@/components/ui/button";
 import type { AdGroup } from "@/components/ui/campaign-ad-group-picker";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldSet,
+} from "@/components/ui/field";
 import {
   type GoogleAdsAccount,
   GoogleAdsAccountPicker,
 } from "@/components/ui/google-ads-account-picker";
 import { SimulationContentPicker } from "@/components/ui/simulation-content-picker";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import type {
   ManualAdDraft,
   ManualKeywordDraft,
@@ -26,29 +32,33 @@ import type {
   SimulationSubmission,
 } from "./types";
 
-interface SimulationModeProps {
-  onSubmit: (payload: SimulationSubmission) => void;
+interface SimulationFormProps {
+  onSubmit: (payload: SimulationSubmission) => Promise<void> | void;
   isPending: boolean;
   error: string | null;
 }
 
-export function SimulationMode({
+export function SimulationForm({
   onSubmit,
   isPending,
   error,
-}: SimulationModeProps) {
+}: SimulationFormProps) {
   const [simulationKind, setSimulationKind] = useState<SimulationKind>("ads");
   const [contextValue, setContextValue] = useState("");
   const [keywordGoal, setKeywordGoal] = useState("");
   const [keywordGoalError, setKeywordGoalError] = useState<string | null>(null);
-  const [, setIsExpanded] = useState(false);
   const [selectedAudiences, setSelectedAudiences] = useState<Audience[]>([]);
-  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [manualError, setManualError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const manualAdIdRef = useRef(1);
   const manualKeywordIdRef = useRef(1);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [manualError, setManualError] = useState<string | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
+  const [isGoogleAdsAccountPickerOpen, setIsGoogleAdsAccountPickerOpen] =
+    useState(false);
+  const [isGoogleAdsAdsPickerOpen, setIsGoogleAdsAdsPickerOpen] =
+    useState(false);
+  const [selectedAdGroups, setSelectedAdGroups] = useState<AdGroup[]>([]);
+  const [selectedAdsAdGroups, setSelectedAdsAdGroups] = useState<AdGroup[]>([]);
 
   const createManualAd = (): ManualAdDraft => {
     const id = manualAdIdRef.current;
@@ -69,12 +79,6 @@ export function SimulationMode({
   const [manualKeywords, setManualKeywords] = useState<ManualKeywordDraft[]>(
     () => [createManualKeyword()]
   );
-  const [isGoogleAdsAccountPickerOpen, setIsGoogleAdsAccountPickerOpen] =
-    useState(false);
-  const [isGoogleAdsAdsPickerOpen, setIsGoogleAdsAdsPickerOpen] =
-    useState(false);
-  const [selectedAdGroups, setSelectedAdGroups] = useState<AdGroup[]>([]);
-  const [selectedAdsAdGroups, setSelectedAdsAdGroups] = useState<AdGroup[]>([]);
 
   const { cleanedAds, hasAnyAds, hasCompleteAds, hasIncompleteAds } =
     useMemo(() => {
@@ -107,12 +111,12 @@ export function SimulationMode({
       };
     }, [manualAds, selectedAdsAdGroups]);
 
-  const { seedKeywords, keywordCount } = useMemo(() => {
+  const { seedKeywords } = useMemo(() => {
     const trimmed = manualKeywords
       .map((item) => item.value.trim())
       .filter((value) => value.length > 0);
     const unique = Array.from(new Set(trimmed));
-    return { seedKeywords: unique, keywordCount: unique.length };
+    return { seedKeywords: unique };
   }, [manualKeywords]);
 
   const googleAdsAds = useMemo(
@@ -125,17 +129,24 @@ export function SimulationMode({
     [selectedAdsAdGroups]
   );
 
-  const totalPills =
-    selectedAudiences.length +
-    (simulationKind === "ads"
-      ? attachedFiles.length + cleanedAds.length + selectedAdsAdGroups.length
-      : keywordCount + (keywordGoal.trim().length > 0 ? 1 : 0));
-
-  const shouldExpand =
-    contextValue.length > 100 || contextValue.includes("\n") || totalPills > 0;
-
-  const textareaPlaceholder =
-    "Add optional context or notes for this simulation (optional)";
+  const submitDisabledReason = (() => {
+    if (selectedAudiences.length === 0) {
+      return "Select at least one audience to run simulations.";
+    }
+    if (simulationKind === "ads") {
+      if (!hasAnyAds) {
+        return "Add at least one ad copy or import from Google Ads.";
+      }
+      if (!hasCompleteAds) {
+        return "Provide both a headline and description for every ad copy.";
+      }
+      return null;
+    }
+    if (keywordGoal.trim().length === 0) {
+      return "Describe the advertising goal to simulate keywords.";
+    }
+    return null;
+  })();
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -161,8 +172,8 @@ export function SimulationMode({
         return;
       }
 
-      setManualError(null);
       setFormError(null);
+      setManualError(null);
       setKeywordGoalError(null);
       onSubmit({
         mode: "ads",
@@ -174,6 +185,7 @@ export function SimulationMode({
     }
 
     if (trimmedGoal.length === 0) {
+      setFormError(null);
       setManualError(null);
       setKeywordGoalError(
         "Describe the advertising goal to simulate keywords."
@@ -181,8 +193,8 @@ export function SimulationMode({
       return;
     }
 
-    setManualError(null);
     setFormError(null);
+    setManualError(null);
     setKeywordGoalError(null);
     onSubmit({
       mode: "keywords",
@@ -345,26 +357,7 @@ export function SimulationMode({
     }
   };
 
-  const getTooltipText = () => {
-    if (selectedAudiences.length === 0) {
-      return "Please select at least one audience";
-    }
-    if (simulationKind === "ads") {
-      if (!hasAnyAds) {
-        return "Add at least one ad copy";
-      }
-      if (hasIncompleteAds) {
-        return "Complete headline and description for every ad";
-      }
-      return "Run simulation";
-    }
-    if (keywordGoal.trim().length === 0) {
-      return "Describe the advertising goal";
-    }
-    return "Run keyword simulation";
-  };
-
-  const handleTextareaChange = (
+  const handleContextChange = (
     event: React.ChangeEvent<HTMLTextAreaElement>
   ) => {
     const nextValue = event.target.value;
@@ -373,169 +366,123 @@ export function SimulationMode({
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
-    const shouldExpandNext =
-      nextValue.length > 100 || nextValue.includes("\n") || totalPills > 0;
-    setIsExpanded(shouldExpandNext);
-    if (formError && nextValue.trim().length > 0) {
-      setFormError(null);
-    }
   };
-
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      handleSubmit(event);
-    }
-  };
-
-  useEffect(() => {
-    setIsExpanded(shouldExpand);
-  }, [shouldExpand]);
 
   return (
-    <TooltipProvider delayDuration={300}>
-      <form className="group/composer w-full" onSubmit={handleSubmit}>
-        <div
-          className={cn(
-            "mx-auto w-full max-w-6xl overflow-clip border border-border bg-transparent bg-clip-padding p-4 shadow-lg transition-all duration-200 dark:bg-muted/50",
-            {
-              "grid grid-cols-1 grid-rows-[1fr_auto] rounded-3xl": shouldExpand,
-              "grid grid-cols-[auto_1fr_auto] grid-rows-[1fr_auto] rounded-[28px]":
-                !shouldExpand,
-            }
-          )}
-          style={{
-            gridTemplateAreas: shouldExpand
-              ? "'primary' 'footer'"
-              : "'leading primary trailing' '. footer .'",
-          }}
-        >
-          <div
-            className={cn(
-              "relative flex min-h-20 items-start overflow-x-hidden px-3",
-              {
-                "mb-0 px-4 py-2": shouldExpand,
-                "-my-4": !shouldExpand,
-              }
-            )}
-            style={{ gridArea: "primary" }}
-          >
-            <div className="max-h-52 flex-1 overflow-auto">
-              <Textarea
-                className="scrollbar-thin min-h-0 resize-none rounded-none border-0 px-0 pt-3 pb-12 text-base placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-transparent"
-                onChange={handleTextareaChange}
-                onKeyDown={handleKeyDown}
-                placeholder={textareaPlaceholder}
-                ref={textareaRef}
-                rows={3}
-                value={contextValue}
-              />
-
-              <div className="absolute right-3 bottom-3 left-3 flex min-h-[40px] flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
-                <div className="min-w-[200px] flex-1 lg:max-w-[300px]">
-                  <AudiencePicker
-                    onAdGroupsClear={handleAdGroupsClear}
-                    onAudiencesChange={handleAudiencesChange}
-                    onGoogleAdsClick={handleGoogleAdsClick}
-                    onMetaAdsClick={handleMetaAdsClick}
-                    placeholder="Audiences"
-                    selectedAdGroupsCount={selectedAdGroups.length}
-                    selectedAudiences={selectedAudiences}
-                  />
-                </div>
-                <div className="min-w-[220px] flex-1 lg:max-w-[350px]">
-                  <SimulationContentPicker
-                    googleAdsAdGroupCount={selectedAdsAdGroups.length}
-                    hasIncompleteManualAds={
-                      hasIncompleteAds && manualError === null
-                    }
-                    keywordGoal={keywordGoal}
-                    keywordGoalError={keywordGoalError}
-                    manualAdCount={cleanedAds.length}
-                    manualAds={manualAds}
-                    manualKeywords={manualKeywords}
-                    manualValidationError={manualError}
-                    onClearGoogleAdsSelection={handleRemoveAdsAdGroups}
-                    onGoogleAdsImport={handleGoogleAdsAdsClick}
-                    onKeywordGoalChange={(value) => {
-                      setKeywordGoal(value);
-                      if (value.trim().length > 0) {
-                        setKeywordGoalError(null);
-                      }
-                    }}
-                    onManualAdAdd={handleAddManualAd}
-                    onManualAdChange={handleManualAdChange}
-                    onManualAdRemove={handleRemoveManualAd}
-                    onManualAdsClear={handleClearManualAds}
-                    onManualKeywordAdd={handleAddManualKeyword}
-                    onManualKeywordChange={handleManualKeywordChange}
-                    onManualKeywordRemove={handleRemoveManualKeyword}
-                    onManualKeywordsClear={handleClearManualKeywords}
-                    onSimulationKindChange={(kind) => {
-                      setSimulationKind(kind);
-                      setFormError(null);
-                      setManualError(null);
+    <form
+      className="mx-auto flex w-full max-w-6xl flex-col gap-6"
+      onSubmit={handleSubmit}
+    >
+      <Card>
+        <CardHeader>
+          <CardTitle>Simulation setup</CardTitle>
+          <CardDescription>
+            Configure your audiences and inputs, then run persona simulations on
+            ad variants or keyword strategies.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <FieldGroup className="space-y-6">
+            <FieldSet>
+              <Field>
+                <FieldLabel>Audience selection</FieldLabel>
+                <AudiencePicker
+                  onAdGroupsClear={handleAdGroupsClear}
+                  onAudiencesChange={handleAudiencesChange}
+                  onGoogleAdsClick={handleGoogleAdsClick}
+                  onMetaAdsClick={handleMetaAdsClick}
+                  placeholder="Select audiences"
+                  selectedAdGroupsCount={selectedAdGroups.length}
+                  selectedAudiences={selectedAudiences}
+                />
+                {formError ? (
+                  <FieldDescription className="text-destructive">
+                    {formError}
+                  </FieldDescription>
+                ) : null}
+              </Field>
+              <Field>
+                <FieldLabel>Simulation type</FieldLabel>
+                <SimulationContentPicker
+                  googleAdsAdGroupCount={selectedAdsAdGroups.length}
+                  hasIncompleteManualAds={
+                    hasIncompleteAds && manualError === null
+                  }
+                  keywordGoal={keywordGoal}
+                  keywordGoalError={keywordGoalError}
+                  manualAdCount={cleanedAds.length}
+                  manualAds={manualAds}
+                  manualKeywords={manualKeywords}
+                  manualValidationError={manualError}
+                  onClearGoogleAdsSelection={handleRemoveAdsAdGroups}
+                  onGoogleAdsImport={handleGoogleAdsAdsClick}
+                  onKeywordGoalChange={(value) => {
+                    setKeywordGoal(value);
+                    if (value.trim().length > 0) {
                       setKeywordGoalError(null);
-                    }}
-                    simulationKind={simulationKind}
-                  />
-                </div>
-                {simulationKind === "ads" ? (
-                  <AttachFilesPicker
-                    className="w-full min-w-[200px] lg:w-[250px]"
-                    onSelectedFilesChange={setAttachedFiles}
-                    selectedFiles={attachedFiles}
-                  />
-                ) : (
-                  <div className="hidden min-h-[40px] w-[250px] lg:block" />
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="flex items-center gap-2"
-            style={{ gridArea: shouldExpand ? "footer" : "trailing" }}
+                    }
+                  }}
+                  onManualAdAdd={handleAddManualAd}
+                  onManualAdChange={handleManualAdChange}
+                  onManualAdRemove={handleRemoveManualAd}
+                  onManualAdsClear={handleClearManualAds}
+                  onManualKeywordAdd={handleAddManualKeyword}
+                  onManualKeywordChange={handleManualKeywordChange}
+                  onManualKeywordRemove={handleRemoveManualKeyword}
+                  onManualKeywordsClear={handleClearManualKeywords}
+                  onSimulationKindChange={(kind) => {
+                    setSimulationKind(kind);
+                    setFormError(null);
+                    setManualError(null);
+                    setKeywordGoalError(null);
+                  }}
+                  simulationKind={simulationKind}
+                />
+                {simulationKind === "ads" && manualError ? (
+                  <FieldDescription className="text-destructive">
+                    {manualError}
+                  </FieldDescription>
+                ) : null}
+                {simulationKind === "keywords" && keywordGoalError ? (
+                  <FieldDescription className="text-destructive">
+                    {keywordGoalError}
+                  </FieldDescription>
+                ) : null}
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="simulation-notes">Notes</FieldLabel>
+                <Textarea
+                  id="simulation-notes"
+                  onChange={handleContextChange}
+                  placeholder="Add optional context or notes for this simulation"
+                  ref={textareaRef}
+                  rows={4}
+                  value={contextValue}
+                />
+              </Field>
+            </FieldSet>
+          </FieldGroup>
+        </CardContent>
+        <CardFooter className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          {submitDisabledReason ? (
+            <p className="text-muted-foreground text-sm">
+              {submitDisabledReason}
+            </p>
+          ) : (
+            <span className="text-muted-foreground text-sm">
+              Ready to run simulations.
+            </span>
+          )}
+          <Button
+            disabled={isPending || Boolean(submitDisabledReason)}
+            type="submit"
           >
-            <div className="ms-auto flex items-center gap-1.5">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div>
-                    <Button
-                      className="h-9 w-9 rounded-full"
-                      disabled={
-                        isPending ||
-                        selectedAudiences.length === 0 ||
-                        (simulationKind === "ads"
-                          ? !hasCompleteAds
-                          : keywordGoal.trim().length === 0)
-                      }
-                      size="icon"
-                      type="submit"
-                    >
-                      <Send className="size-5" />
-                    </Button>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{getTooltipText()}</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          </div>
-        </div>
-      </form>
+            {isPending ? "Running…" : "Run simulation"}
+          </Button>
+        </CardFooter>
+      </Card>
 
-      {formError ? (
-        <p className="mt-3 text-destructive text-sm">{formError}</p>
-      ) : null}
-      {simulationKind === "ads" && manualError ? (
-        <p className="mt-3 text-destructive text-sm">{manualError}</p>
-      ) : null}
-      {simulationKind === "keywords" && keywordGoalError ? (
-        <p className="mt-3 text-destructive text-sm">{keywordGoalError}</p>
-      ) : null}
-      {error ? <p className="mt-4 text-red-600 text-sm">{error}</p> : null}
+      {error ? <p className="text-destructive text-sm">{error}</p> : null}
 
       <GoogleAdsAccountPicker
         onAccountSelect={handleGoogleAdsAccountSelect}
@@ -551,6 +498,6 @@ export function SimulationMode({
         onOpenChange={setIsGoogleAdsAdsPickerOpen}
         open={isGoogleAdsAdsPickerOpen}
       />
-    </TooltipProvider>
+    </form>
   );
 }

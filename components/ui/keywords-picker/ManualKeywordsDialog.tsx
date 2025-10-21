@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import type { ManualKeywordDraft } from "@/app/product/simulation/audience-builder/types";
+import type { ManualKeywordDraft } from "@/app/product/simulation/types";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
