@@ -93,10 +93,29 @@ export default function SimulationPage() {
         payload.audiences.map(async (audience) => {
           const personaAudienceId = audience.audienceId ?? audience.id;
           try {
-            const personas =
+            let personas =
               (await convex.query(api.personas.listByAudienceId, {
                 audienceId: personaAudienceId,
               })) ?? [];
+
+            // For Google Ads audiences, ensure senior citizen personas exist
+            if (audience.source === "google-ads") {
+              try {
+                const seniorCitizenPersonas = await convex.action(
+                  api.migrations.ensureSeniorCitizenPersonasForGoogleAds,
+                  {
+                    googleAdsAudienceId: personaAudienceId,
+                    count: 5, // Generate 5 senior citizen personas
+                  }
+                );
+                
+                // Add senior citizen personas to the existing personas
+                personas = [...personas, ...seniorCitizenPersonas];
+              } catch (_migrationErr) {
+                // Continue with existing personas if migration fails
+                // Log error for debugging if needed
+              }
+            }
 
             // For saved audiences, get the projectedPersonasCount
             let projectedPersonasCount: number | undefined;
