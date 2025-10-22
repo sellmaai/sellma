@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { PersonaDisplay } from "@/components/ui/persona-display";
 import type { Behavior } from "@/lib/personas/types";
+import { calculateAudienceSizeWithProjectedCount } from "@/lib/simulation/audience-calculator";
 import { AggregateSimulationResults } from "./AggregateSimulationResults";
 import type { AdSimulationResult } from "./types";
 
@@ -276,6 +277,12 @@ export function AdSimulationResults({
       ),
     [results]
   );
+  
+  const personaCount = useMemo(
+    () => calculateAudienceSizeWithProjectedCount(selectedAudiences),
+    [selectedAudiences]
+  );
+  
   const hasResults = results.length > 0;
 
   useEffect(() => {
@@ -348,7 +355,7 @@ export function AdSimulationResults({
                     Top Persona Reactions
                   </h3>
                   <span className="text-muted-foreground text-sm">
-                    {totalReactions} reaction{totalReactions === 1 ? "" : "s"}
+                    {personaCount} persona{personaCount === 1 ? "" : "s"} × {totalReactions} reaction{totalReactions === 1 ? "" : "s"}
                   </span>
                 </div>
                 {results.map((result) =>
