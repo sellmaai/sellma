@@ -152,24 +152,13 @@ export default function AudienceGenerationPage() {
           })
             .then((arr) => {
               // Handle multiple personas per group
-              if (Array.isArray(arr) && arr.length > 0) {
-                setPersonasById((prev) => {
-                  // Only add personas that belong to the current audience session
-                  const newPersonas = arr.reduce(
-                    (acc, p) => {
-                      if (
-                        p &&
-                        p.audienceId === currentAudienceIdRef.current &&
-                        p.personaId
-                      ) {
-                        acc[p.personaId] = p;
-                      }
-                      return acc;
-                    },
-                    {} as typeof prev
-                  );
-                  return { ...prev, ...newPersonas };
-                });
+              if (arr && arr.length > 0) {
+                for (const p of arr) {
+                  // Only apply results if they belong to the most recent audience session
+                  if (p && p.audienceId === currentAudienceIdRef.current) {
+                    setPersonasById((prev) => ({ ...prev, [p.personaId]: p }));
+                  }
+                }
               }
             })
             .catch((_error) => {
