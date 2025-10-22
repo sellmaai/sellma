@@ -22,6 +22,7 @@ export default function AudienceGenerationPage() {
   const savePersonas = useMutation(api.personas.saveMany);
   const saveAudience = useMutation(api.userAudiences.save);
   const [message, setMessage] = useState("");
+  const [originalPrompt, setOriginalPrompt] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -69,6 +70,7 @@ export default function AudienceGenerationPage() {
     setAudienceDescription(null);
     setIsExpanded(false);
     setMessage("");
+    setOriginalPrompt("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
@@ -88,6 +90,8 @@ export default function AudienceGenerationPage() {
     if (!message.trim() || isComposerLocked) {
       return;
     }
+    // Store the original prompt before starting generation
+    setOriginalPrompt(message);
     setError(null);
     setIsThinking(true);
     setGroupSuggestStatus("active");
@@ -171,7 +175,7 @@ export default function AudienceGenerationPage() {
               }
             });
         }
-        setMessage("");
+        // Don't clear the message here - let it persist after generation
         setIsExpanded(false);
         if (textareaRef.current) {
           textareaRef.current.style.height = "auto";
@@ -399,6 +403,15 @@ export default function AudienceGenerationPage() {
           </Button>
         </div>
       ) : null}
+
+      {originalPrompt && groups.length > 0 && (
+        <div className="mx-auto mb-6 w-full max-w-2xl">
+          <div className="rounded-lg border border-border bg-muted/30 p-4">
+            <h3 className="mb-2 text-sm font-medium text-muted-foreground">Original Prompt:</h3>
+            <p className="text-sm text-foreground">{originalPrompt}</p>
+          </div>
+        </div>
+      )}
 
       <div className="w-full">
         <div className="mx-auto w-full max-w-2xl">
