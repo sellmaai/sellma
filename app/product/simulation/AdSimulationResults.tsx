@@ -270,11 +270,11 @@ export function AdSimulationResults({
 }: AdSimulationResultsProps) {
   const [open, setOpen] = useState(false);
   const totalReactions = useMemo(
-    () =>
-      results.reduce(
-        (acc, result) => acc + result.reactions.reactions_to_variants.length,
-        0
-      ),
+    () => {
+      // Count the actual number of ads that were added via ad picker
+      // Since all results have the same ads array, we can just take the first result's ads length
+      return results.length > 0 ? results[0].ads.length : 0;
+    },
     [results]
   );
   
