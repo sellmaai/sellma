@@ -3,7 +3,7 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
-import { Toaster, toast } from "sonner";
+import { toast } from "sonner";
 import { SignInMethodDivider } from "@/components/SignInMethodDivider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,7 +86,6 @@ function SignInWithMagicLink({
       <label htmlFor="email">Email</label>
       <Input autoComplete="email" className="mb-4" id="email" name="email" />
       <Button type="submit">Send sign-in link</Button>
-      <Toaster />
     </form>
   );
 }

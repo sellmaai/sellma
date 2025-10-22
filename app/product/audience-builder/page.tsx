@@ -3,6 +3,7 @@
 import { useAction, useMutation } from "convex/react";
 import { CornerDownLeft, Send } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { toast } from "sonner";
 import { PersonaBrowser } from "@/components/personas/PersonaBrowser";
 import { Button } from "@/components/ui/button";
 import { SaveAudienceDialog } from "@/components/ui/save-audience-dialog";
@@ -259,7 +260,13 @@ export default function AudienceGenerationPage() {
       );
       setPersonasById(mapped);
       setDecision("saved");
-      setAudienceNotice("saved");
+      setAudienceNotice(null);
+      toast.success("Audience saved successfully.", {
+        action: {
+          label: "New audience",
+          onClick: handleStartNewAudience,
+        },
+      });
       currentAudienceIdRef.current = null;
     } catch (err) {
       setSaveError(
@@ -384,9 +391,8 @@ export default function AudienceGenerationPage() {
         </div>
       </form>
       {error ? <p className="mt-4 text-red-600 text-sm">{error}</p> : null}
-      {audienceNotice === "saved" ? (
-        <div className="mt-4 flex items-center justify-between gap-3 text-sm">
-          <p className="text-emerald-600">Audience saved successfully.</p>
+      {decision === "saved" ? (
+        <div className="mt-4 flex justify-end">
           <Button
             onClick={handleStartNewAudience}
             size="sm"
