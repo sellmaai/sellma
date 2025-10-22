@@ -37,7 +37,7 @@ export type SimulationSubmission =
 
 export interface AdSimulationResult {
   mode: "ads";
-  audience: Audience;
+  audience: Audience & { projectedPersonasCount?: number };
   persona: Persona;
   reactions: AdReactions;
   ads: ManualAdDraft[];
@@ -46,7 +46,7 @@ export interface AdSimulationResult {
 
 export interface KeywordSimulationResult {
   mode: "keywords";
-  audience: Audience;
+  audience: Audience & { projectedPersonasCount?: number };
   persona: Persona;
   keywords: KeywordSimulation;
   advertisingGoal: string;

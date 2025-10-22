@@ -258,12 +258,14 @@ interface AdSimulationResultsProps {
   results: AdSimulationResult[];
   isLoading: boolean;
   error: string | null;
+  selectedAudiences: Array<AdSimulationResult['audience']>;
 }
 
 export function AdSimulationResults({
   results,
   isLoading,
   error,
+  selectedAudiences,
 }: AdSimulationResultsProps) {
   const [open, setOpen] = useState(false);
   const totalReactions = useMemo(
@@ -336,11 +338,14 @@ export function AdSimulationResults({
             </div>
           ) : (
             <>
-              <AggregateSimulationResults results={results} />
+              <AggregateSimulationResults 
+                results={results} 
+                selectedAudiences={selectedAudiences}
+              />
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-lg">
-                    Individual Persona Reactions
+                    Top Persona Reactions
                   </h3>
                   <span className="text-muted-foreground text-sm">
                     {totalReactions} reaction{totalReactions === 1 ? "" : "s"}
