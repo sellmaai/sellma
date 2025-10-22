@@ -35,7 +35,6 @@ interface AudiencePickerProps {
   placeholder?: string;
   className?: string;
   onGoogleAdsClick?: () => void;
-  onMetaAdsClick?: () => void;
   selectedAdGroupsCount?: number;
   onAdGroupsClear?: () => void;
 }
@@ -46,7 +45,6 @@ export function AudiencePicker({
   placeholder = "Select audiences...",
   className,
   onGoogleAdsClick,
-  onMetaAdsClick,
   selectedAdGroupsCount = 0,
   onAdGroupsClear,
 }: AudiencePickerProps) {

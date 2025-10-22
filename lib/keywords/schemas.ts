@@ -14,13 +14,15 @@ export const NegativeKeywordSchema = z.object({
   matchType: KeywordMatchTypeEnum.optional(),
 });
 
-export const KeywordSimulationSchema = z.object({
-  persona_id: z.string().min(1),
-  advertising_goal_summary: z.string().min(1).max(600),
-  positive_keywords: z.array(PositiveKeywordSchema).min(1).max(12),
-  negative_keywords: z.array(NegativeKeywordSchema).min(1).max(12),
-  reasoning: z.string().min(1).max(600),
-}).strict(); // Ensure no extra fields are allowed
+export const KeywordSimulationSchema = z
+  .object({
+    persona_id: z.string().min(1),
+    advertising_goal_summary: z.string().min(1).max(600),
+    positive_keywords: z.array(PositiveKeywordSchema).min(1).max(12),
+    negative_keywords: z.array(NegativeKeywordSchema).min(1).max(12),
+    reasoning: z.string().min(1).max(600),
+  })
+  .strict(); // Ensure no extra fields are allowed
 
 export type KeywordMatchType = z.infer<typeof KeywordMatchTypeEnum>;
 export type PositiveKeyword = z.infer<typeof PositiveKeywordSchema>;

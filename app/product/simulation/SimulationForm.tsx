@@ -363,7 +363,7 @@ export function SimulationForm({
     setSelectedKeywordAdGroups([]);
   };
 
-  const handleMetaAdsClick = () => {
+  const _handleMetaAdsClick = () => {
     // TODO: Integrate Meta Ads audience import.
   };
 
@@ -527,7 +527,6 @@ export function SimulationForm({
                   onAdGroupsClear={handleAdGroupsClear}
                   onAudiencesChange={handleAudiencesChange}
                   onGoogleAdsClick={handleGoogleAdsClick}
-                  onMetaAdsClick={handleMetaAdsClick}
                   placeholder="Select audiences"
                   selectedAdGroupsCount={selectedAdGroups.length}
                   selectedAudiences={selectedAudiences}

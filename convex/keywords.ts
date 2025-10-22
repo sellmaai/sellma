@@ -45,33 +45,32 @@ export const simulate = action({
         });
         return object;
       } catch (error) {
-        const errorInstance = error instanceof Error ? error : new Error(String(error));
+        const errorInstance =
+          error instanceof Error ? error : new Error(String(error));
         lastError = errorInstance;
-        
+
         if (NoObjectGeneratedError.isInstance(error)) {
-          console.error(`Keyword simulation attempt ${attempt + 1} failed - schema validation error:`, {
-            cause: error.cause,
-            text: error.text,
-            usage: error.usage,
-          });
-          
           // If this is the last attempt, throw a user-friendly error
           if (attempt === maxRetries) {
             throw new Error(
               "Failed to generate keyword recommendations after multiple attempts. The AI response didn't match the expected format. Please try again with different inputs."
             );
           }
-          
+
           // Wait a bit before retrying
-          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+          await new Promise((resolve) =>
+            setTimeout(resolve, 1000 * (attempt + 1))
+          );
           continue;
         }
-        
+
         // For non-schema errors, don't retry
         throw error;
       }
     }
-    
-    throw lastError || new Error("Unknown error occurred during keyword simulation");
+
+    throw (
+      lastError || new Error("Unknown error occurred during keyword simulation")
+    );
   },
 });

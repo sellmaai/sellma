@@ -407,8 +407,10 @@ export default function AudienceGenerationPage() {
       {originalPrompt && groups.length > 0 && (
         <div className="mx-auto mb-6 w-full max-w-2xl">
           <div className="rounded-lg border border-border bg-muted/30 p-4">
-            <h3 className="mb-2 text-sm font-medium text-muted-foreground">Original Prompt:</h3>
-            <p className="text-sm text-foreground">{originalPrompt}</p>
+            <h3 className="mb-2 font-medium text-muted-foreground text-sm">
+              Original Prompt:
+            </h3>
+            <p className="text-foreground text-sm">{originalPrompt}</p>
           </div>
         </div>
       )}

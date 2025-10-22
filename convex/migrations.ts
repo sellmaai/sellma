@@ -62,13 +62,14 @@ export const generateSeniorCitizenPersonasForGoogleAds = action({
 
     const count = Math.min(Math.max(args.count ?? 5, 1), 10);
     const audienceGroup = "senior-citizens-bathroom-accessibility";
-    
+
     // Build prompt specifically for senior citizens looking to make bathroom accessible
     const prompt = buildPersonaPrompt({
       group: audienceGroup,
       count,
       context: {
-        audienceDescription: "Senior citizens (65+ years old) who are looking to make their bathrooms more accessible and safe. These individuals may have mobility challenges, balance issues, or other age-related concerns that make traditional bathroom fixtures difficult or dangerous to use. They are interested in safety modifications, accessibility features, and products that can help them maintain independence in their daily routines.",
+        audienceDescription:
+          "Senior citizens (65+ years old) who are looking to make their bathrooms more accessible and safe. These individuals may have mobility challenges, balance issues, or other age-related concerns that make traditional bathroom fixtures difficult or dangerous to use. They are interested in safety modifications, accessibility features, and products that can help them maintain independence in their daily routines.",
         location: "United States", // Default location, can be made configurable
       },
     });
@@ -100,13 +101,17 @@ export const checkSeniorCitizenPersonasExist = action({
     googleAdsAudienceId: v.string(),
   },
   handler: async (ctx, args): Promise<{ exists: boolean; count: number }> => {
-    const existingPersonas: Doc<"personas">[] = await ctx.runQuery(api.personas.listByAudienceId, {
-      audienceId: args.googleAdsAudienceId,
-    });
+    const existingPersonas: Doc<"personas">[] = await ctx.runQuery(
+      api.personas.listByAudienceId,
+      {
+        audienceId: args.googleAdsAudienceId,
+      }
+    );
 
     // Check if any existing personas are for senior citizens bathroom accessibility
     const seniorCitizenPersonas: Doc<"personas">[] = existingPersonas.filter(
-      (persona: Doc<"personas">) => persona.audienceGroup === "senior-citizens-bathroom-accessibility"
+      (persona: Doc<"personas">) =>
+        persona.audienceGroup === "senior-citizens-bathroom-accessibility"
     );
 
     return {
@@ -127,9 +132,12 @@ export const ensureSeniorCitizenPersonasForGoogleAds = action({
   },
   handler: async (ctx, args): Promise<Doc<"personas">[]> => {
     // First check if personas already exist
-    const { exists } = await ctx.runAction(api.migrations.checkSeniorCitizenPersonasExist, {
-      googleAdsAudienceId: args.googleAdsAudienceId,
-    });
+    const { exists } = await ctx.runAction(
+      api.migrations.checkSeniorCitizenPersonasExist,
+      {
+        googleAdsAudienceId: args.googleAdsAudienceId,
+      }
+    );
 
     if (exists) {
       // Personas already exist, return them
@@ -139,9 +147,12 @@ export const ensureSeniorCitizenPersonasForGoogleAds = action({
     }
 
     // Generate new personas
-    return await ctx.runAction(api.migrations.generateSeniorCitizenPersonasForGoogleAds, {
-      googleAdsAudienceId: args.googleAdsAudienceId,
-      count: args.count,
-    });
+    return await ctx.runAction(
+      api.migrations.generateSeniorCitizenPersonasForGoogleAds,
+      {
+        googleAdsAudienceId: args.googleAdsAudienceId,
+        count: args.count,
+      }
+    );
   },
 });

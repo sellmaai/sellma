@@ -108,7 +108,6 @@ export default function SimulationPage() {
                     count: 5, // Generate 5 senior citizen personas
                   }
                 );
-                
                 // Add senior citizen personas to the existing personas
                 personas = [...personas, ...seniorCitizenPersonas];
               } catch (_migrationErr) {

@@ -15,7 +15,6 @@ import { ManualAdsDialog } from "./ManualAdsDialog";
 
 interface AdvertisementsPickerProps {
   onGoogleAdsClick?: () => void;
-  onMetaAdsClick?: () => void;
   onAttachFilesClick?: (files: FileList | null) => void;
   onFileCountChange?: (count: number) => void;
   manualAds: ManualAdDraft[];
@@ -37,7 +36,6 @@ interface AdvertisementsPickerProps {
 
 export function AdvertisementsPicker({
   onGoogleAdsClick,
-  onMetaAdsClick,
   onFileCountChange,
   manualAds,
   manualAdCount,
