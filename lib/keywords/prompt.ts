@@ -28,9 +28,33 @@ export function buildKeywordSimulationPrompt({
   lines.push(
     "You are assisting with paid search campaign planning.",
     "Using the provided persona, recommend keywords that align or misalign with the advertising goal.",
-    "Return JSON only, validated by the KeywordSimulation schema (no extraneous fields).",
-    "Set persona_id to the persona.personaId exactly.",
-    "Keep rationale concise, free of sensitive personal data, and grounded in the persona context."
+    "",
+    "CRITICAL: Return ONLY valid JSON that matches this exact schema:",
+    "{",
+    '  "persona_id": "string (required, use persona.personaId exactly)",',
+    '  "advertising_goal_summary": "string (required, 1-600 chars)",',
+    '  "positive_keywords": [',
+    '    {',
+    '      "keyword": "string (required, 1-120 chars)",',
+    '      "matchType": "broad|phrase|exact (optional)",',
+    '      "intent": "string (optional, 1-240 chars)",',
+    '      "confidence": "number (optional, 0-1)"',
+    '    }',
+    '  ],',
+    '  "negative_keywords": [',
+    '    {',
+    '      "keyword": "string (required, 1-120 chars)",',
+    '      "matchType": "broad|phrase|exact (optional)"',
+    '    }',
+    '  ],',
+    '  "reasoning": "string (required, 1-600 chars)"',
+    "}",
+    "",
+    "Requirements:",
+    "- Include 1-12 positive keywords and 1-12 negative keywords",
+    "- Set persona_id to the persona.personaId exactly",
+    "- Keep all text fields within character limits",
+    "- Return ONLY the JSON object, no other text"
   );
 
   const goalText = advertisingGoal.trim();
