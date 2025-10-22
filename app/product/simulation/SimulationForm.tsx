@@ -3,7 +3,10 @@
 import { useMemo, useRef, useState } from "react";
 import { type Audience, AudiencePicker } from "@/components/ui/audience-picker";
 import { Button } from "@/components/ui/button";
-import type { AdGroup } from "@/components/ui/campaign-ad-group-picker";
+import {
+  type AdGroup,
+  CampaignAdGroupPicker,
+} from "@/components/ui/campaign-ad-group-picker";
 import {
   Card,
   CardContent,
@@ -23,10 +26,15 @@ import {
   type GoogleAdsAccount,
   GoogleAdsAccountPicker,
 } from "@/components/ui/google-ads-account-picker";
-import { SimulationContentPicker } from "@/components/ui/simulation-content-picker";
+import {
+  AdContentPicker,
+  KeywordContentPicker,
+} from "@/components/ui/simulation-content-picker";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type {
   ManualAdDraft,
+  ManualKeywordAdGroupDraft,
   ManualKeywordDraft,
   SimulationKind,
   SimulationSubmission,
@@ -46,7 +54,9 @@ export function SimulationForm({
   const [simulationKind, setSimulationKind] = useState<SimulationKind>("ads");
   const [contextValue, setContextValue] = useState("");
   const [keywordGoal, setKeywordGoal] = useState("");
-  const [keywordGoalError, setKeywordGoalError] = useState<string | null>(null);
+  const [keywordAdGroupError, setKeywordAdGroupError] = useState<string | null>(
+    null
+  );
   const [selectedAudiences, setSelectedAudiences] = useState<Audience[]>([]);
   const [manualError, setManualError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -59,6 +69,23 @@ export function SimulationForm({
     useState(false);
   const [selectedAdGroups, setSelectedAdGroups] = useState<AdGroup[]>([]);
   const [selectedAdsAdGroups, setSelectedAdsAdGroups] = useState<AdGroup[]>([]);
+  const [isKeywordAdGroupPickerOpen, setIsKeywordAdGroupPickerOpen] =
+    useState(false);
+  const [selectedKeywordAdGroups, setSelectedKeywordAdGroups] = useState<
+    AdGroup[]
+  >([]);
+  const manualKeywordAdGroupIdRef = useRef(1);
+  const [manualKeywordAdGroups, setManualKeywordAdGroups] = useState<
+    ManualKeywordAdGroupDraft[]
+  >([{ id: 1, name: "", campaignName: "" }]);
+
+  const handleSimulationKindChange = (value: string) => {
+    const nextKind: SimulationKind = value === "keywords" ? "keywords" : "ads";
+    setSimulationKind(nextKind);
+    setFormError(null);
+    setManualError(null);
+    setKeywordAdGroupError(null);
+  };
 
   const createManualAd = (): ManualAdDraft => {
     const id = manualAdIdRef.current;
@@ -70,6 +97,12 @@ export function SimulationForm({
     const id = manualKeywordIdRef.current;
     manualKeywordIdRef.current += 1;
     return { id, value: "" };
+  };
+
+  const createManualKeywordAdGroup = (): ManualKeywordAdGroupDraft => {
+    const id = manualKeywordAdGroupIdRef.current;
+    manualKeywordAdGroupIdRef.current += 1;
+    return { id, name: "", campaignName: "" };
   };
 
   const [manualAds, setManualAds] = useState<ManualAdDraft[]>(() => [
@@ -129,6 +162,33 @@ export function SimulationForm({
     [selectedAdsAdGroups]
   );
 
+  const normalizedManualKeywordAdGroups = useMemo(
+    () =>
+      manualKeywordAdGroups
+        .map((group) => {
+          const name = group.name.trim();
+          if (name.length === 0) {
+            return null;
+          }
+          const campaignName = group.campaignName.trim();
+          return {
+            id: `manual-${group.id}`,
+            name,
+            campaignId: `manual-${group.id}`,
+            campaignName:
+              campaignName.length > 0 ? campaignName : "Manual entry",
+            status: "ENABLED" as const,
+          } satisfies AdGroup;
+        })
+        .filter((value): value is AdGroup => Boolean(value)),
+    [manualKeywordAdGroups]
+  );
+
+  const combinedKeywordAdGroups = useMemo(
+    () => [...selectedKeywordAdGroups, ...normalizedManualKeywordAdGroups],
+    [selectedKeywordAdGroups, normalizedManualKeywordAdGroups]
+  );
+
   const submitDisabledReason = (() => {
     if (selectedAudiences.length === 0) {
       return "Select at least one audience to run simulations.";
@@ -142,8 +202,10 @@ export function SimulationForm({
       }
       return null;
     }
-    if (keywordGoal.trim().length === 0) {
-      return "Describe the advertising goal to simulate keywords.";
+    const hasKeywordInputs =
+      combinedKeywordAdGroups.length > 0 || seedKeywords.length > 0;
+    if (!hasKeywordInputs) {
+      return "Add at least one ad group or seed keyword.";
     }
     return null;
   })();
@@ -174,7 +236,6 @@ export function SimulationForm({
 
       setFormError(null);
       setManualError(null);
-      setKeywordGoalError(null);
       onSubmit({
         mode: "ads",
         audiences: selectedAudiences,
@@ -184,23 +245,24 @@ export function SimulationForm({
       return;
     }
 
-    if (trimmedGoal.length === 0) {
+    const hasKeywordInputs =
+      combinedKeywordAdGroups.length > 0 || seedKeywords.length > 0;
+    if (!hasKeywordInputs) {
       setFormError(null);
       setManualError(null);
-      setKeywordGoalError(
-        "Describe the advertising goal to simulate keywords."
-      );
+      setKeywordAdGroupError("Add at least one ad group or seed keyword.");
       return;
     }
 
     setFormError(null);
     setManualError(null);
-    setKeywordGoalError(null);
+    setKeywordAdGroupError(null);
     onSubmit({
       mode: "keywords",
       audiences: selectedAudiences,
       advertisingGoal: trimmedGoal,
       seedKeywords,
+      adGroups: combinedKeywordAdGroups,
       notes: trimmedContext ? trimmedContext : undefined,
     });
   };
@@ -262,7 +324,8 @@ export function SimulationForm({
   };
 
   const handleGoogleAdsAdsClick = () => {
-    setSimulationKind("ads");
+    setManualError(null);
+    setFormError(null);
     setIsGoogleAdsAdsPickerOpen(true);
   };
 
@@ -281,6 +344,23 @@ export function SimulationForm({
 
   const handleRemoveAdsAdGroups = () => {
     setSelectedAdsAdGroups([]);
+  };
+
+  const handleKeywordAdGroupImportClick = () => {
+    setKeywordAdGroupError(null);
+    setIsKeywordAdGroupPickerOpen(true);
+  };
+
+  const handleKeywordAdGroupsSelect = (adGroups: AdGroup[]) => {
+    setSelectedKeywordAdGroups(adGroups);
+    if (adGroups.length > 0) {
+      setKeywordAdGroupError(null);
+    }
+    setIsKeywordAdGroupPickerOpen(false);
+  };
+
+  const handleKeywordAdGroupsClear = () => {
+    setSelectedKeywordAdGroups([]);
   };
 
   const handleMetaAdsClick = () => {
@@ -350,6 +430,47 @@ export function SimulationForm({
     setManualKeywords([createManualKeyword()]);
   };
 
+  const handleManualKeywordAdGroupChange = (
+    id: number,
+    field: "name" | "campaignName",
+    value: string
+  ) => {
+    setManualKeywordAdGroups((prev) =>
+      prev.map((group) =>
+        group.id === id ? { ...group, [field]: value } : group
+      )
+    );
+    if (keywordAdGroupError) {
+      setKeywordAdGroupError(null);
+    }
+  };
+
+  const handleAddManualKeywordAdGroup = () => {
+    setManualKeywordAdGroups((prev) => [...prev, createManualKeywordAdGroup()]);
+    if (keywordAdGroupError) {
+      setKeywordAdGroupError(null);
+    }
+  };
+
+  const handleRemoveManualKeywordAdGroup = (id: number) => {
+    setManualKeywordAdGroups((prev) => {
+      const next = prev.filter((group) => group.id !== id);
+      if (next.length > 0) {
+        return next;
+      }
+      return [createManualKeywordAdGroup()];
+    });
+    if (keywordAdGroupError) {
+      setKeywordAdGroupError(null);
+    }
+  };
+
+  const handleClearManualKeywordAdGroups = () => {
+    manualKeywordAdGroupIdRef.current = 1;
+    setManualKeywordAdGroups([createManualKeywordAdGroup()]);
+    setKeywordAdGroupError(null);
+  };
+
   const handleAudiencesChange = (audiences: Audience[]) => {
     setSelectedAudiences(audiences);
     if (audiences.length > 0) {
@@ -374,12 +495,28 @@ export function SimulationForm({
       onSubmit={handleSubmit}
     >
       <Card>
-        <CardHeader>
-          <CardTitle>Simulation setup</CardTitle>
-          <CardDescription>
-            Configure your audiences and inputs, then run persona simulations on
-            ad variants or keyword strategies.
-          </CardDescription>
+        <CardHeader className="space-y-4">
+          <div className="space-y-1">
+            <CardTitle>Simulation setup</CardTitle>
+            <CardDescription>
+              Configure your audiences and inputs, then run persona simulations
+              on ad variants or keyword strategies.
+            </CardDescription>
+          </div>
+          <div className="space-y-2">
+            <p className="font-medium text-foreground text-sm">
+              Simulation type
+            </p>
+            <Tabs
+              onValueChange={handleSimulationKindChange}
+              value={simulationKind}
+            >
+              <TabsList>
+                <TabsTrigger value="ads">Ads</TabsTrigger>
+                <TabsTrigger value="keywords">Keywords</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         </CardHeader>
         <CardContent>
           <FieldGroup className="space-y-6">
@@ -402,50 +539,52 @@ export function SimulationForm({
                 ) : null}
               </Field>
               <Field>
-                <FieldLabel>Simulation type</FieldLabel>
-                <SimulationContentPicker
-                  googleAdsAdGroupCount={selectedAdsAdGroups.length}
-                  hasIncompleteManualAds={
-                    hasIncompleteAds && manualError === null
-                  }
-                  keywordGoal={keywordGoal}
-                  keywordGoalError={keywordGoalError}
-                  manualAdCount={cleanedAds.length}
-                  manualAds={manualAds}
-                  manualKeywords={manualKeywords}
-                  manualValidationError={manualError}
-                  onClearGoogleAdsSelection={handleRemoveAdsAdGroups}
-                  onGoogleAdsImport={handleGoogleAdsAdsClick}
-                  onKeywordGoalChange={(value) => {
-                    setKeywordGoal(value);
-                    if (value.trim().length > 0) {
-                      setKeywordGoalError(null);
+                <FieldLabel>Simulation inputs</FieldLabel>
+                {simulationKind === "ads" ? (
+                  <AdContentPicker
+                    googleAdsAdGroupCount={selectedAdsAdGroups.length}
+                    hasIncompleteManualAds={
+                      hasIncompleteAds && manualError === null
                     }
-                  }}
-                  onManualAdAdd={handleAddManualAd}
-                  onManualAdChange={handleManualAdChange}
-                  onManualAdRemove={handleRemoveManualAd}
-                  onManualAdsClear={handleClearManualAds}
-                  onManualKeywordAdd={handleAddManualKeyword}
-                  onManualKeywordChange={handleManualKeywordChange}
-                  onManualKeywordRemove={handleRemoveManualKeyword}
-                  onManualKeywordsClear={handleClearManualKeywords}
-                  onSimulationKindChange={(kind) => {
-                    setSimulationKind(kind);
-                    setFormError(null);
-                    setManualError(null);
-                    setKeywordGoalError(null);
-                  }}
-                  simulationKind={simulationKind}
-                />
+                    manualAdCount={cleanedAds.length}
+                    manualAds={manualAds}
+                    manualValidationError={manualError}
+                    onClearGoogleAdsSelection={handleRemoveAdsAdGroups}
+                    onGoogleAdsImport={handleGoogleAdsAdsClick}
+                    onManualAdAdd={handleAddManualAd}
+                    onManualAdChange={handleManualAdChange}
+                    onManualAdRemove={handleRemoveManualAd}
+                    onManualAdsClear={handleClearManualAds}
+                  />
+                ) : (
+                  <KeywordContentPicker
+                    adGroupError={keywordAdGroupError}
+                    adGroups={combinedKeywordAdGroups}
+                    importedAdGroups={selectedKeywordAdGroups}
+                    keywordGoal={keywordGoal}
+                    manualAdGroups={manualKeywordAdGroups}
+                    manualKeywords={manualKeywords}
+                    onAdGroupsImport={handleKeywordAdGroupImportClick}
+                    onClearAdGroups={handleKeywordAdGroupsClear}
+                    onKeywordGoalChange={setKeywordGoal}
+                    onManualAdGroupAdd={handleAddManualKeywordAdGroup}
+                    onManualAdGroupChange={handleManualKeywordAdGroupChange}
+                    onManualAdGroupRemove={handleRemoveManualKeywordAdGroup}
+                    onManualAdGroupsClear={handleClearManualKeywordAdGroups}
+                    onManualKeywordAdd={handleAddManualKeyword}
+                    onManualKeywordChange={handleManualKeywordChange}
+                    onManualKeywordRemove={handleRemoveManualKeyword}
+                    onManualKeywordsClear={handleClearManualKeywords}
+                  />
+                )}
                 {simulationKind === "ads" && manualError ? (
                   <FieldDescription className="text-destructive">
                     {manualError}
                   </FieldDescription>
                 ) : null}
-                {simulationKind === "keywords" && keywordGoalError ? (
+                {simulationKind === "keywords" && keywordAdGroupError ? (
                   <FieldDescription className="text-destructive">
-                    {keywordGoalError}
+                    {keywordAdGroupError}
                   </FieldDescription>
                 ) : null}
               </Field>
@@ -497,6 +636,13 @@ export function SimulationForm({
         onAdGroupsSelect={handleGoogleAdsAdsGroupsSelect}
         onOpenChange={setIsGoogleAdsAdsPickerOpen}
         open={isGoogleAdsAdsPickerOpen}
+      />
+
+      <CampaignAdGroupPicker
+        accountId="keyword-simulation"
+        onAdGroupsSelect={handleKeywordAdGroupsSelect}
+        onOpenChange={setIsKeywordAdGroupPickerOpen}
+        open={isKeywordAdGroupPickerOpen}
       />
     </form>
   );

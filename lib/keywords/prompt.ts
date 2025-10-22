@@ -1,10 +1,19 @@
 import type { Persona } from "../personas/types";
 
+interface KeywordAdGroup {
+  id: string;
+  name: string;
+  campaignId: string;
+  campaignName: string;
+  status: string;
+}
+
 interface BuildKeywordSimulationPromptParams {
   persona: Persona;
   advertisingGoal: string;
   seedKeywords?: string[];
   audienceSummary?: string;
+  adGroups: KeywordAdGroup[];
 }
 
 export function buildKeywordSimulationPrompt({
@@ -12,6 +21,7 @@ export function buildKeywordSimulationPrompt({
   advertisingGoal,
   seedKeywords,
   audienceSummary,
+  adGroups,
 }: BuildKeywordSimulationPromptParams) {
   const lines: string[] = [];
 
@@ -23,10 +33,33 @@ export function buildKeywordSimulationPrompt({
     "Keep rationale concise, free of sensitive personal data, and grounded in the persona context."
   );
 
-  lines.push("Advertising Goal:", advertisingGoal);
+  const goalText = advertisingGoal.trim();
+  if (goalText.length > 0) {
+    lines.push("Advertising Goal:", goalText);
+  } else {
+    lines.push(
+      "Advertising Goal:",
+      "Not specified. Infer relevant goals from the persona and supplied ad groups."
+    );
+  }
 
   if (audienceSummary) {
     lines.push("Audience Summary:", audienceSummary);
+  }
+
+  if (adGroups.length > 0) {
+    const simplifiedGroups = adGroups.map(
+      ({ id, name, campaignName, status }) => ({
+        id,
+        name,
+        campaignName,
+        status,
+      })
+    );
+    lines.push(
+      "Reference these Google Ads ad groups when crafting recommendations:",
+      JSON.stringify(simplifiedGroups)
+    );
   }
 
   if (seedKeywords && seedKeywords.length > 0) {

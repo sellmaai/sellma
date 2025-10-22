@@ -11,6 +11,15 @@ export const simulate = action({
     advertisingGoal: v.string(),
     seedKeywords: v.optional(v.array(v.string())),
     audienceSummary: v.optional(v.string()),
+    adGroups: v.array(
+      v.object({
+        id: v.string(),
+        name: v.string(),
+        campaignId: v.string(),
+        campaignName: v.string(),
+        status: v.string(),
+      })
+    ),
   },
   handler: async (_ctx, args) => {
     try {
@@ -26,6 +35,7 @@ export const simulate = action({
           advertisingGoal: args.advertisingGoal,
           seedKeywords: args.seedKeywords ?? undefined,
           audienceSummary: args.audienceSummary ?? undefined,
+          adGroups: args.adGroups,
         }),
       });
       return object;

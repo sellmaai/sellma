@@ -186,6 +186,7 @@ export default function SimulationPage() {
               advertisingGoal: payload.advertisingGoal,
               seedKeywords: preparedSeedKeywords,
               audienceSummary: payload.notes ?? audience.name,
+              adGroups: payload.adGroups,
             }).then(
               (keywords): KeywordSimulationResult => ({
                 mode: "keywords",
@@ -194,6 +195,7 @@ export default function SimulationPage() {
                 keywords,
                 advertisingGoal: payload.advertisingGoal,
                 seedKeywords: preparedSeedKeywords,
+                adGroups: payload.adGroups,
                 notes: payload.notes,
               })
             )
