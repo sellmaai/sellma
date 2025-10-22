@@ -20,7 +20,7 @@ export function AudiencePickerDemo() {
     setIntegrationNotice("Google Ads integration would open here.");
   };
 
-  const handleMetaAdsClick = () => {
+  const _handleMetaAdsClick = () => {
     setIntegrationNotice("Meta Ads integration would open here.");
   };
 
@@ -51,7 +51,6 @@ export function AudiencePickerDemo() {
               <AudiencePicker
                 onAudiencesChange={setSelectedAudiences}
                 onGoogleAdsClick={handleGoogleAdsClick}
-                onMetaAdsClick={handleMetaAdsClick}
                 placeholder="Audience"
                 selectedAudiences={selectedAudiences}
               />

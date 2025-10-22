@@ -24,7 +24,7 @@ const GoogleIcon = () => (
   </div>
 );
 
-const MetaIcon = () => (
+const _MetaIcon = () => (
   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 font-bold text-sm text-white">
     M
   </div>
@@ -101,11 +101,11 @@ export function UserSettings() {
     setIntegrations((prev) => ({ ...prev, googleAds: false }));
   };
 
-  const handleMetaAdsConnect = () => {
+  const _handleMetaAdsConnect = () => {
     setIntegrations((prev) => ({ ...prev, metaAds: true }));
   };
 
-  const handleMetaAdsDisconnect = () => {
+  const _handleMetaAdsDisconnect = () => {
     setIntegrations((prev) => ({ ...prev, metaAds: false }));
   };
 
