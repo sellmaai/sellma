@@ -50,11 +50,13 @@ export default function SimulationPage() {
   >([]);
   const [simulationError, setSimulationError] = useState<string | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [selectedAudiences, setSelectedAudiences] = useState<Array<AdSimulationResult['audience']>>([]);
 
   const handleSimulationSubmit = async (payload: SimulationSubmission) => {
     setActiveSimulationKind(payload.mode);
     setSimulationError(null);
     setIsSimulating(true);
+    setSelectedAudiences([]);
     if (payload.mode === "ads") {
       setAdSimulationResults([]);
     } else {
@@ -93,8 +95,21 @@ export default function SimulationPage() {
               (await convex.query(api.personas.listByAudienceId, {
                 audienceId: personaAudienceId,
               })) ?? [];
+            
+            // For saved audiences, get the projectedPersonasCount
+            let projectedPersonasCount: number | undefined;
+            if (audience.source === "saved") {
+              const savedAudience = await convex.query(api.userAudiences.getByName, {
+                name: audience.name,
+              });
+              projectedPersonasCount = savedAudience?.projectedPersonasCount;
+            }
+            
             return {
-              audience,
+              audience: {
+                ...audience,
+                projectedPersonasCount,
+              },
               personas: personas.map((persona) => normalizePersona(persona)),
             };
           } catch (err) {
@@ -108,7 +123,7 @@ export default function SimulationPage() {
       );
 
       const audiencesWithoutPersonas = audiencePersonaPairs
-        .filter(({ personas }) => personas.length === 0)
+        .filter(({ personas, audience }) => personas.length === 0 && audience.source === "saved")
         .map(({ audience }) => audience.name);
       const pairsWithPersonas = audiencePersonaPairs.filter(
         ({ personas }) => personas.length > 0
@@ -152,6 +167,7 @@ export default function SimulationPage() {
 
         const collected = successful.map((item) => item.value);
         setAdSimulationResults(collected);
+        setSelectedAudiences(audiencePersonaPairs.map(({ audience }) => audience));
 
         if (failed.length > 0) {
           const firstError = failed.at(0)?.reason;
@@ -200,16 +216,16 @@ export default function SimulationPage() {
           )
         );
 
-      if (simulationPromises.length === 0) {
-        setSimulationError(
-          audiencesWithoutPersonas.length > 0
-            ? `No personas available for ${audiencesWithoutPersonas
-                .map((name) => `"${name}"`)
-                .join(", ")}. Generate or save personas first.`
-            : "No personas available for the selected audiences. Generate or save personas first."
-        );
-        return;
-      }
+      // if (simulationPromises.length === 0) {
+      //   setSimulationError(
+      //     audiencesWithoutPersonas.length > 0
+      //       ? `No personas available for ${audiencesWithoutPersonas
+      //           .map((name) => `"${name}"`)
+      //           .join(", ")}. Generate or save personas first.`
+      //       : "No personas available for the selected audiences. Generate or save personas first."
+      //   );
+      //   return;
+      // }
 
       const settledResults = await Promise.allSettled(simulationPromises);
       const successful = settledResults.filter(isFulfilled);
@@ -217,6 +233,7 @@ export default function SimulationPage() {
 
       const collected = successful.map((item) => item.value);
       setKeywordSimulationResults(collected);
+      setSelectedAudiences(audiencePersonaPairs.map(({ audience }) => audience));
 
       if (failed.length > 0) {
         const firstError = failed.at(0)?.reason;
@@ -263,12 +280,14 @@ export default function SimulationPage() {
             error={simulationError}
             isLoading={isSimulating}
             results={adSimulationResults}
+            selectedAudiences={selectedAudiences}
           />
         ) : (
           <KeywordSimulationResults
             error={simulationError}
             isLoading={isSimulating}
             results={keywordSimulationResults}
+            selectedAudiences={selectedAudiences}
           />
         )}
       </div>

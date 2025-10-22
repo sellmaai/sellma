@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { PersonaDisplay } from "@/components/ui/persona-display";
 import type { Behavior } from "@/lib/personas/types";
+import { calculateAudienceSizeWithProjectedCount } from "@/lib/simulation/audience-calculator";
 import { AggregateSimulationResults } from "./AggregateSimulationResults";
 import type { AdSimulationResult } from "./types";
 
@@ -258,12 +259,14 @@ interface AdSimulationResultsProps {
   results: AdSimulationResult[];
   isLoading: boolean;
   error: string | null;
+  selectedAudiences: Array<AdSimulationResult['audience']>;
 }
 
 export function AdSimulationResults({
   results,
   isLoading,
   error,
+  selectedAudiences,
 }: AdSimulationResultsProps) {
   const [open, setOpen] = useState(false);
   const totalReactions = useMemo(
@@ -274,6 +277,12 @@ export function AdSimulationResults({
       ),
     [results]
   );
+  
+  const personaCount = useMemo(
+    () => calculateAudienceSizeWithProjectedCount(selectedAudiences),
+    [selectedAudiences]
+  );
+  
   const hasResults = results.length > 0;
 
   useEffect(() => {
@@ -336,14 +345,17 @@ export function AdSimulationResults({
             </div>
           ) : (
             <>
-              <AggregateSimulationResults results={results} />
+              <AggregateSimulationResults 
+                results={results} 
+                selectedAudiences={selectedAudiences}
+              />
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-lg">
-                    Individual Persona Reactions
+                    Top Persona Reactions
                   </h3>
                   <span className="text-muted-foreground text-sm">
-                    {totalReactions} reaction{totalReactions === 1 ? "" : "s"}
+                    {personaCount} persona{personaCount === 1 ? "" : "s"} × {totalReactions} reaction{totalReactions === 1 ? "" : "s"}
                   </span>
                 </div>
                 {results.map((result) =>

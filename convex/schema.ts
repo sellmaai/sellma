@@ -17,6 +17,7 @@ export default defineSchema({
     createdAt: v.string(),
     updatedAt: v.string(),
     audienceId: v.optional(v.string()),
+    projectedPersonasCount: v.optional(v.number()),
   })
     .index("by_user", ["userId"])
     .index("by_user_and_name", ["userId", "name"]),

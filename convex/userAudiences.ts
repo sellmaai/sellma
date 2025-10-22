@@ -7,6 +7,7 @@ export const save = mutation({
     name: v.string(),
     description: v.optional(v.string()),
     audienceId: v.string(),
+    projectedPersonasCount: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -34,6 +35,7 @@ export const save = mutation({
       createdAt: now,
       updatedAt: now,
       audienceId: args.audienceId,
+      projectedPersonasCount: args.projectedPersonasCount,
     });
 
     return audienceMetadataId;

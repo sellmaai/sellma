@@ -4,19 +4,22 @@ import { Eye, Target, TrendingUp, Users } from "lucide-react";
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { SimulationResult } from "./types";
+import { calculateAudienceSizeWithProjectedCount } from "@/lib/simulation/audience-calculator";
 
 interface AggregateSimulationResultsProps {
   results: SimulationResult[];
+  selectedAudiences: Array<SimulationResult['audience']>;
 }
 
 export function AggregateSimulationResults({
   results,
+  selectedAudiences,
 }: AggregateSimulationResultsProps) {
   const aggregateData = useMemo(() => {
     if (results.length === 0) {
       return {
         totalPersonas: 0,
-        simulatedReach: 0,
+        audienceSize: 0,
         ctr: 0,
         relevanceScore: 0,
         estimatedCPC: 0,
@@ -40,18 +43,22 @@ export function AggregateSimulationResults({
     // Calculate estimated CPM (Cost Per Mille) - random between $2.00 to $15.00
     const estimatedCPM = Math.random() * (15.0 - 2.0) + 2.0;
 
-    // Calculate total personas simulated
+    // Calculate total personas simulated (number of results)
     const totalPersonas = results.length;
+
+    // Calculate audience size from all selected audiences (not just those with simulation results)
+    const audienceSize = calculateAudienceSizeWithProjectedCount(selectedAudiences);
 
     return {
       totalPersonas,
+      audienceSize,
       ctr,
       relevanceScore,
       estimatedCPC,
       estimatedCPA,
       estimatedCPM,
     };
-  }, [results]);
+  }, [results, selectedAudiences]);
 
   return (
     <div className="mb-8 space-y-6">
@@ -60,7 +67,7 @@ export function AggregateSimulationResults({
           Simulation Summary
         </h2>
         <p className="mt-2 text-muted-foreground">
-          Aggregate results from {aggregateData.totalPersonas.toLocaleString()}{" "}
+          Aggregate results from {(aggregateData.audienceSize ?? 0).toLocaleString()}{" "}
           personas tested
         </p>
       </div>
@@ -74,7 +81,7 @@ export function AggregateSimulationResults({
           </CardHeader>
           <CardContent>
             <div className="font-bold text-2xl">
-              {aggregateData.totalPersonas.toLocaleString()}
+              {(aggregateData.audienceSize ?? 0).toLocaleString()}
             </div>
           </CardContent>
         </Card>
