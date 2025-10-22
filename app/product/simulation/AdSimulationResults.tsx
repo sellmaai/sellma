@@ -310,10 +310,7 @@ export function AdSimulationResults({
   }
 
   const countForLabel = totalReactions > 0 ? totalReactions : results.length;
-  const triggerLabel =
-    countForLabel === 1
-      ? "View ad simulation result"
-      : `View ${countForLabel} ad simulation results`;
+  const triggerLabel = "View ad simulation results";
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
