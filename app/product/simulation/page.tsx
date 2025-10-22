@@ -50,7 +50,9 @@ export default function SimulationPage() {
   >([]);
   const [simulationError, setSimulationError] = useState<string | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
-  const [selectedAudiences, setSelectedAudiences] = useState<Array<AdSimulationResult['audience']>>([]);
+  const [selectedAudiences, setSelectedAudiences] = useState<
+    AdSimulationResult["audience"][]
+  >([]);
 
   const handleSimulationSubmit = async (payload: SimulationSubmission) => {
     setActiveSimulationKind(payload.mode);
@@ -95,16 +97,19 @@ export default function SimulationPage() {
               (await convex.query(api.personas.listByAudienceId, {
                 audienceId: personaAudienceId,
               })) ?? [];
-            
+
             // For saved audiences, get the projectedPersonasCount
             let projectedPersonasCount: number | undefined;
             if (audience.source === "saved") {
-              const savedAudience = await convex.query(api.userAudiences.getByName, {
-                name: audience.name,
-              });
+              const savedAudience = await convex.query(
+                api.userAudiences.getByName,
+                {
+                  name: audience.name,
+                }
+              );
               projectedPersonasCount = savedAudience?.projectedPersonasCount;
             }
-            
+
             return {
               audience: {
                 ...audience,
@@ -123,7 +128,10 @@ export default function SimulationPage() {
       );
 
       const audiencesWithoutPersonas = audiencePersonaPairs
-        .filter(({ personas, audience }) => personas.length === 0 && audience.source === "saved")
+        .filter(
+          ({ personas, audience }) =>
+            personas.length === 0 && audience.source === "saved"
+        )
         .map(({ audience }) => audience.name);
       const pairsWithPersonas = audiencePersonaPairs.filter(
         ({ personas }) => personas.length > 0
@@ -167,7 +175,9 @@ export default function SimulationPage() {
 
         const collected = successful.map((item) => item.value);
         setAdSimulationResults(collected);
-        setSelectedAudiences(audiencePersonaPairs.map(({ audience }) => audience));
+        setSelectedAudiences(
+          audiencePersonaPairs.map(({ audience }) => audience)
+        );
 
         if (failed.length > 0) {
           const firstError = failed.at(0)?.reason;
@@ -235,7 +245,9 @@ export default function SimulationPage() {
 
       const collected = successful.map((item) => item.value);
       setKeywordSimulationResults(collected);
-      setSelectedAudiences(audiencePersonaPairs.map(({ audience }) => audience));
+      setSelectedAudiences(
+        audiencePersonaPairs.map(({ audience }) => audience)
+      );
 
       if (failed.length > 0) {
         const firstError = failed.at(0)?.reason;

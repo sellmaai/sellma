@@ -289,14 +289,13 @@ interface KeywordSimulationResultsProps {
   results: KeywordSimulationResult[];
   isLoading: boolean;
   error: string | null;
-  selectedAudiences: Array<KeywordSimulationResult['audience']>;
+  selectedAudiences: KeywordSimulationResult["audience"][];
 }
 
 export function KeywordSimulationResults({
   results,
   isLoading,
   error,
-  selectedAudiences,
 }: KeywordSimulationResultsProps) {
   const [open, setOpen] = useState(false);
   const hasResults = results.length > 0;

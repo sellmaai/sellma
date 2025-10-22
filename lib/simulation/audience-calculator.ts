@@ -14,9 +14,9 @@ export function calculateAudienceSize(audiences: Audience[]): number {
         // This will be handled by the component that has access to the full audience data
         return total + (audience.count || 0);
       case "google-ads":
-        return total + (250 * (audience.count || 1));
+        return total + 250 * (audience.count || 1);
       case "meta-ads":
-        return total + (250 * (audience.count || 1));
+        return total + 250 * (audience.count || 1);
       default:
         return total;
     }
@@ -34,9 +34,9 @@ export function calculateAudienceSizeWithProjectedCount(
       case "saved":
         return total + (audience.projectedPersonasCount || 0);
       case "google-ads":
-        return total + (250 * (audience.count || 1));
+        return total + 250 * (audience.count || 1);
       case "meta-ads":
-        return total + (250 * (audience.count || 1));
+        return total + 250 * (audience.count || 1);
       default:
         return total;
     }

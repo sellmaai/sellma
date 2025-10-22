@@ -178,7 +178,7 @@ export function SimulationForm({
             campaignName:
               campaignName.length > 0 ? campaignName : "Manual entry",
             status: "ENABLED" as const,
-          } satisfies AdGroup;
+          } as AdGroup;
         })
         .filter((value): value is AdGroup => Boolean(value)),
     [manualKeywordAdGroups]
