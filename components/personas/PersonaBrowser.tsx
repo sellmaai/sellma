@@ -3,8 +3,8 @@
 import type { FC } from "react";
 import { useMemo, useState } from "react";
 import type { Persona } from "@/lib/personas/types";
-import { PersonaDisplay } from "../ui/persona-display";
 import { Button } from "../ui/button";
+import { PersonaDisplay } from "../ui/persona-display";
 
 interface PersonaBrowserProps {
   personas: Persona[];
@@ -20,7 +20,10 @@ const buildSearchString = (persona: Persona): string => {
   return `${name} ${occupation} ${city} ${state}`.toLowerCase();
 };
 
-export const PersonaBrowser: FC<PersonaBrowserProps> = ({ personas, projectedPersonasCount }) => {
+export const PersonaBrowser: FC<PersonaBrowserProps> = ({
+  personas,
+  projectedPersonasCount,
+}) => {
   const [search, setSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
   const [pagesViewed, setPagesViewed] = useState(1);
@@ -51,7 +54,7 @@ export const PersonaBrowser: FC<PersonaBrowserProps> = ({ personas, projectedPer
       setShowAll(true);
       return;
     }
-    setPagesViewed(prev => prev + 1);
+    setPagesViewed((prev) => prev + 1);
   };
 
   if (personas.length === 0) {
@@ -86,15 +89,12 @@ export const PersonaBrowser: FC<PersonaBrowserProps> = ({ personas, projectedPer
             <PersonaDisplay key={persona.personaId} persona={persona} />
           ))}
         </div>
-        
+
         {projectedPersonasCount && !showAll && (
           <div className="flex justify-center">
-            <Button
-              variant="outline"
-              onClick={handleShowMore}
-              className="mt-4"
-            >
-              Show more ({projectedPersonasCount - (5 * pagesViewed)} more personas)
+            <Button className="mt-4" onClick={handleShowMore} variant="outline">
+              Show more ({projectedPersonasCount - 5 * pagesViewed} more
+              personas)
             </Button>
           </div>
         )}

@@ -3,12 +3,12 @@
 import { Eye, Target, TrendingUp, Users } from "lucide-react";
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { SimulationResult } from "./types";
 import { calculateAudienceSizeWithProjectedCount } from "@/lib/simulation/audience-calculator";
+import type { SimulationResult } from "./types";
 
 interface AggregateSimulationResultsProps {
   results: SimulationResult[];
-  selectedAudiences: Array<SimulationResult['audience']>;
+  selectedAudiences: SimulationResult["audience"][];
 }
 
 export function AggregateSimulationResults({
@@ -47,7 +47,8 @@ export function AggregateSimulationResults({
     const totalPersonas = results.length;
 
     // Calculate audience size from all selected audiences (not just those with simulation results)
-    const audienceSize = calculateAudienceSizeWithProjectedCount(selectedAudiences);
+    const audienceSize =
+      calculateAudienceSizeWithProjectedCount(selectedAudiences);
 
     return {
       totalPersonas,
@@ -67,8 +68,8 @@ export function AggregateSimulationResults({
           Simulation Summary
         </h2>
         <p className="mt-2 text-muted-foreground">
-          Aggregate results from {(aggregateData.audienceSize ?? 0).toLocaleString()}{" "}
-          personas tested
+          Aggregate results from{" "}
+          {(aggregateData.audienceSize ?? 0).toLocaleString()} personas tested
         </p>
       </div>
 

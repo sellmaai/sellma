@@ -54,7 +54,9 @@ export default function AudienceGenerationPage() {
     null | "saved" | "rejected"
   >(null);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [projectedPersonasCount, setProjectedPersonasCount] = useState<number | null>(null);
+  const [projectedPersonasCount, setProjectedPersonasCount] = useState<
+    number | null
+  >(null);
 
   const resetBuilderState = () => {
     setSaveError(null);
@@ -120,9 +122,10 @@ export default function AudienceGenerationPage() {
         setPerGroupStatus(
           Object.fromEntries(res.map((g) => [g.id, "pending"]))
         );
-        
+
         // Generate random projected personas count between 1500 and 4000
-        const randomCount = Math.floor(Math.random() * (4000 - 1500 + 1)) + 1500;
+        const randomCount =
+          Math.floor(Math.random() * (4000 - 1500 + 1)) + 1500;
         setProjectedPersonasCount(randomCount);
 
         // Kick off persona generation per group with progressive updates
@@ -149,16 +152,27 @@ export default function AudienceGenerationPage() {
           })
             .then((arr) => {
               // Handle multiple personas per group
-              if (arr && arr.length > 0) {
-                arr.forEach((p) => {
-                  // Only apply results if they belong to the most recent audience session
-                  if (p && p.audienceId === currentAudienceIdRef.current) {
-                    setPersonasById((prev) => ({ ...prev, [p.personaId]: p }));
-                  }
+              if (Array.isArray(arr) && arr.length > 0) {
+                setPersonasById((prev) => {
+                  // Only add personas that belong to the current audience session
+                  const newPersonas = arr.reduce(
+                    (acc, p) => {
+                      if (
+                        p &&
+                        p.audienceId === currentAudienceIdRef.current &&
+                        p.personaId
+                      ) {
+                        acc[p.personaId] = p;
+                      }
+                      return acc;
+                    },
+                    {} as typeof prev
+                  );
+                  return { ...prev, ...newPersonas };
                 });
               }
             })
-            .catch(() => {
+            .catch((_error) => {
               // noop: keep UX flowing; we could surface per-group errors later if desired
             })
             .finally(() => {
@@ -413,8 +427,8 @@ export default function AudienceGenerationPage() {
         ref={personaSectionRef}
       >
         {groups.length > 0 && Object.values(personasById).length > 0 && (
-          <PersonaBrowser 
-            personas={Object.values(personasById)} 
+          <PersonaBrowser
+            personas={Object.values(personasById)}
             projectedPersonasCount={projectedPersonasCount}
           />
         )}

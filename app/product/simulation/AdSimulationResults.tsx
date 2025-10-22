@@ -259,7 +259,7 @@ interface AdSimulationResultsProps {
   results: AdSimulationResult[];
   isLoading: boolean;
   error: string | null;
-  selectedAudiences: Array<AdSimulationResult['audience']>;
+  selectedAudiences: AdSimulationResult["audience"][];
 }
 
 export function AdSimulationResults({
@@ -269,20 +269,17 @@ export function AdSimulationResults({
   selectedAudiences,
 }: AdSimulationResultsProps) {
   const [open, setOpen] = useState(false);
-  const totalReactions = useMemo(
-    () => {
-      // Count the actual number of ads that were added via ad picker
-      // Since all results have the same ads array, we can just take the first result's ads length
-      return results.length > 0 ? results[0].ads.length : 0;
-    },
-    [results]
-  );
-  
+  const totalReactions = useMemo(() => {
+    // Count the actual number of ads that were added via ad picker
+    // Since all results have the same ads array, we can just take the first result's ads length
+    return results.length > 0 ? results[0].ads.length : 0;
+  }, [results]);
+
   const personaCount = useMemo(
     () => calculateAudienceSizeWithProjectedCount(selectedAudiences),
     [selectedAudiences]
   );
-  
+
   const hasResults = results.length > 0;
 
   useEffect(() => {
@@ -345,8 +342,8 @@ export function AdSimulationResults({
             </div>
           ) : (
             <>
-              <AggregateSimulationResults 
-                results={results} 
+              <AggregateSimulationResults
+                results={results}
                 selectedAudiences={selectedAudiences}
               />
               <div className="space-y-4">
@@ -355,7 +352,8 @@ export function AdSimulationResults({
                     Top Persona Reactions
                   </h3>
                   <span className="text-muted-foreground text-sm">
-                    {personaCount} persona{personaCount === 1 ? "" : "s"} × {totalReactions} reaction{totalReactions === 1 ? "" : "s"}
+                    {personaCount} persona{personaCount === 1 ? "" : "s"} ×{" "}
+                    {totalReactions} reaction{totalReactions === 1 ? "" : "s"}
                   </span>
                 </div>
                 {results.map((result) =>
