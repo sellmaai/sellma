@@ -1,6 +1,9 @@
 import { Tag } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { ManualKeywordDraft } from "@/app/product/simulation/types";
+import type {
+  ManualKeywordAdGroupDraft,
+  ManualKeywordDraft,
+} from "@/app/product/simulation/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -17,6 +20,16 @@ interface KeywordsPickerProps {
   goal?: string;
   goalError?: string | null;
   onGoalChange?: (value: string) => void;
+  adGroups?: ManualKeywordAdGroupDraft[];
+  adGroupError?: string | null;
+  onAdGroupChange?: (
+    id: number,
+    field: "name" | "campaignName",
+    value: string
+  ) => void;
+  onAdGroupAdd?: () => void;
+  onAdGroupRemove?: (id: number) => void;
+  onAdGroupsClear?: () => void;
 }
 
 export function KeywordsPicker({
@@ -30,9 +43,53 @@ export function KeywordsPicker({
   goal,
   goalError,
   onGoalChange,
+  adGroups,
+  adGroupError,
+  onAdGroupChange,
+  onAdGroupAdd,
+  onAdGroupRemove,
+  onAdGroupsClear,
 }: KeywordsPickerProps) {
   const [open, setOpen] = useState(false);
   const [internalGoal, setInternalGoal] = useState("");
+  const [internalAdGroups, setInternalAdGroups] = useState<
+    ManualKeywordAdGroupDraft[]
+  >([{ id: 1, name: "", campaignName: "" }]);
+
+  const activeAdGroups = adGroups ?? internalAdGroups;
+
+  const handleInternalAdGroupChange = (
+    id: number,
+    field: "name" | "campaignName",
+    value: string
+  ) => {
+    setInternalAdGroups((prev) =>
+      prev.map((group) =>
+        group.id === id ? { ...group, [field]: value } : group
+      )
+    );
+  };
+
+  const handleInternalAdGroupAdd = () => {
+    setInternalAdGroups((prev) => [
+      ...prev,
+      { id: prev.length + 1, name: "", campaignName: "" },
+    ]);
+  };
+
+  const handleInternalAdGroupRemove = (id: number) => {
+    setInternalAdGroups((prev) => {
+      const next = prev.filter((group) => group.id !== id);
+      if (next.length > 0) {
+        return next;
+      }
+      return [{ id: 1, name: "", campaignName: "" }];
+    });
+  };
+
+  const handleInternalAdGroupsClear = () => {
+    setInternalAdGroups([{ id: 1, name: "", campaignName: "" }]);
+  };
 
   const summary = useMemo(() => {
     const nonEmpty = keywords.filter(
@@ -93,9 +150,15 @@ export function KeywordsPicker({
       </Button>
 
       <ManualKeywordsDialog
+        adGroupError={adGroupError}
+        adGroups={activeAdGroups}
         goal={goal ?? internalGoal}
         goalError={goalError}
         keywords={keywords}
+        onAdGroupAdd={onAdGroupAdd ?? handleInternalAdGroupAdd}
+        onAdGroupChange={onAdGroupChange ?? handleInternalAdGroupChange}
+        onAdGroupRemove={onAdGroupRemove ?? handleInternalAdGroupRemove}
+        onAdGroupsClear={onAdGroupsClear ?? handleInternalAdGroupsClear}
         onGoalChange={(value) => {
           if (onGoalChange) {
             onGoalChange(value);
@@ -110,6 +173,9 @@ export function KeywordsPicker({
           onKeywordsClear();
           if (!onGoalChange) {
             setInternalGoal("");
+          }
+          if (!onAdGroupsClear) {
+            handleInternalAdGroupsClear();
           }
           setOpen(false);
         }}
