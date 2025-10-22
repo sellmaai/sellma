@@ -85,12 +85,22 @@ interface KeywordResultCardProps {
 }
 
 const KeywordResultCard = ({ result }: KeywordResultCardProps) => {
-  const { persona, audience, keywords, seedKeywords, advertisingGoal } = result;
+  const {
+    persona,
+    audience,
+    keywords,
+    seedKeywords,
+    advertisingGoal,
+    adGroups,
+  } = result;
   const groupColor = useMemo(
     () => getGroupColor(persona.audienceGroup),
     [persona.audienceGroup]
   );
   const goalSummary = keywords.advertising_goal_summary;
+  const advertisingGoalDisplay = advertisingGoal.trim().length
+    ? advertisingGoal
+    : "No specific advertising goal provided.";
 
   return (
     <div className="rounded-3xl border border-border/60 bg-background/95 p-6 shadow-sm transition hover:shadow-lg">
@@ -126,7 +136,7 @@ const KeywordResultCard = ({ result }: KeywordResultCardProps) => {
               <Target className="h-4 w-4" />
               Advertising Goal
             </div>
-            <p className="text-base leading-6">{advertisingGoal}</p>
+            <p className="text-base leading-6">{advertisingGoalDisplay}</p>
             <p className="text-muted-foreground text-sm leading-6">
               {goalSummary}
             </p>
@@ -143,6 +153,29 @@ const KeywordResultCard = ({ result }: KeywordResultCardProps) => {
                 No manual seed keywords provided.
               </p>
             )}
+            {adGroups.length > 0 ? (
+              <div className="pt-3">
+                <p className="text-muted-foreground text-xs uppercase tracking-wide">
+                  Source Ad Groups
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {adGroups.map((group) => (
+                    <Badge
+                      className="rounded-xl bg-background px-3 py-1 text-foreground text-xs"
+                      key={group.id}
+                      variant="outline"
+                    >
+                      <span className="font-medium">{group.name}</span>
+                      {group.campaignName ? (
+                        <span className="text-muted-foreground">
+                          {` • ${group.campaignName}`}
+                        </span>
+                      ) : null}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

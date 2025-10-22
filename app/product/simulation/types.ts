@@ -1,4 +1,5 @@
 import type { Audience } from "@/components/ui/audience-picker";
+import type { AdGroup } from "@/components/ui/campaign-ad-group-picker";
 import type { KeywordSimulation } from "@/lib/keywords/types";
 import type { AdReactions, Persona } from "@/lib/personas/types";
 
@@ -15,6 +16,12 @@ export interface ManualKeywordDraft {
   value: string;
 }
 
+export interface ManualKeywordAdGroupDraft {
+  id: number;
+  name: string;
+  campaignName: string;
+}
+
 interface BaseSimulationSubmission {
   audiences: Audience[];
   notes?: string;
@@ -29,6 +36,7 @@ export interface KeywordSimulationSubmission extends BaseSimulationSubmission {
   mode: "keywords";
   advertisingGoal: string;
   seedKeywords: string[];
+  adGroups: AdGroup[];
 }
 
 export type SimulationSubmission =
@@ -51,6 +59,7 @@ export interface KeywordSimulationResult {
   keywords: KeywordSimulation;
   advertisingGoal: string;
   seedKeywords: string[];
+  adGroups: AdGroup[];
   notes?: string;
 }
 
