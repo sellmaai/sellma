@@ -182,14 +182,14 @@ export function UserSettings() {
               onConnect={handleGoogleAdsConnect}
               onDisconnect={handleGoogleAdsDisconnect}
             />
-            <IntegrationCard
+            {/* <IntegrationCard
               description="Connect your Meta Ads account to manage Facebook and Instagram campaigns."
               icon={<MetaIcon />}
               isConnected={integrations.metaAds}
               name="Meta Ads"
               onConnect={handleMetaAdsConnect}
               onDisconnect={handleMetaAdsDisconnect}
-            />
+            /> */}
           </div>
         </CardContent>
       </Card>

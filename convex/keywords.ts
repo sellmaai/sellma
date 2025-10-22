@@ -22,28 +22,56 @@ export const simulate = action({
     ),
   },
   handler: async (_ctx, args) => {
-    try {
-      const { object } = await generateObject({
-        model: google("gemini-2.5-flash"),
-        output: "object",
-        schema: KeywordSimulationSchema,
-        schemaName: "KeywordSimulation",
-        schemaDescription:
-          "Recommended positive and negative keywords for the persona.",
-        prompt: buildKeywordSimulationPrompt({
-          persona: args.persona,
-          advertisingGoal: args.advertisingGoal,
-          seedKeywords: args.seedKeywords ?? undefined,
-          audienceSummary: args.audienceSummary ?? undefined,
-          adGroups: args.adGroups,
-        }),
-      });
-      return object;
-    } catch (error) {
-      if (NoObjectGeneratedError.isInstance(error)) {
-        // Optionally capture provider response here.
+    const maxRetries = 2;
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const { object } = await generateObject({
+          model: google("gemini-2.5-flash"),
+          output: "object",
+          schema: KeywordSimulationSchema,
+          schemaName: "KeywordSimulation",
+          schemaDescription:
+            "Recommended positive and negative keywords for the persona.",
+          temperature: 0.2,
+          prompt: buildKeywordSimulationPrompt({
+            persona: args.persona,
+            advertisingGoal: args.advertisingGoal,
+            seedKeywords: args.seedKeywords ?? undefined,
+            audienceSummary: args.audienceSummary ?? undefined,
+            adGroups: args.adGroups,
+          }),
+        });
+        return object;
+      } catch (error) {
+        const errorInstance = error instanceof Error ? error : new Error(String(error));
+        lastError = errorInstance;
+        
+        if (NoObjectGeneratedError.isInstance(error)) {
+          console.error(`Keyword simulation attempt ${attempt + 1} failed - schema validation error:`, {
+            cause: error.cause,
+            text: error.text,
+            usage: error.usage,
+          });
+          
+          // If this is the last attempt, throw a user-friendly error
+          if (attempt === maxRetries) {
+            throw new Error(
+              "Failed to generate keyword recommendations after multiple attempts. The AI response didn't match the expected format. Please try again with different inputs."
+            );
+          }
+          
+          // Wait a bit before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+          continue;
+        }
+        
+        // For non-schema errors, don't retry
+        throw error;
       }
-      throw error;
     }
+    
+    throw lastError || new Error("Unknown error occurred during keyword simulation");
   },
 });

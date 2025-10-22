@@ -20,7 +20,7 @@ export const KeywordSimulationSchema = z.object({
   positive_keywords: z.array(PositiveKeywordSchema).min(1).max(12),
   negative_keywords: z.array(NegativeKeywordSchema).min(1).max(12),
   reasoning: z.string().min(1).max(600),
-});
+}).strict(); // Ensure no extra fields are allowed
 
 export type KeywordMatchType = z.infer<typeof KeywordMatchTypeEnum>;
 export type PositiveKeyword = z.infer<typeof PositiveKeywordSchema>;

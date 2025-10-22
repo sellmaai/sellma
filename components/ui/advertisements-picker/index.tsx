@@ -123,7 +123,7 @@ export function AdvertisementsPicker({
             <ExternalLink className="mr-2 h-4 w-4 flex-shrink-0" />
             <span className="text-sm">From Google Ads</span>
           </Button>
-          <Button
+          {/* <Button
             className="h-9 w-full justify-start px-3 text-left"
             onClick={onMetaAdsClick}
             size="sm"
@@ -131,7 +131,7 @@ export function AdvertisementsPicker({
           >
             <ExternalLink className="mr-2 h-4 w-4 flex-shrink-0" />
             <span className="text-sm">From Meta Ads</span>
-          </Button>
+          </Button> */}
           <Button
             className="h-9 w-full justify-start px-3 text-left"
             onClick={handleAttachFilesClick}

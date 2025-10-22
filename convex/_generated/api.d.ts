@@ -15,6 +15,7 @@ import type * as auth from "../auth.js";
 import type * as http from "../http.js";
 import type * as keywords from "../keywords.js";
 import type * as messages from "../messages.js";
+import type * as migrations from "../migrations.js";
 import type * as personas from "../personas.js";
 import type * as simulation from "../simulation.js";
 import type * as userAudiences from "../userAudiences.js";
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   keywords: typeof keywords;
   messages: typeof messages;
+  migrations: typeof migrations;
   personas: typeof personas;
   simulation: typeof simulation;
   userAudiences: typeof userAudiences;

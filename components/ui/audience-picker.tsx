@@ -236,7 +236,7 @@ export function AudiencePicker({
                         <ExternalLink className="mr-2 h-4 w-4 flex-shrink-0" />
                         <span className="font-medium text-xs">Google Ads</span>
                       </Button>
-                      <Button
+                      {/* <Button
                         className="min-h-[40px] flex-1 justify-center px-3 text-center"
                         onClick={onMetaAdsClick}
                         size="sm"
@@ -244,7 +244,7 @@ export function AudiencePicker({
                       >
                         <ExternalLink className="mr-2 h-4 w-4 flex-shrink-0" />
                         <span className="font-medium text-xs">Meta Ads</span>
-                      </Button>
+                      </Button> */}
                     </div>
                   </div>
 
